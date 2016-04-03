@@ -1,0 +1,71 @@
+<resources>
+    <string name="app_name">University Evaluation Android</string>
+    <string name="action_settings">Settings</string>
+    <string name="viewfinder_switch">Vollbild</string>
+    <string name="action_bar_title">Evaluation</string>
+
+    <string name="toolbar_search">Springe zu Frage</string>
+    <string name="toolbar_activate_edit_mode">Wechsle zu Tastatur-Modus</string>
+    <string name="toolbar_activate_camera_mode">Wechsle zu Kamera-Modus</string>
+    <string name="send_dialogue_answers_uncomplete">Es wurde(n) erst %1$s von %2$s Frage beantwortet. Antworten wirklich abschicken?\n\nDie unbeantworteten Fragen sind in der Navigationsliste (Toolbar) jetzt farbig markiert.</string>
+    <!--<string name="send_dialogue_answers_complete">Wirklich </string>-->
+    <string name="edit_text_click_hint_photo">Gib hier eine Antwort ein oder versende ein Photo mit der Antwort durch klick auf das Photoapparat-Symbol in der Toolbar.</string>
+    <string name="edit_text_click_hint_numeric">Gib hier eine Antwort ein.</string>
+
+    <string name="title_activity_inner_section">InnerSectionActivity</string>
+    <!--Website %1$s isn\'t yet available, I\'m working on it, please wait %2$s-->
+
+    <!--Error messages-->
+    <string name="no_network_title">Keine Verbindung zum Server möglich.</string>
+    <string name="no_network_message">Aktivieren Sie Ihre Verbindung zum Internet.</string>
+    <string name="error_500_502_title">Interner Fehler aufgetreten.</string>
+    <string name="error_500_502_message">Informieren Sie die Entwickler.</string>
+    <string name="error_503_title">Server vorübergehend nicht erreichbar.</string>
+    <string name="error_503_message">Versuchen Sie es in Kürze erneut.</string>
+    <string name="error_404_403_title">Falsche Adresse</string>
+    <string name="error_404_403_message">Keine Daten vom Server erhalten.</string>
+    <string name="some_network_error_title">Fehler bei Datenempfang.</string>
+    <string name="some_network_error_message">Ein unbekannter Netzwerkfehler ist aufgetreten.</string>
+    <string name="wrong_qr_code_error_title">Falscher QR-Code</string>
+    <string name="wrong_qr_code_error_message">Lesen Sie den korrekten Code ein.</string>
+    <string name="token_already_used_title">QR-Code nicht gültig.</string>
+    <string name="token_already_used_message">Er wurde bereits verwendet.</string>
+    <string name="invalid_token_title">QR-Code nicht verfügbar</string>
+    <string name="invalid_token_message">Er ist nicht mehr gültig.</string>
+    <string name="evaluation_closed_title">Evaluation bereits geschlossen.</string>
+    <string name="evaluation_closed_message">Die Umfrage, die mit diesem Ticket verknüpft ist, ist bereits geschlossen.</string>
+    <string name="unknown_error_title">Unbekannter Fehler aufgetreten.</string>
+    <string name="unknown_error_message">Versuchen Sie es erneut.</string>
+    <string name="malformed_request_title">Inkompatibilität festgestellt</string>
+    <string name="malformed_request_message">Aktualisieren Sie ihre App.</string>
+    <string name="device_id_title">QR-Code bereits in Verwendung</string>
+    <string name="device_id_message">Scannen Sie einen unbenutzten QR-Code</string>
+    <string name="socket_timeout_title">Server antwortet nicht</string>
+    <string name="socket_timeout_message">Der Server benötigt zu lange für eine Antwort. Versuchen sie es erneut.</string>
+    <string name="connect_exception_title">Netzwerk neu konfiguriert</string>
+    <string name="connect_exception_message">Ihre Netzwerkkonfiguration hat sich seit dem Start der App geändert. App muss neu gestartet werden. Wird jetzt beendet.</string>
+    <!--Success Messages-->
+    <string name="answers_transmission_success_title">Übertragung erfolgreich.</string>
+    <string name="answers_transmission_success_message">Die Evaluation ist beendet. Die Applikation wird geschlossen.</string>
+
+    <!--Button texts-->
+    <string name="ok_button">Okay</string>
+    <string name="abort_button">Abbrechen</string>
+    <string name="close_button">Schließen</string>
+    <string name="send_button">Abschicken</string>
+    <string name="retry_button">Wiederholen</string>
+    <string name="tab_view_button_question">Frage </string>
+    <string name="tab_view_button_send">Abschicken</string>
+
+
+    <!--ScanActivity status texts-->
+    <string name="scan_search">QR-Code einlesen</string>
+    <string name="zoom_not_supported">Zoomen nicht möglich</string>
+    <string name="scan_send">Warte auf Antwort</string>
+    <string name="scan_forward">Starte Evaluation</string>
+
+    <string name="chose_subject">Wählen Sie Ihren Studiengang.</string>
+    <string name="title_activity_enlarge_image">EnlargeImageActivity</string>
+
+    <string name="hello_world">Hello world!</string>
+</resources>

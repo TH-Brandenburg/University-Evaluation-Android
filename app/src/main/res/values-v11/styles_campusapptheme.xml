@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Generated with http://android-holo-colors.com -->
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <style name="ButtonCampusAppTheme" parent="android:Widget.Holo.Light.Button">
+	  <item name="android:background">@drawable/campusapptheme_btn_default_holo_light</item>
+      <item name="android:textColor">@drawable/campusapptheme_btn_default_holo_light_text_color</item>
+  </style>
+
+  <style name="ImageButtonCampusAppTheme" parent="android:Widget.Holo.Light.ImageButton">
+	  <item name="android:background">@drawable/campusapptheme_btn_default_holo_light</item>
+  </style>
+
+  <style name="ActionBarCampusAppTheme" parent ="@style/Widget.AppCompat.ActionBar">
+      <item name="android:background">@color/campusapptheme_color_red</item>
+      <item name="android:titleTextStyle">@color/campusapptheme_color_white_background</item>
+      <!-- Support library compatibility -->
+      <item name="background">@color/campusapptheme_color_red</item>
+      <item name="titleTextStyle">@style/ActionBarTitleTextCampusAppTheme</item>
+
+  </style>
+
+    <!-- ActionBar title text -->
+    <style name="ActionBarTitleTextCampusAppTheme"
+        parent="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textColor">@color/campusapptheme_color_white_background</item>
+        <!-- The textColor property is backward compatible with the Support Library -->
+        <item name="colorPrimary">@color/campusapptheme_color_red</item>
+        <item name="colorPrimaryDark">@color/campusapptheme_color_red</item>
+        <item name="android:textColorPrimary">@color/campusapptheme_color_white_background</item>
+    </style>
+
+
+
+
+</resources>

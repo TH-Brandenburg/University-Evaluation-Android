@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Generated with http://android-holo-colors.com -->
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <style name="CampusAppTheme" parent="@style/_CampusAppTheme"/>
+
+  <style name="_CampusAppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+
+    <item name="android:editTextBackground">@drawable/campusapptheme_edit_text_holo_light</item>
+
+    <item name="android:buttonStyle">@style/ButtonCampusAppTheme</item>
+
+    <item name="android:imageButtonStyle">@style/ImageButtonCampusAppTheme</item>
+
+    <item name="android:actionBarStyle">@style/ActionBarCampusAppTheme</item>
+
+      <!-- Support library compatibility -->
+    <item name="actionBarStyle">@style/ActionBarCampusAppTheme</item>
+
+      <!--<item name="colorPrimary">@color/campusapptheme_color_red</item>-->
+      <!--<item name="colorPrimaryDark">@color/campusapptheme_color_red</item>-->
+      <!--<item name="android:textColorPrimary">@color/campusapptheme_color_white</item>-->
+
+  </style>
+
+</resources>

@@ -1,0 +1,8 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="button_margin_top_bottom">2dp</dimen>
+    <dimen name="button_margin_left_right">2dp</dimen>
+    <dimen name="button_border_thickness">4dp</dimen>
+
+
+</resources>
