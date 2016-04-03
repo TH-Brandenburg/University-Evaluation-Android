@@ -1,7 +1,7 @@
 # University Evaluation Android
 
 
-[![Build Status](https://magnum.travis-ci.com/M-a-x-G/CampusAppEvalExpAndroid.svg?token=6sdNxURnkfrdmbgqRzq3&branch=master)](https://magnum.travis-ci.com/M-a-x-G/CampusAppEvalExpAndroid)
+[![Build Status](https://travis-ci.org/TH-Brandenburg/University-Evaluation-Android.svg?branch=master)](https://travis-ci.org/TH-Brandenburg/University-Evaluation-Android)
 
 
 This project presents a software solution of the evaluation
@@ -15,9 +15,9 @@ to see if it reaches this goal.
 
 ## Related projects
 
-* OpenUniversityEvaluation Backend
-* OpenUniversityEvaluation DTOs
-* OpenUniversityEvaluation Windows Phone App (under construction)
+* [University Evaluation Backend](https://github.com/TH-Brandenburg/University-Evaluation-Backend)
+* [University Evaluation DTOs](https://github.com/TH-Brandenburg/University-Evaluation-DTOs)
+* [University Evaluation Windows Phone App (under construction)](https://github.com/TH-Brandenburg/University-Evaluation-Windows-Phone)
 
 
 ## Licenses of used software
