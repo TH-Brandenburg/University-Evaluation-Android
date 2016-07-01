@@ -405,7 +405,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
      ************************************************/
     @Override
     public void onRestartQRScanning() {
-        EventBus.getEventBus().post(new RestartQRScanningEvent());
+        EventBus.get().post(new RestartQRScanningEvent());
     }
 
     /**
@@ -527,15 +527,15 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
             int statusCode = response.code();
 
             if(response.isSuccessful()){
-                EventBus.getEventBus().post(new NetworkSuccessEvent<>(response.body(), response));
+                EventBus.get().post(new NetworkSuccessEvent<>(response.body(), response));
             } else {
-                EventBus.getEventBus().post(new NetworkErrorEvent<>(response));
+                EventBus.get().post(new NetworkErrorEvent<>(response));
             }
         }
 
         @Override
         public void onFailure(Call<QuestionsDTO> call, Throwable t) {
-            EventBus.getEventBus().post(new NetworkFailureEvent(t));
+            EventBus.get().post(new NetworkFailureEvent(t));
         }
     }
 
@@ -635,22 +635,22 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
     /*private class AsyncQuestionsRequest implements Callback<QuestionsDTO> {
         @Override
         public void success(QuestionsDTO questionsDTO, Response response) {
-            EventBus.getEventBus().post(new NetworkSuccessEvent<QuestionsDTO>(questionsDTO, response));
+            EventBus.get().post(new NetworkSuccessEvent<QuestionsDTO>(questionsDTO, response));
         }
 
         @Override
         public void failure(RetrofitError error) {
-            EventBus.getEventBus().post(new NetworkFailureEvent(error));
+            EventBus.get().post(new NetworkFailureEvent(error));
         }
 
 //        @Override
 //        public void onResponse(Response<QuestionsDTO> response, Retrofit retrofit) {
-//            EventBus.getEventBus().post(new NetworkSuccessEvent<QuestionsDTO>(response, retrofit));
+//            EventBus.get().post(new NetworkSuccessEvent<QuestionsDTO>(response, retrofit));
 //        }
 //
 //        @Override
 //        public void onFailure(Throwable e) {
-//            EventBus.getEventBus().post(new NetworkFailureEvent(e));
+//            EventBus.get().post(new NetworkFailureEvent(e));
 //        }
 
 

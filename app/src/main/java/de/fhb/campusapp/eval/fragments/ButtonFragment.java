@@ -28,6 +28,8 @@ import de.fhb.ca.dto.util.MultipleChoiceAnswerDTO;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterPageEvent;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
 import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.utility.EventBus;
+import de.fhb.campusapp.eval.utility.Events.ClickedChoiceButtonEvent;
 import de.fhb.campusapp.eval.utility.Utility;
 import de.fhb.campusapp.eval.utility.vos.ChoiceVO;
 import de.fhb.campusapp.eval.utility.vos.MultipleChoiceAnswerVO;
@@ -324,7 +326,7 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
                 ChoiceVO choiceVO = DataHolder.retrieveChoiceVO(mQuestion, choiceText);
                 dto.setChoice(choiceVO);
             }
-
+            EventBus.get().post(new ClickedChoiceButtonEvent());
             //notify navigationList that a new answer was given
             ((PagerAdapterSetPrimary) getActivity()).setPrimaryFragment(mPosition + 1);
         }

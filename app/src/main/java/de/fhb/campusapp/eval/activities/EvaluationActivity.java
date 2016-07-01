@@ -20,7 +20,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AccelerateInterpolator;
-import android.view.animation.Interpolator;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListPopupWindow;
@@ -219,12 +218,15 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         mViewPager.setAdapter(mCollectionPagerAdapter);
         mViewPager.setmCustomViewPagerCommunicator(this);
         mViewPager.setPageTransformer(true, this);
+
+        // Manipulating the animation speed of the view pager is not easy.
+        // Reflection is necessary. Either that or alter the class directly within the android support package.
         if(FeatureSwitch.CUSTOM_PAGER_ANIMATION){
             try {
                 Field mScroller;
                 mScroller = ViewPager.class.getDeclaredField("mScroller");
                 mScroller.setAccessible(true);
-                CustomScroller scroller = new CustomScroller(mViewPager.getContext(), new AccelerateInterpolator(1.5f));
+                CustomScroller scroller = new CustomScroller(mViewPager.getContext());
                 // scroller.setFixedDuration(5000);
                 mScroller.set(mViewPager, scroller);
             } catch (NoSuchFieldException | IllegalArgumentException | IllegalAccessException e) {
@@ -247,7 +249,6 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
             mIsCameraModeDisplayed = savedInstanceState.getBoolean(CAMERA_MODE_DISPLAYED);
             mIsNormalModeDisplayed = savedInstanceState.getBoolean(NORMAL_MODE_DISPLAYED);
             mRestoreToolbar = savedInstanceState.getBoolean(RESTORE_TOOLBAR);
-
         }
     }
 
@@ -891,7 +892,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 
     @Override
     public void onStartServerCommunication() {
-        EventBus.getEventBus().post(new StartServerCommunicationEvent());
+        EventBus.get().post(new StartServerCommunicationEvent());
     }
 
     private class RetrofitCallback implements Callback<ResponseDTO>{
@@ -899,15 +900,15 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         @Override
         public void onResponse(Call<ResponseDTO> call, Response<ResponseDTO> response) {
             if(response.isSuccessful()){
-                EventBus.getEventBus().post(new NetworkSuccessEvent<>(response.body() ,response));
+                EventBus.get().post(new NetworkSuccessEvent<>(response.body() ,response));
             } else {
-                EventBus.getEventBus().post(new NetworkErrorEvent<>(response));
+                EventBus.get().post(new NetworkErrorEvent<>(response));
             }
         }
 
         @Override
         public void onFailure(Call<ResponseDTO> call, Throwable t) {
-            EventBus.getEventBus().post(new NetworkFailureEvent(t));
+            EventBus.get().post(new NetworkFailureEvent(t));
         }
     }
 

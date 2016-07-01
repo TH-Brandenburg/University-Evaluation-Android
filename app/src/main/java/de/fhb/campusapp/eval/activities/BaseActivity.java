@@ -19,7 +19,7 @@ public abstract class BaseActivity extends RoboActionBarActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        EventBus.getEventBus().register(this);
+        EventBus.get().register(this);
     }
 
     @Override
@@ -30,7 +30,7 @@ public abstract class BaseActivity extends RoboActionBarActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        EventBus.getEventBus().unregister(this);
+        EventBus.get().unregister(this);
     }
 
     @Override

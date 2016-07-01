@@ -29,7 +29,7 @@ public abstract class BaseFragment extends RoboFragment{
     @Override
     public void onStart() {
         super.onStart();
-//        EventBus.getEventBus().register(this);
+//        EventBus.get().register(this);
     }
 
     @Override
@@ -46,7 +46,7 @@ public abstract class BaseFragment extends RoboFragment{
     @Override
     public void onStop() {
         super.onStop();
-//        EventBus.getEventBus().register(this);
+//        EventBus.get().register(this);
     }
 
     @Override

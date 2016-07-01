@@ -54,7 +54,7 @@ public class SendDialogFragment extends RoboDialogFragment {
                 .setPositiveButton(R.string.send_button, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-//                        EventBus.getEventBus().post(new PreServerCommunicationEvent());
+//                        EventBus.get().post(new PreServerCommunicationEvent());
                         mActivityCommunicator.onPreServerCommunication();
                     }
                 })

@@ -10,7 +10,7 @@ public class EventBus {
 
     public static final Bus eventBus = new Bus(ThreadEnforcer.MAIN);
 
-    public static Bus getEventBus(){
+    public static Bus get(){
         return eventBus;
     }
 }

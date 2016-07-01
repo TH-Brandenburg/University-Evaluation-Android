@@ -200,7 +200,7 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
         mGettingPrimaryCalledBefore = true;
         mCurrentlyPrimary = true;
 //        questionCommunicator.updateImageName(mImageName);
-//        EventBus.getEventBus().post(new FragmentGotPrimaryEvent(mQuestion, mImageName));
+//        EventBus.get().post(new FragmentGotPrimaryEvent(mQuestion, mImageName));
     }
 
     /**
