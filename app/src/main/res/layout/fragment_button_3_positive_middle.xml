@@ -1,6 +1,6 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" tools:context="de.thb.ue.android.fragments.ButtonFragment"
+    android:layout_height="match_parent" tools:context="de.fhb.campusapp.eval.fragments.ButtonFragment"
     android:id="@+id/button_fragment_layout">
 
 
@@ -20,7 +20,7 @@
         android:layout_centerHorizontal="true"
         android:textAlignment="5"/> <!--alignStart-->
 
-    <de.thb.ue.android.custom.CustomVerticalButton
+    <de.fhb.campusapp.eval.custom.CustomVerticalButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAllCaps="false"

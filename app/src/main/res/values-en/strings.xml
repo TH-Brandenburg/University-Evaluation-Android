@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">University Evaluation Android</string>
+    <string name="app_name">CampusAppEvaluationExp</string>
     <string name="close_button">Close</string>
     <string name="edit_text_click_hint_photo">Enter an answer here or send a photo containing the answer by clicking the camera symbol in the toolbar.</string>
     <string name="error_404_403_message">No data received from server</string>
@@ -16,7 +16,7 @@
     <string name="scan_forward">Start evaluation</string>
     <string name="scan_search">Search for QR-Code</string>
     <string name="scan_send">Wait for answer</string>
-    <string name="send_button">evaluate</string>
+    <string name="send_button">Send</string>
     <string name="some_network_error_message">An unknown network error occured.</string>
     <string name="some_network_error_title">Error upon retrieving data</string>
     <string name="tab_view_button_question">Question</string>
@@ -30,7 +30,7 @@
     <string name="action_bar_title">Evaluation</string>
     <string name="toolbar_search">Jump to Question</string>
     <string name="abort_button">Abbort</string>
-    <string name="send_dialogue_answers_uncomplete">There are onyl %1$s of %2$s questions answered. Do you really want to send your data?\n\n The unanswered questions are now marked in the navigation list (toolbar).</string>
+    <string name="send_dialogue_answers_uncomplete">There are onyl %1$s of %2$s questions answered. Do you really want to send your data?\n\nThe unanswered questions are now marked in the navigation list (toolbar).</string>
     <string name="connect_exception_title">Network reconfigured</string>
     <string name="device_id_title">QR code already in use</string>
     <string name="device_id_message">Scan an unused QR code.</string>
@@ -54,4 +54,7 @@
     <string name="zoom_not_supported">Zooming not possible</string>
     <string name="title_activity_enlarge_image">Enlarge Image Activity</string>
     <string name="connect_exception_message">Your network configuration has changed since the app was started. App must be restarted.</string>
+    <string name="tab_view_button_choose">Choose your subject</string>
+    <string name="subject_not_chosen_title">Subject not yet chosen </string>
+    <string name="subject_not_chosen_message">You need to choose your subject at the start of the questionnaire in order to proceed.</string>
 </resources>

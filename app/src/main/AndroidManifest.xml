@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="thb.de.ue.android"
+    package="fhb.de.campusappevaluationexp"
     android:installLocation="preferExternal"
     >
 
@@ -35,9 +35,10 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/app_theme"
+        android:name="de.fhb.campusapp.eval.custom.CustomApplication"
         tools:replace="icon, theme" >
         <activity
-            android:name="de.thb.ue.android.activities.ScanActivity"
+            android:name="de.fhb.campusapp.eval.activities.ScanActivity"
             android:label="@string/app_name"
             android:windowSoftInputMode="adjustResize" >
             <intent-filter>
@@ -47,23 +48,23 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="de.thb.ue.android.activities.EvaluationActivity"
+            android:name="de.fhb.campusapp.eval.activities.EvaluationActivity"
             android:label="@string/action_bar_title" >
         </activity>
+        <!--<activity-->
+            <!--android:name="de.fhb.campusapp.eval.activities.InnerSectionActivity"-->
+            <!--android:label="@string/action_bar_title" >-->
+        <!--</activity>-->
         <activity
-            android:name="de.thb.ue.android.activities.InnerSectionActivity"
-            android:label="@string/action_bar_title" >
-        </activity>
-        <activity
-            android:name="de.thb.ue.android.activities.EnlargeImageActivity"
+            android:name="de.fhb.campusapp.eval.activities.EnlargeImageActivity"
             android:label="@string/action_bar_title" >
         </activity>
 
         <service
-            android:name="de.thb.ue.android.custom.CustomJsonSpiceService"
+            android:name="de.fhb.campusapp.eval.custom.CustomJsonSpiceService"
             android:exported="false" />
         <service
-            android:name="de.thb.ue.android.services.CleanUpService"
+            android:name="de.fhb.campusapp.eval.services.CleanUpService"
             android:exported="false"
             android:stopWithTask="false"
             />

@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
+    compileSdkVersion 22
     buildToolsVersion "22.0.1"
     defaultConfig {
-        applicationId 'de.thb.ue.android'
+        applicationId 'de.fhb.campusappevaluationexp'
         minSdkVersion 14
-        targetSdkVersion 23
+        targetSdkVersion 22
         versionCode 4
         versionName "1.11"
     }
@@ -45,27 +45,24 @@ repositories {
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:23.1.1'
+    compile 'com.android.support:appcompat-v7:22.1.1'
     compile 'com.google.zxing:core:3.2.0'
-    //    provided 'com.google.android:android:4.1.1.4'
     compile 'de.fhb.BarcodeFragmentLibrary:app:1.3'
-    compile 'de.thb.ue.dto:UE-DTOs:1.14'
+    compile 'de.fhb.ca.dto:CADtos:1.13'
     compile 'org.roboguice:roboguice:3.0.1'
     provided 'org.roboguice:roboblender:3.0.1'
-    //    compile 'org.springframework.android:spring-android-rest-template:1.0.1.RELEASE'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.5.2'
     compile 'com.octo.android.robospice:robospice:1.4.14'
     compile 'com.octo.android.robospice:robospice-spring-android:1.4.14'
-    //    compile 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
     compile 'io.reactivex:rxjava:1.0.16'
     compile 'io.reactivex:rxandroid:1.0.1'
-//    compile 'com.trello:rxlifecycle:0.3.0'
-//    compile 'com.squareup.retrofit:retrofit:2.0.0-SNAPSHOT'
-    compile 'com.squareup.retrofit:retrofit:1.9.0'
-//    compile 'com.squareup.retrofit:converter-jackson:2.0.0-beta2'
-    compile 'com.squareup.retrofit:converter-jackson:1.9.0'
+    compile 'com.squareup.retrofit2:retrofit:2.0.2'
+    compile 'com.squareup.retrofit2:converter-jackson:2.0.2'
     compile 'com.squareup:otto:1.3.8'
     compile 'com.squareup.picasso:picasso:2.5.2'
+
+    // time
+    compile 'net.danlew:android.joda:2.9.3.1'
 }
 
 buildscript {

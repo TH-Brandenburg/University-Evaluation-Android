@@ -36,7 +36,7 @@
             android:layout_gravity="center_horizontal"
             android:gravity="center">
 
-            <de.thb.ue.android.custom.CustomEditText
+            <de.fhb.campusapp.eval.custom.CustomEditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
@@ -55,6 +55,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:clickable="false"
+                android:id="@+id/thumbnail_layout"
                 >
 
                 <ImageView
@@ -82,8 +83,17 @@
                     android:layout_centerInParent="true"
                     android:visibility="gone" />
 
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/delete_image_button"
+                    android:background="@drawable/ic_delete"
+                    android:layout_alignTop="@+id/comment_thumbnail"
+                    android:layout_alignEnd="@+id/comment_thumbnail"
+                    android:layout_alignRight="@+id/comment_thumbnail"
+                    android:visibility="gone"
+                    />
             </RelativeLayout>
-
         </LinearLayout>
     </ScrollView>
 
