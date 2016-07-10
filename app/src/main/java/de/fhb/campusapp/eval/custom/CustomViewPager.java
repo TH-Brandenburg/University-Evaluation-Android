@@ -50,14 +50,14 @@ public class CustomViewPager extends ViewPager {
                 mCustomViewPagerCommunicator.changeToolbarIcons(false);
             }
 
-            if(FeatureSwitch.AUTO_KEYBOARD){
-                if (mCustomViewPagerCommunicator.isKeyboardNeeded()) {
+            if (mCustomViewPagerCommunicator.isKeyboardNeeded()) {
+                if(FeatureSwitch.AUTO_KEYBOARD){
                     mCustomViewPagerCommunicator.setLayoutResizing();
                     mCustomViewPagerCommunicator.showKeyboard();
-                } else {
-                    mCustomViewPagerCommunicator.setLayoutOverlapping();
-                    mCustomViewPagerCommunicator.hideKeyboard();
                 }
+            } else {
+                mCustomViewPagerCommunicator.setLayoutOverlapping();
+                mCustomViewPagerCommunicator.hideKeyboard();
             }
         }
 

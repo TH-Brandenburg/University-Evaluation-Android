@@ -8,7 +8,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.provider.BaseColumns;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
@@ -19,7 +18,6 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListPopupWindow;
@@ -74,6 +72,7 @@ import de.fhb.campusapp.eval.utility.Events.PhotoTakenEvent;
 import de.fhb.campusapp.eval.utility.Events.PreServerCommunicationEvent;
 import de.fhb.campusapp.eval.utility.Events.StartServerCommunicationEvent;
 import de.fhb.campusapp.eval.utility.FeatureSwitch;
+import de.fhb.campusapp.eval.utility.ImageManager;
 import de.fhb.campusapp.eval.utility.vos.ChoiceVO;
 import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
 import de.fhb.campusapp.eval.utility.Observer.CreateUploadImageObservable;
@@ -99,8 +98,7 @@ import rx.android.schedulers.AndroidSchedulers;
 @ContentView(R.layout.activity_button)
 public class EvaluationActivity extends BaseActivity implements ProgressCommunicator, PagerAdapterSetPrimary, ViewPager.PageTransformer,
         CustomViewPager.CustomViewPagerCommunicator, AdapterView.OnItemClickListener, TextFragment.TextFragmentCommunicator,
-        RequestCommunicator, SendFragment.SendFragmentCommunicator, SendDialogFragment.SendDialogFragmentCommunicator, MessageFragment.MessageFragmentCommunicator
-{
+        RequestCommunicator, SendFragment.SendFragmentCommunicator, SendDialogFragment.SendDialogFragmentCommunicator, MessageFragment.MessageFragmentCommunicator {
 
     /**
      * Constant used to put and extract the state of mListPopupReopen from Bundle
@@ -128,13 +126,13 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
      * Adapter used for the ViewPager. see @CustomFragmentStatePagerAdapter
      */
     private CustomWindowPopupAdapter mListAdapter;
-//    protected SpiceManager spiceManager = new SpiceManager(CustomJsonSpiceService.class);
+    //    protected SpiceManager spiceManager = new SpiceManager(CustomJsonSpiceService.class);
     private CustomFragmentStatePagerAdapter mCollectionPagerAdapter;
     private List<Uri> mPictureList = new ArrayList<>();
     /**
      *
      */
-    private File mCurrentImageFile = null;
+    private File mCurrentIntentImage = null;
     /**
      * represents the question displayed on the currently visible fragment.
      * Used to appropriatly name the pictures made on text based questions
@@ -142,7 +140,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     private String mCurrentQuestionText;
     private String mCurrentImageName;
 
-//    private Retrofit mRetrofit;
+    //    private Retrofit mRetrofit;
     private Retrofit mRetrofitRest;
 
     /**
@@ -202,7 +200,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         }
 
         // fixes the orientation to portrait
-        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         } else {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -221,7 +219,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 
         // Manipulating the animation speed of the view pager is not easy.
         // Reflection is necessary. Either that or alter the class directly within the android support package.
-        if(FeatureSwitch.CUSTOM_PAGER_ANIMATION){
+        if (FeatureSwitch.CUSTOM_PAGER_ANIMATION) {
             try {
                 Field mScroller;
                 mScroller = ViewPager.class.getDeclaredField("mScroller");
@@ -284,7 +282,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 
         // do this to ensure that the camera symbol is also displayed
         // when TextQuestion is first type of question in a questionnaire
-        if(isCameraSymbolNeeded()){
+        if (isCameraSymbolNeeded()) {
             changeToolbarIcons(true);
         }
 
@@ -348,9 +346,10 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         if (id == R.id.camera_activation) {
             // create Intent to take a picture and return control to the calling application
             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            mCurrentImageFile = Utility.createImageFile(mCurrentImageName, this);
-            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(mCurrentImageFile));
-            mPictureList.add(Uri.fromFile(mCurrentImageFile));
+            mCurrentIntentImage = Utility.createImageFile(mCurrentImageName, this);
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(mCurrentIntentImage));
+//            mPictureList.add(Uri.fromFile(mCurrentIntentImage));
+
 
             fillPhotoList();
 
@@ -362,17 +361,24 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         return super.onOptionsItemSelected(item);
     }
 
-    private void fillPhotoList(){
+    /**
+     * Stores references to all existing image files into DataHolder.
+     * Its a snapshot that can be used as reference later.
+     * <p>
+     * (Can be used to answer the question: Which images were taken after the last execution of this method?)
+     */
+    private void fillPhotoList() {
+        DataHolder.setGalleryList(null);
         DataHolder.getGalleryList().clear();
-        String[] projection = { MediaStore.Images.ImageColumns.DISPLAY_NAME };
+        String[] projection = {MediaStore.Images.ImageColumns.DISPLAY_NAME};
         Cursor cursor = null;
         Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
-        if(uri != null){
+        if (uri != null) {
             cursor = getContentResolver().query(uri, projection, null, null, null);
         }
 
-        if(cursor != null && cursor.moveToFirst()){
+        if (cursor != null && cursor.moveToFirst()) {
             do {
                 DataHolder.getGalleryList().add(cursor.getString(0));
             } while (cursor.moveToNext());
@@ -383,50 +389,240 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
         if (requestCode == REQUEST_CAPTURE_IMAGE && resultCode == RESULT_OK) {
-//            Instant now = Instant.now();
+            ImageManager manager = new ImageManager();
+            boolean caseFound = false;
 
-            String[] projection = { MediaStore.Images.ImageColumns.SIZE,
-                                    MediaStore.Images.ImageColumns.DISPLAY_NAME,
-                                    MediaStore.Images.ImageColumns.DATA,
-                                    MediaStore.Images.ImageColumns._ID};
+            caseFound = manager.isPossibility1(mCurrentIntentImage, getContentResolver());
+            if(!caseFound){
+                caseFound = manager.solvePossibility4(mCurrentIntentImage, getContentResolver());
+            }
 
-            Cursor cursor = null;
-            Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            if(!caseFound){
+                caseFound = manager.solvePossibility2(mCurrentIntentImage, getContentResolver());
+            }
 
-            if(mCurrentImageFile != null){
-                if (uri != null && mCurrentImageFile.length() > 0)
-                {
-                    cursor = getContentResolver().query(uri, projection, null, null, null);
-                }
+            if(!caseFound){
+                caseFound = manager.solvePossibility3(mCurrentIntentImage, getContentResolver());
+            }
 
-                if(cursor != null && cursor.moveToFirst()){
-                    do{
-                        boolean imageFound = false;
-                        if(DataHolder.getGalleryList().contains(cursor.getString(1))){
-                            imageFound = true;
-                        }
-
-                        if(!imageFound){
-                            // if this is false -> we found the new Image!
-                            File file = new File(cursor.getString(2));
-
-                            if(file.exists() && mCurrentImageFile.length() < cursor.getLong(0) && file.delete()){
-                                getContentResolver().delete(
-                                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI, BaseColumns._ID + "=" + cursor.getString(3), null);
-                                cursor.close();
-                                break;
-                            }
-                        }
-                    } while (cursor.moveToNext());
-                }
+            if(!caseFound){
+                Log.e("CAMERA_FAILURE", "Possibility was not recognised by ImageManager");
             }
 
             TextFragment fragment = ((TextFragment) mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem()));
-            fragment.onPhotoTaken(mCurrentQuestionText, mCurrentImageFile.getAbsolutePath());
-//            mCurrentImageFile.setLastModified(now.getMillis());
+            fragment.onPhotoTaken(mCurrentQuestionText, mCurrentIntentImage.getAbsolutePath());
         }
     }
+
+    //    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//        if (requestCode == REQUEST_CAPTURE_IMAGE && resultCode == RESULT_OK) {
+//
+//            // array containing properties we want to know about the images on this system.
+//            String[] projection = { MediaStore.Images.ImageColumns.SIZE,
+//                                    MediaStore.Images.ImageColumns.DISPLAY_NAME,// the path to the image including name
+//                                    MediaStore.Images.ImageColumns.DATA,
+//                                    MediaStore.Images.ImageColumns._ID};
+//
+//            Cursor cursor = null;
+//            Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+//
+//            // 3 possibilities:
+//            // - Some devices use it completely and skip the gallery.
+//            // - Some devices ignore it completely and ONLY use the gallery.
+//            // - Some devices really suck and save a full sized image to the gallery,
+//            //   and save a thumbnail only to the location specified.
+//            // All must be addressed and dealt with.
+//            // Poss 1: Best case -> we dont need to do anything
+//            // Poss 2: Copy the Gallery pick to the intended location.
+//            // Poss 3: Delete the thumbnail and copy the full sized picture to specified location.
+//
+//            // test for poss 2
+//            if(mCurrentIntentImage.exists() && mCurrentIntentImage.length() > 0){
+//                // test passed -> the intent stored SOMETHING into the intended file
+//
+//                // test for poss 3 -> search for image in gallery
+//                if (uri != null)
+//                {
+//                    cursor = getContentResolver().query(uri, projection, null, null, null);
+//                }
+//
+//                if(cursor != null && cursor.moveToFirst()) {
+//                    cursor = findNewImageInDatabase(cursor);
+//                    if(pair.second != null && !pair.second.isEmpty()) {
+//
+//                    }
+//                    // if this is false -> we found the new Image!
+//                    File file = new File(cursor.getString(2));
+//                    // if our image is smaller than the gallery one ours is only a thumbnail
+//                    // delete and copy
+//                    if (file.exists() && mCurrentIntentImage.length() < cursor.getLong(0) && file.delete()) {
+//                        try{
+//                            mCurrentIntentImage.createNewFile();
+//                            FileChannel source = null;
+//                            FileChannel destination = null;
+//                            try {
+//                                source = new FileInputStream(file).getChannel();
+//                                destination = new FileOutputStream(mCurrentIntentImage).getChannel();
+//                                destination.transferFrom(source, 0, source.size());
+//                            } finally {
+//                                if (source != null) {
+//                                    source.close();
+//                                }
+//                                if (destination != null) {
+//                                    destination.close();
+//                                }
+//                            }
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+//                        getContentResolver().delete(
+//                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, BaseColumns._ID + "=" + cursor.getString(3), null);
+//                        break;
+//                    }
+//                }
+//
+//
+//                }
+//            } else {
+//                // the intent stored nothing inside the file
+//            }
+//
+//
+//
+//            if(mCurrentIntentImage != null){
+//                if (uri != null && mCurrentIntentImage.length() > 0)
+//                {
+//                    cursor = getContentResolver().query(uri, projection, null, null, null);
+//                }
+//
+//                if(cursor != null && cursor.moveToFirst()){
+//                    do{
+//                        boolean imageFound = false;
+//                        if(DataHolder.getGalleryList().contains(cursor.getString(1))){
+//                            imageFound = true;
+//                        }
+//
+//                        if(!imageFound){
+//                            // if this is false -> we found the new Image!
+//                            File file = new File(cursor.getString(2));
+//
+//                            // Delete it and remove its entry from the MediaStore Database.
+//                            // Congrats. You have removed the offending duplicate.
+//                            if(file.exists() && file.delete()){
+//                                getContentResolver().delete(
+//                                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI, BaseColumns._ID + "=" + cursor.getString(3), null);
+//                                break;
+//                            } else {
+//                                Log.e("FILE_DELETE_FAILED", "Image could not be deleted!");
+//                                throw new IllegalStateException("Could not delete file. Either it does not exist or its locked.");
+//                            }
+//                        }
+//                    } while (cursor.moveToNext());
+//                }
+//                if(cursor != null){
+//                    cursor.close();
+//                }
+//            }
+//            TextFragment fragment = ((TextFragment) mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem()));
+//            fragment.onPhotoTaken(mCurrentQuestionText, mCurrentIntentImage.getAbsolutePath());
+//        }
+//    }
+//
+//    private Cursor findNewImageInDatabase(Cursor cursor){
+//        do {
+//            if (!DataHolder.getGalleryList().contains(cursor.getString(1))) {
+//                pathToImage = Pair.create(cursor,cursor.getString(1));
+//            }
+//        }while (cursor.moveToNext());
+//
+//        return pathToImage;
+//    }
+
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        // based on the result we either set the preview or show a quick toast splash.
+//        if (resultCode != RESULT_OK) {
+//            return;
+//        }
+//
+//        // This is ##### ridiculous.  Some versions of Android save
+//        // to the MediaStore as well.  Not sure why!  We don't know what
+//        // name Android will give either, so we get to search for this
+//        // manually and remove it.
+//        String[] projection = {MediaStore.Images.ImageColumns.SIZE,
+//                MediaStore.Images.ImageColumns.DISPLAY_NAME,
+//                MediaStore.Images.ImageColumns.DATA,
+//                BaseColumns._ID,};
+//        //
+//        // intialize the Uri and the Cursor, and the current expected size.
+//        Cursor cursor = null;
+//        Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+//        //
+//        if (mCurrentIntentImage != null) {
+//            // Query the Uri to get the data path.  Only if the Uri is valid,
+//            // and we had a valid size to be searching for.
+//            if ((uri != null) && (mCurrentIntentImage.length() > 0)) {
+//                cursor = getContentResolver().query(uri, projection, null, null, null);
+//            }
+//            //
+//            // If we found the cursor and found a record in it (we also have the size).
+//            if ((cursor != null) && (cursor.moveToFirst())) {
+//                do {
+//                    // Check each area in the gallary we built before.
+//                    boolean imageFound = false;
+//                    if (DataHolder.getGalleryList().contains(cursor.getString(1))) {
+//                        imageFound = true;
+//                    }
+//                    //
+//                    // To here we looped the full gallery.
+//                    if (!imageFound) {
+//                        // This is the NEW image.  If the size is bigger, copy it.
+//                        // Then delete it!
+//                        File file = new File(cursor.getString(2));
+//
+//                        // Ensure it's there, check size, and delete!
+//                        if ((file.exists()) && (mCurrentIntentImage.length() < cursor.getLong(0)) && (mCurrentIntentImage.delete())) {
+//                            // Finally we can stop the copy.
+//                            try {
+//                                mCurrentIntentImage.createNewFile();
+//                                FileChannel source = null;
+//                                FileChannel destination = null;
+//                                try {
+//                                    source = new FileInputStream(file).getChannel();
+//                                    destination = new FileOutputStream(mCurrentIntentImage).getChannel();
+//                                    destination.transferFrom(source, 0, source.size());
+//                                } finally {
+//                                    if (source != null) {
+//                                        source.close();
+//                                    }
+//                                    if (destination != null) {
+//                                        destination.close();
+//                                    }
+//                                }
+//                            } catch (IOException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+//                        //
+//                        ContentResolver cr = getContentResolver();
+//                        cr.delete(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+//                                BaseColumns._ID + "=" + cursor.getString(3), null);
+//                        break;
+//                    }
+//                }
+//                while (cursor.moveToNext());
+//                cursor.close();
+//
+//            }
+//            TextFragment fragment = ((TextFragment) mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem()));
+//            fragment.onPhotoTaken(mCurrentQuestionText, mCurrentIntentImage.getAbsolutePath());
+//        }
+//    }
+
+
 
     @Override
     protected void onPause() {
@@ -725,8 +921,8 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
      **********************************/
     @Produce
     public PhotoTakenEvent produceLastPhotoTakenEvent(){
-        if(mCurrentImageFile != null){
-            return new PhotoTakenEvent(mCurrentImageFile.getPath(), mCurrentQuestionText);
+        if(mCurrentIntentImage != null){
+            return new PhotoTakenEvent(mCurrentIntentImage.getPath(), mCurrentQuestionText);
         }
         return null;
     }

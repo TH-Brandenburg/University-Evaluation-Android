@@ -15,6 +15,8 @@ import java.util.Arrays;
 
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
 import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.utility.EventBus;
+import de.fhb.campusapp.eval.utility.Events.ClickedChoiceButtonEvent;
 import fhb.de.campusappevaluationexp.R;
 import roboguice.inject.InjectView;
 
@@ -88,6 +90,8 @@ public class InnerSectionFragment extends BaseFragment implements ListView.OnIte
         TextView textView = (TextView) view;
         mListView.setItemChecked(mListView.getPositionForView(view), true);
         DataHolder.getAnswersVO().setStudyPath(textView.getText().toString());
+        EventBus.get().post(new ClickedChoiceButtonEvent());
+
         //notify navigationList that a new answer was given
         ((PagerAdapterSetPrimary) getActivity()).setPrimaryFragment(mPosition + 1);
     }

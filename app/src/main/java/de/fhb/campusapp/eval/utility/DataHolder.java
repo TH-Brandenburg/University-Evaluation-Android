@@ -353,7 +353,7 @@ public class DataHolder {
      */
     public static HashMap<String, ImageDataVO> getCommentaryImageMap() {
         if(commentaryImageMap == null){
-            commentaryImageMap = retrieveFromStorage(IMAGE_MAP_KEY, HashMap.class);
+            commentaryImageMap =  retrieveFromStorage(IMAGE_MAP_KEY, HashMap.class);
             if(commentaryImageMap == null){
                 commentaryImageMap = new HashMap<>();
             }

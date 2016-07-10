@@ -15,7 +15,7 @@ import de.fhb.campusapp.eval.utility.Events.ClickedChoiceButtonEvent;
 
 public class CustomScroller extends Scroller {
 
-    private int mDuration = 1000;
+    private int mDuration = 1100;
     private boolean buttonClicked = false;
 
     public CustomScroller(Context context) {
@@ -37,6 +37,7 @@ public class CustomScroller extends Scroller {
 
 
     @Subscribe
+    @SuppressWarnings("unused")
     public void onClickedChoiceButtonEvent(ClickedChoiceButtonEvent event){
         buttonClicked = true;
     }

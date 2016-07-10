@@ -6,9 +6,7 @@
 
     <uses-sdk tools:overrideLibrary="com.abhi.barcode.frag.libv2, com.commonsware.cwac.cam2" />
 
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="18" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
@@ -32,7 +30,7 @@
     <application
         android:name="de.fhb.campusapp.eval.custom.CustomApplication"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_fhb_logo_clean"
         android:label="@string/app_name"
         android:theme="@style/app_theme"
         tools:replace="icon, theme">

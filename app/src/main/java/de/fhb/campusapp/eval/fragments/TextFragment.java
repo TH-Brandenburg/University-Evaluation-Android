@@ -47,6 +47,7 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
     public static final String QUESTION = "QUESTION";
     public static final String POSITION = "POSITION";
     public static final String ID = "ID";
+    public static final String PRIMARY = "PRIMARY";
 
     private String mQuestion;
     private String mImageName;
