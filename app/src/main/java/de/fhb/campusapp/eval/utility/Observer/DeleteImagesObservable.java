@@ -4,8 +4,11 @@ package de.fhb.campusapp.eval.utility.Observer;
  * Created by Admin on 28.11.2015.
  */
 
+import android.util.Log;
+
 import java.io.File;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
 import rx.Observable;
@@ -46,6 +49,7 @@ public class DeleteImagesObservable {
         Observable<Void> observable = Observable.create(new Observable.OnSubscribe<Void>(){
             @Override
             public void call(Subscriber<? super Void> subscriber) {
+
                 for(ImageDataVO pathsObj : imageMap.values()){
                     if(pathsObj.getmThumbnailFilePath() != null){
                         File image2 = new File(pathsObj.getmThumbnailFilePath());

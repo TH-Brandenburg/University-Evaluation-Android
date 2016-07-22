@@ -6,12 +6,16 @@ import android.support.annotation.NonNull;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionLikeType;
+import com.fasterxml.jackson.databind.type.MapLikeType;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 
 import org.joda.time.Instant;
 import org.roboguice.shaded.goole.common.collect.Iterables;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +41,9 @@ public class DataHolder {
     private static final String RECOLOR_NAVIGATION_LIST = "RECOLOR_NAVIGATION_LIST";
     private static final String APP_STARTING_TIME_KEY = "APP_STARTING_TIME";
     private static final String GALLERY_LIST_KEY = "GALLERY_LIST_KEY";
+
+    private static final String COLLECTION_TYPE = "COLLECTION_TYPE";
+    private static final String MAP_TYPE = "MAP_TYPE";
 
     /*
         Defines ho many fragments are placed in the pageViewer BEFORE the start of the questionnaire.
@@ -353,7 +360,8 @@ public class DataHolder {
      */
     public static HashMap<String, ImageDataVO> getCommentaryImageMap() {
         if(commentaryImageMap == null){
-            commentaryImageMap =  retrieveFromStorage(IMAGE_MAP_KEY, HashMap.class);
+//            commentaryImageMap =  retrieveFromStorage(IMAGE_MAP_KEY, HashMap.class);
+            commentaryImageMap = retrieveComplexType(IMAGE_MAP_KEY, MAP_TYPE, HashMap.class, String.class, ImageDataVO.class);
             if(commentaryImageMap == null){
                 commentaryImageMap = new HashMap<>();
             }
@@ -392,7 +400,8 @@ public class DataHolder {
 
     public static HashSet<String> getGalleryList() {
         if(galleryList == null) {
-            galleryList = retrieveFromStorage(GALLERY_LIST_KEY, HashSet.class);
+//            galleryList = retrieveFromStorage(GALLERY_LIST_KEY, HashSet.class);
+            galleryList = retrieveComplexType(GALLERY_LIST_KEY, COLLECTION_TYPE, HashSet.class, String.class);
             if (galleryList == null) {
                 galleryList = new HashSet<>();
             }
@@ -489,16 +498,6 @@ public class DataHolder {
     private static <T> T retrieveFromStorage(String key, Class<T> type){
         T obj = null;
 
-        // instantiate T if type of T is primitive. Primitives shall not be returned as null.
-        // causes exceptions otherwise.
-       /* if(type == Boolean.class || type == Integer.class || type == Character.class || type == Long.class || type == Short.class){
-            try {
-                obj = type.newInstance();
-            } catch (InstantiationException | IllegalAccessException e) {
-                e.printStackTrace();
-            }
-        }*/
-
         if(mapper == null){
             mapper = new ObjectMapper();
         }
@@ -510,6 +509,47 @@ public class DataHolder {
             String value = preferences.getString(key, null);
             if(value != null && type != String.class){
                 obj = mapper.readValue(value, type);
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return obj;
+    }
+
+    /**
+     * Method that retrieves complex objects with custom types from shared preferences
+     * @param key The key identifiying the object within sharedPreferences
+     * @param type technical parameter needed by the ObjectMapper. It is used to identify the method the mapper needs to call.
+     *             Concrete: It specifies wether the returned type is a map or a collection. There a different methods but those 2 are currently supported
+     * @param returnType The type of the object this method is to return.
+     * @param paramType list of parameters containing the typed the generic returnType will be resolved with. Example: HashMap<paramType[0], paramType[1]>
+     * @return the retrieved object of type returnType.
+     */
+    private static <T> T retrieveComplexType(String key, String type, Class<T> returnType, Class ... paramType){
+        T obj = null;
+
+        if(mapper == null){
+            mapper = new ObjectMapper();
+        }
+        if(preferences == null){
+            return null;
+        }
+
+        try {
+            String value = preferences.getString(key, null);
+            if(value != null){
+                TypeFactory typeFactory = mapper.getTypeFactory();
+                switch (type){
+                    case COLLECTION_TYPE:
+                        CollectionLikeType collection = typeFactory.constructCollectionLikeType(returnType, paramType[0]);
+                        obj = mapper.readValue(value, collection);
+                        break;
+                    case MAP_TYPE:
+                        MapLikeType map = typeFactory.constructMapLikeType(returnType, paramType[0], paramType[1]);
+                        obj = mapper.readValue(value, map);
+                        break;
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();

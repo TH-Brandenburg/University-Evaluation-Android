@@ -94,11 +94,11 @@ public class CustomFragmentStatePagerAdapter extends FragmentStatePagerAdapter{
         super.setPrimaryItem(container, position, object);
 //        mCurrentFragment = (Fragment) object;
         if(object instanceof PagerAdapterPageEvent){
-            ((PagerAdapterPageEvent) object).onGettingPrimary();
+            ((PagerAdapterPageEvent) object).onGettingPrimary(mOldPosition);
         }
 
         if(mOldPosition != position && getFragmentAtPosition(mOldPosition) != null && getFragmentAtPosition(mOldPosition) instanceof PagerAdapterPageEvent){
-            ((PagerAdapterPageEvent) getFragmentAtPosition(mOldPosition)).onLeavingPrimary();
+            ((PagerAdapterPageEvent) getFragmentAtPosition(mOldPosition)).onLeavingPrimary(position);
         }
         mOldPosition = position;
     }

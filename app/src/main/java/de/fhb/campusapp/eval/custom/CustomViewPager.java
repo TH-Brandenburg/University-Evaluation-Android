@@ -36,8 +36,6 @@ public class CustomViewPager extends ViewPager {
     }
 
 
-
-
     private class CustomOnPageChangeListener implements OnPageChangeListener {
         @Override
         public void onPageSelected(int position) {

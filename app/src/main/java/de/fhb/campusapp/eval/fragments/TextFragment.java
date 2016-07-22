@@ -24,7 +24,6 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import org.apache.commons.lang3.StringUtils;
-import org.joda.time.Instant;
 
 import java.io.File;
 
@@ -32,6 +31,8 @@ import de.fhb.campusapp.eval.activities.EnlargeImageActivity;
 import de.fhb.campusapp.eval.custom.CustomEditText;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterPageEvent;
+import de.fhb.campusapp.eval.utility.FeatureSwitch;
+import de.fhb.campusapp.eval.utility.ImageManager;
 import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
 import de.fhb.campusapp.eval.utility.Observer.DeleteImagesObservable;
 import de.fhb.campusapp.eval.utility.DataHolder;
@@ -62,6 +63,7 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
     private boolean mGettingPrimaryCalledBefore = false;
     private boolean mReloadInitialized = false;
 
+
     private TextFragmentCommunicator mActivityCommunicator;
 
     @InjectView(R.id.question_text_view)
@@ -72,6 +74,9 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
 
     @InjectView(R.id.comment_thumbnail)
     private ImageView mImageView;
+
+    @InjectView(R.id.camera_button)
+    private ImageButton mCameraButton;
 
     @InjectView(R.id.scrollView)
     private ScrollView mScrollView;
@@ -143,10 +148,23 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
         mTextView.setMovementMethod(new ScrollingMovementMethod());
 
         view.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+
+
+            /*
+                this is the first of 2 globalLayout listeners within this class. It is also the first one to be called.
+                The other one starts listening AFTER onResume was called which might be to late for some operations.
+             */
             @Override
             public void onGlobalLayout() {
+
                 mImageView.setMaxHeight((mRootLayout.getHeight() - mTextView.getHeight())/2);
                 mImageView.setMaxWidth(mRootLayout.getWidth());
+
+                if(FeatureSwitch.IMAGEVIEW_OPENS_CAMERA_INTENT && !DataHolder.getCommentaryImageMap().containsKey(mQuestion)){
+                    configureImageViewAsButton();
+                } else {
+//                    Utility.animateView(mProgressBar, View.VISIBLE, 1.0f, 100);
+                }
 
                 mEditText.setHeight((mRootLayout.getHeight() - mTextView.getHeight()) / 2);
                 mEditText.setMovementMethod(new ScrollingMovementMethod());
@@ -171,13 +189,32 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
                 }
             }
         });
+        mEditText.setPagerAdapter((PagerAdapterSetPrimary) getActivity());
+//
+//        mEditText.setImeActionLabel("Done", KeyEvent.KEYCODE_ENTER);
+//
+//        mEditText.setOnEditorActionListener((textView, i, keyEvent) -> {
+//            ((PagerAdapterSetPrimary) getActivity()).setPrimaryFragment(mPosition + 1);
+//            return true;
+//        });
+    }
 
-        mEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
-                ((PagerAdapterSetPrimary) getActivity()).setPrimaryFragment(mPosition + 1);
-                return true;
-            }
+    private void configureImageViewAsButton() {
+        mImageView.setBackgroundColor(getResources().getColor(R.color.campusapptheme_color_light_gray));
+
+        Utility.animateView(mImageView, View.VISIBLE, 1.0f, 100);
+        Utility.animateView(mCameraButton, View.VISIBLE, 1.0f, 100);
+
+        mCameraButton.setOnClickListener(listener -> {
+            ImageManager manager = new ImageManager();
+            File intentImage = manager.startCameraIntent(getActivity(), mImageName);
+            mActivityCommunicator.setIntenImage(intentImage);
+        });
+
+        mImageView.setOnClickListener(listener -> {
+            ImageManager manager = new ImageManager();
+            File intentImage = manager.startCameraIntent(getActivity(), mImageName);
+            mActivityCommunicator.setIntenImage(intentImage);
         });
     }
 
@@ -185,7 +222,7 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
     public void onResume() {
         super.onResume();
         if(mCurrentlyPrimary){
-            mReloadInitialized = initializeReload();
+            mReloadInitialized = initializeImageViews(mPosition);
         }
     }
 
@@ -193,22 +230,22 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
      * Called when this fragment is displayed by the ViewPager.
      */
     @Override
-    public void onGettingPrimary() {
+    public void onGettingPrimary(int oldPosition) {
         mActivityCommunicator.fragmentBecamePrimary(mQuestion, mImageName);
+
         if(!mGettingPrimaryCalledBefore){
-            mReloadInitialized = initializeReload();
+            mReloadInitialized = initializeImageViews(oldPosition);
         }
+
         mGettingPrimaryCalledBefore = true;
         mCurrentlyPrimary = true;
-//        questionCommunicator.updateImageName(mImageName);
-//        EventBus.get().post(new FragmentGotPrimaryEvent(mQuestion, mImageName));
     }
 
     /**
      * Called when this fragment ceases to be displayed by the ViewPager
      */
     @Override
-    public void onLeavingPrimary() {
+    public void onLeavingPrimary(int newPosition) {
         mReloadInitialized = false;
         mCurrentlyPrimary = false;
         mGettingPrimaryCalledBefore = false;
@@ -228,6 +265,8 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
 
         //set bitmap free for garbage collection
         mImageView.setImageBitmap(null);
+        mImageView.setImageDrawable(null);
+
         //stop all ongoing picasso requests
         Picasso.with(getActivity()).cancelRequest(mImageView);
     }
@@ -241,23 +280,31 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
      * when the navigation list is used to jump to this fragment from far away since onGettingPrimary is obviously
      * called before onCreateView in this scenario.
      */
-    private boolean initializeReload(){
+    private boolean initializeImageViews(int oldPosition){
         boolean success = false;
         if(!mReloadInitialized && mImageView != null){
             success = true;
-            mImageView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                @Override
-                public void onGlobalLayout() {
-                    if(DataHolder.getCommentaryImageMap().containsKey(mQuestion)){
+
+            if(oldPosition - mPosition >= 2 || mPosition - oldPosition >= 2){
+                mImageView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
                         onReloadImage();
+                        if(FeatureSwitch.IMAGEVIEW_OPENS_CAMERA_INTENT && !DataHolder.getCommentaryImageMap().containsKey(mQuestion)){
+                            mCameraButton.setVisibility(View.VISIBLE);
+                            mImageView.setVisibility(View.VISIBLE);
+                            configureImageViewAsButton();
+                        }
+                        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN){
+                            mImageView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        } else {
+                            mImageView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                        }
                     }
-                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN){
-                        mImageView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                    } else {
-                        mImageView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                    }
-                }
-            });
+                });
+            } else {
+                onReloadImage();
+            }
         }
         return success;
     }
@@ -274,7 +321,11 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
             }
             Utility.animateView(mProgressBar, View.VISIBLE, 1.0f, 100);
             Utility.animateView(mImageView, View.INVISIBLE, 0, 100);
-//            Picasso.with(getActivity()).setLoggingEnabled(true);
+
+            if(FeatureSwitch.IMAGEVIEW_OPENS_CAMERA_INTENT){
+                Utility.animateView(mCameraButton, View.INVISIBLE, 0, 100);
+            }
+
             Picasso.with(getActivity()).cancelRequest(mImageView);
             Picasso.with(getActivity())
                     .load(imageFile)
@@ -285,9 +336,15 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
     }
 
     public void onReloadImage(){
-        if( DataHolder.getCommentaryImageMap().containsKey(mQuestion)){
-            Utility.animateView(mProgressBar, View.VISIBLE, 1.0f, 100);
+        if(DataHolder.getCommentaryImageMap().containsKey(mQuestion)){
+            //it is made visible in the onViewCreated method (GlobalLayoutListener)
+            Utility.animateView(mProgressBar, View.INVISIBLE, 1.0f, 0);
             Utility.animateView(mImageView, View.INVISIBLE, 0, 100);
+
+            if(FeatureSwitch.IMAGEVIEW_OPENS_CAMERA_INTENT){
+                Utility.animateView(mCameraButton, View.INVISIBLE, 0, 100);
+            }
+
             ImageDataVO pathObj = DataHolder.getCommentaryImageMap().get(mQuestion);
             Picasso.with(getActivity()).cancelRequest(mImageView);
             Picasso.with(getActivity())
@@ -308,6 +365,9 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
 
         @Override
         public void onSuccess() {
+            if(FeatureSwitch.IMAGEVIEW_OPENS_CAMERA_INTENT){
+                Utility.animateView(mCameraButton, View.INVISIBLE, 0, 0);
+            }
             Utility.animateView(mProgressBar, View.INVISIBLE, 0, 100);
             Utility.animateView(mImageView, View.VISIBLE, 1.0f, 100);
             Utility.animateView(mDeleteButton, View.VISIBLE, 1.0f, 100);
@@ -318,7 +378,6 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
                 public void onClick(View view) {
                     Intent intent = new Intent(getActivity(), EnlargeImageActivity.class);
                     intent.putExtra(EnlargeImageActivity.IMAGE_FILE_PATH, imagePath);
-//                    mActivityCommunicator.displayProgressOverlay();
                     startActivity(intent);
                 }
             });
@@ -329,8 +388,13 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
                 public void onClick(View view) {
                     mImageView.setImageBitmap(null);
                     mImageView.setImageDrawable(null);
-                    Utility.animateView(mImageView, View.GONE, 0, 100);
-                    Utility.animateView(mDeleteButton, View.GONE, 0, 90);
+                    if(FeatureSwitch.IMAGEVIEW_OPENS_CAMERA_INTENT){
+                        Utility.animateView(mCameraButton, View.VISIBLE, 10f, 100);
+                        configureImageViewAsButton();
+                    } else {
+                        Utility.animateView(mImageView, View.INVISIBLE, 0, 100);
+                    }
+                    Utility.animateView(mDeleteButton, View.INVISIBLE, 0, 90);
                     ImageDataVO pathsVO = DataHolder.getCommentaryImageMap().remove(mQuestion);
                     DeleteImagesObservable observable = new DeleteImagesObservable();
                     observable.deleteImagePairInBackground(pathsVO).observeOn(AndroidSchedulers.mainThread()).subscribe();
@@ -345,8 +409,9 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
     }
 
     public interface TextFragmentCommunicator{
-        public void fragmentBecamePrimary(String question, String imageName);
-        public void displayProgressOverlay();
+        void fragmentBecamePrimary(String question, String imageName);
+        void displayProgressOverlay();
+        void setIntenImage(File intentImage);
     }
 
     public String getmQuestion() {

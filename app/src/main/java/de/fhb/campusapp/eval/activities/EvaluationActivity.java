@@ -5,6 +5,7 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.hardware.camera2.CameraManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -344,46 +345,15 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         }
 
         if (id == R.id.camera_activation) {
-            // create Intent to take a picture and return control to the calling application
-            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            mCurrentIntentImage = Utility.createImageFile(mCurrentImageName, this);
-            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(mCurrentIntentImage));
-//            mPictureList.add(Uri.fromFile(mCurrentIntentImage));
-
-
-            fillPhotoList();
-
-            // start the image capture Intent
-            if (takePictureIntent.resolveActivity(getPackageManager()) != null) { // ensure that there is an itent that supports the request
-                startActivityForResult(takePictureIntent, REQUEST_CAPTURE_IMAGE);
-            }
+            ImageManager manager = new ImageManager();
+            mCurrentIntentImage = manager.startCameraIntent(this, mCurrentImageName);
         }
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * Stores references to all existing image files into DataHolder.
-     * Its a snapshot that can be used as reference later.
-     * <p>
-     * (Can be used to answer the question: Which images were taken after the last execution of this method?)
-     */
-    private void fillPhotoList() {
-        DataHolder.setGalleryList(null);
-        DataHolder.getGalleryList().clear();
-        String[] projection = {MediaStore.Images.ImageColumns.DISPLAY_NAME};
-        Cursor cursor = null;
-        Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-
-        if (uri != null) {
-            cursor = getContentResolver().query(uri, projection, null, null, null);
-        }
-
-        if (cursor != null && cursor.moveToFirst()) {
-            do {
-                DataHolder.getGalleryList().add(cursor.getString(0));
-            } while (cursor.moveToNext());
-            cursor.close();
-        }
+    @Override
+    public void setIntenImage(File intentImage) {
+        mCurrentIntentImage = intentImage;
     }
 
     @Override
@@ -392,29 +362,14 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 
         if (requestCode == REQUEST_CAPTURE_IMAGE && resultCode == RESULT_OK) {
             ImageManager manager = new ImageManager();
-            boolean caseFound = false;
-
-            caseFound = manager.isPossibility1(mCurrentIntentImage, getContentResolver());
-            if(!caseFound){
-                caseFound = manager.solvePossibility4(mCurrentIntentImage, getContentResolver());
-            }
-
-            if(!caseFound){
-                caseFound = manager.solvePossibility2(mCurrentIntentImage, getContentResolver());
-            }
-
-            if(!caseFound){
-                caseFound = manager.solvePossibility3(mCurrentIntentImage, getContentResolver());
-            }
-
-            if(!caseFound){
-                Log.e("CAMERA_FAILURE", "Possibility was not recognised by ImageManager");
-            }
+            manager.testForPossibility(getContentResolver(), mCurrentIntentImage);
 
             TextFragment fragment = ((TextFragment) mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem()));
             fragment.onPhotoTaken(mCurrentQuestionText, mCurrentIntentImage.getAbsolutePath());
         }
     }
+
+
 
     //    @Override
 //    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -666,9 +621,19 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         mViewPager.setCurrentItem(newPosition);
     }
 
+    @Override
+    public void incrementPrimaryFragment() {
+        mViewPager.setCurrentItem(mViewPager.getCurrentItem() + 1);
+    }
+
+    @Override
+    public void decrementPrimaryFragment() {
+        mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);
+    }
+
     /*
 
-     */
+             */
     @Override
     public void onBackPressed() {
         if (mListPopupWindow.isShowing()) {
@@ -711,7 +676,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     public boolean isCameraSymbolNeeded() {
         boolean needed = false;
 
-        if (mCollectionPagerAdapter != null && mViewPager != null) {
+        if (mCollectionPagerAdapter != null && mViewPager != null && FeatureSwitch.TOOLBAR_CAMERA_ICON) {
             Fragment fragment = mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem());
 
             if (fragment != null && fragment.getClass() == TextFragment.class ) {
@@ -792,13 +757,13 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         mListPopupReopen = false;
     }
 
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.FLAG_EDITOR_ACTION || keyCode == KeyEvent.KEYCODE_ENTER) {
-            setPrimaryFragment(mViewPager.getCurrentItem() + 1);
-        }
-        return super.onKeyDown(keyCode, event);
-    }
+//    @Override
+//    public boolean onKeyDown(int keyCode, KeyEvent event) {
+//        if (keyCode == KeyEvent.FLAG_EDITOR_ACTION || keyCode == KeyEvent.KEYCODE_ENTER) {
+//            setPrimaryFragment(mViewPager.getCurrentItem() + 1);
+//        }
+//        return super.onKeyDown(keyCode, event);
+//    }
 
     /*
     *

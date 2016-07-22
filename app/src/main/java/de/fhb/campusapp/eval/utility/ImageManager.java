@@ -1,10 +1,14 @@
 package de.fhb.campusapp.eval.utility;
 
+import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,7 +36,7 @@ import java.nio.channels.FileChannel;
  */
 
 public class ImageManager {
-
+    private static final int REQUEST_CAPTURE_IMAGE = 1;
     /**
      * Some devices use it completely and skip the gallery.
      * Best case -> we dont need to do anything.
@@ -236,6 +240,43 @@ public class ImageManager {
         return result;
     }
 
+    public void testForPossibility(ContentResolver contentResolver,File intentImage) {
+        boolean caseFound;
+
+        caseFound = this.isPossibility1(intentImage, contentResolver);
+        if(!caseFound){
+            caseFound = this.solvePossibility4(intentImage, contentResolver);
+        }
+
+        if(!caseFound){
+            caseFound = this.solvePossibility2(intentImage, contentResolver);
+        }
+
+        if(!caseFound){
+            caseFound = this.solvePossibility3(intentImage, contentResolver);
+        }
+
+        if(!caseFound){
+            Log.e("CAMERA_FAILURE", "Possibility was not recognised by ImageManager");
+        }
+    }
+
+    public File startCameraIntent(Activity activity, String intentImageName){
+        // create Intent to take a picture and return control to the calling application
+        File intentImage =  Utility.createImageFile(intentImageName, activity);
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(intentImage));
+
+        fillPhotoList(activity.getContentResolver());
+
+        // start the image capture Intent
+        if (takePictureIntent.resolveActivity(activity.getPackageManager()) != null) { // ensure that there is an intent that supports the request
+            activity.startActivityForResult(takePictureIntent, REQUEST_CAPTURE_IMAGE);
+        }
+        return intentImage;
+    }
+
     private ImageInfo findGalleryImageInDatabase(Cursor cursor){
 
         ImageInfo imageInfo = new ImageInfo(cursor);
@@ -251,24 +292,51 @@ public class ImageManager {
         return imageInfo;
     }
 
+    /**
+     * Stores references to all existing image files into DataHolder.
+     * Its a snapshot that can be used as reference later.
+     * <p>
+     * (Can be used to answer the question: Which images were taken after the last execution of this method?)
+     */
+    private void fillPhotoList(ContentResolver contentResolver) {
+        DataHolder.setGalleryList(null);
+        DataHolder.getGalleryList().clear();
+        String[] projection = {MediaStore.Images.ImageColumns.DISPLAY_NAME};
+        Cursor cursor = null;
+        Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+
+        if (uri != null) {
+            cursor = contentResolver.query(uri, projection, null, null, null);
+        }
+
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                DataHolder.getGalleryList().add(cursor.getString(0));
+            } while (cursor.moveToNext());
+            cursor.close();
+        }
+    }
+
+
+
     private class ImageInfo {
         private boolean unknownImageExisting;
         private Cursor cursor;
 
-        public ImageInfo(Cursor cursor) {
+        ImageInfo(Cursor cursor) {
             this.cursor = cursor;
             unknownImageExisting = false;
         }
 
-        public boolean isGalleryImageExisting() {
+        boolean isGalleryImageExisting() {
             return unknownImageExisting;
         }
 
-        public void setUnknownImageExisting(boolean unknownImageExisting) {
+        void setUnknownImageExisting(boolean unknownImageExisting) {
             this.unknownImageExisting = unknownImageExisting;
         }
 
-        public Cursor getCursor() {
+        Cursor getCursor() {
             return cursor;
         }
 

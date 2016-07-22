@@ -292,12 +292,12 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
     }
 
     @Override
-    public void onGettingPrimary() {
+    public void onGettingPrimary(int oldPosition) {
 
     }
 
     @Override
-    public void onLeavingPrimary() {
+    public void onLeavingPrimary(int newPosition) {
 //        if(mRootView != null) {
 //            if (Build.VERSION.SDK_INT < 16) {
 //                mRootView.getViewTreeObserver().removeGlobalOnLayoutListener(mGlobalObserver);
