@@ -10,39 +10,23 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.media.ExifInterface;
-import android.os.Build;
 import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.TouchDelegate;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ListView;
-
-import org.apache.commons.io.FilenameUtils;
-import org.joda.time.Duration;
-import org.joda.time.Instant;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
-import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
 
 
 public class Utility {
@@ -102,6 +86,7 @@ public class Utility {
     public static void setKeyboardOverlapping(Activity activity){
         activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
     }
+
 
     public static void setKeyboardResizing(Activity activity){
         activity.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);

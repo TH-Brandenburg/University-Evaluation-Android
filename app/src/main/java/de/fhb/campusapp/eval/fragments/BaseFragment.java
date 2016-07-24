@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
-import de.fhb.campusapp.eval.utility.EventBus;
 import roboguice.fragment.RoboFragment;
 
 /**

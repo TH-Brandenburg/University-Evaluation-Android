@@ -1,7 +1,5 @@
 package de.fhb.campusapp.eval.utility.Events;
 
-import lombok.Data;
-
 /**
  * Created by Admin on 15.12.2015.
  */

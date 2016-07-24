@@ -1,7 +1,5 @@
 package de.fhb.campusapp.eval.utility.vos;
 
-import org.joda.time.Instant;
-
 /**
  * Created by Admin on 11.12.2015.
  */

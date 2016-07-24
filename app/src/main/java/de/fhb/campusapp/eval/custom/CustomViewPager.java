@@ -17,8 +17,6 @@ public class CustomViewPager extends ViewPager {
     private CustomViewPagerCommunicator mCustomViewPagerCommunicator;
     private int mOldPosition = 0;
 
-
-
     public CustomViewPager(Context context) {
         super(context);
         this.setOnPageChangeListener(new CustomOnPageChangeListener());

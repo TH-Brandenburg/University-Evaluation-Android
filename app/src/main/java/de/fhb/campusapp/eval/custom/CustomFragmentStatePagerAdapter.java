@@ -7,15 +7,10 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.view.ViewGroup;
 
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-
-import de.fhb.ca.dto.MultipleChoiceQuestionDTO;
-import de.fhb.ca.dto.util.ChoiceDTO;
-import de.fhb.ca.dto.util.TextQuestionDTO;
 import de.fhb.campusapp.eval.fragments.ButtonFragment;
 import de.fhb.campusapp.eval.fragments.InnerSectionFragment;
 import de.fhb.campusapp.eval.fragments.SendFragment;
@@ -49,6 +44,7 @@ public class CustomFragmentStatePagerAdapter extends FragmentStatePagerAdapter{
     public CustomFragmentStatePagerAdapter(FragmentManager fm, Context context) {
         super(fm);
         this.mContext = context;
+
     }
 
     @Override

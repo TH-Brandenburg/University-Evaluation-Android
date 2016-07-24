@@ -9,8 +9,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import de.fhb.campusapp.eval.utility.DataHolder;
-import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
 import de.fhb.campusapp.eval.utility.Utility;
+import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
 import de.fhb.campusapp.eval.utility.vos.TextQuestionVO;
 import rx.Observable;
 import rx.Subscriber;

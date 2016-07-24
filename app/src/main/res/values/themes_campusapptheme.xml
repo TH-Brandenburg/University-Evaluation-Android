@@ -12,7 +12,6 @@
     <item name="android:buttonStyle">@style/ButtonCampusAppTheme</item>
 
     <item name="android:imageButtonStyle">@style/ImageButtonCampusAppTheme</item>
-
     <item name="android:actionBarStyle">@style/ActionBarCampusAppTheme</item>
 
       <!-- Support library compatibility -->

@@ -9,9 +9,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import de.fhb.campusapp.eval.activities.ScanActivity;
-import de.fhb.campusapp.eval.utility.EventBus;
-import de.fhb.campusapp.eval.utility.Events.RestartQRScanningEvent;
-import de.fhb.campusapp.eval.utility.Events.StartServerCommunicationEvent;
 import fhb.de.campusappevaluationexp.R;
 import roboguice.fragment.RoboDialogFragment;
 

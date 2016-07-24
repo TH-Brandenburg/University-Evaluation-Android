@@ -7,10 +7,6 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 
-import de.fhb.campusapp.eval.interfaces.RequestCommunicator;
-import de.fhb.campusapp.eval.utility.EventBus;
-import de.fhb.campusapp.eval.utility.Events.PreServerCommunicationEvent;
-import de.fhb.campusapp.eval.utility.Events.StartServerCommunicationEvent;
 import fhb.de.campusappevaluationexp.R;
 import roboguice.fragment.RoboDialogFragment;
 

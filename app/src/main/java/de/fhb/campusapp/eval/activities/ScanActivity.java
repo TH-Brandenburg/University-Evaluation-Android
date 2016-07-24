@@ -25,12 +25,12 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.android.camera.CameraManager;
 import com.squareup.otto.Subscribe;
 
-import org.apache.http.HttpStatus;
 import org.joda.time.Instant;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.net.ConnectException;
+import java.net.HttpURLConnection;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.EnumSet;
@@ -44,6 +44,7 @@ import de.fhb.campusapp.eval.fragments.MessageFragment;
 import de.fhb.campusapp.eval.interfaces.RetroRequestService;
 import de.fhb.campusapp.eval.services.CleanUpService;
 import de.fhb.campusapp.eval.utility.ClassMapper;
+import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.EventBus;
 import de.fhb.campusapp.eval.utility.Events.NetworkErrorEvent;
 import de.fhb.campusapp.eval.utility.Events.NetworkFailureEvent;
@@ -51,11 +52,9 @@ import de.fhb.campusapp.eval.utility.Events.NetworkSuccessEvent;
 import de.fhb.campusapp.eval.utility.Events.RestartQRScanningEvent;
 import de.fhb.campusapp.eval.utility.Observer.DeleteImagesObservable;
 import de.fhb.campusapp.eval.utility.QrPojo;
-import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.Utility;
 import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
 import fhb.de.campusappevaluationexp.R;
-
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -499,16 +498,16 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
                 fragment.show(getSupportFragmentManager(), "MalformedRequest");
             } else {
                 // Check of status codes and display information to user
-                if (statusCode == HttpStatus.SC_BAD_GATEWAY || statusCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
+                if (statusCode == HttpURLConnection.HTTP_BAD_GATEWAY || statusCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
                     MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.error_500_502_title), mResources.getString(R.string.no_network_message), true, MessageFragment.Option.RetryCommunication);
                     fragment.show(getSupportFragmentManager(), "500|502");
-                } else if (statusCode == HttpStatus.SC_SERVICE_UNAVAILABLE) {
+                } else if (statusCode == HttpURLConnection.HTTP_UNAVAILABLE) {
                     MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.error_503_title), mResources.getString(R.string.error_503_message), true, MessageFragment.Option.RetryCommunication);
                     fragment.show(getSupportFragmentManager(), "503");
-                } else if (statusCode == HttpStatus.SC_FORBIDDEN || statusCode == HttpStatus.SC_NOT_FOUND) {
+                } else if (statusCode == HttpURLConnection.HTTP_FORBIDDEN || statusCode == HttpURLConnection.HTTP_NOT_FOUND) {
                     MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.error_404_403_title), mResources.getString(R.string.error_404_403_message), true, MessageFragment.Option.RetryCommunication);
                     fragment.show(getSupportFragmentManager(), "404|403");
-                } else if (statusCode == HttpStatus.SC_BAD_REQUEST) {
+                } else if (statusCode == HttpURLConnection.HTTP_BAD_REQUEST) {
                     MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.unknown_error_title), mResources.getString(R.string.unknown_error_message), true, MessageFragment.Option.RetryCommunication);
                     fragment.show(getSupportFragmentManager(), "400");
                 }

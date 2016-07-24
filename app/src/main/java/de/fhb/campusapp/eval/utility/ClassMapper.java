@@ -1,7 +1,6 @@
 package de.fhb.campusapp.eval.utility;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import de.fhb.ca.dto.AnswersDTO;
 import de.fhb.ca.dto.MultipleChoiceQuestionDTO;

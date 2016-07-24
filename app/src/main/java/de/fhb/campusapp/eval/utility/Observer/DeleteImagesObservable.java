@@ -4,11 +4,8 @@ package de.fhb.campusapp.eval.utility.Observer;
  * Created by Admin on 28.11.2015.
  */
 
-import android.util.Log;
-
 import java.io.File;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 
 import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
 import rx.Observable;

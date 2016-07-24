@@ -8,7 +8,6 @@ import android.support.annotation.Nullable;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,14 +28,16 @@ import java.io.File;
 
 import de.fhb.campusapp.eval.activities.EnlargeImageActivity;
 import de.fhb.campusapp.eval.custom.CustomEditText;
-import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterPageEvent;
+import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
+import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.utility.EventBus;
+import de.fhb.campusapp.eval.utility.Events.ActivityInstanceAcquiredEvent;
 import de.fhb.campusapp.eval.utility.FeatureSwitch;
 import de.fhb.campusapp.eval.utility.ImageManager;
-import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
 import de.fhb.campusapp.eval.utility.Observer.DeleteImagesObservable;
-import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.Utility;
+import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
 import de.fhb.campusapp.eval.utility.vos.TextAnswerVO;
 import de.fhb.campusapp.eval.utility.vos.TextQuestionVO;
 import fhb.de.campusappevaluationexp.R;
@@ -111,6 +112,9 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         mActivityCommunicator = (TextFragmentCommunicator) activity;
+        if(mCurrentlyPrimary && mGettingPrimaryCalledBefore){
+            EventBus.get().post(new ActivityInstanceAcquiredEvent(activity));
+        }
     }
 
     @Override
@@ -129,7 +133,7 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
-        if(isVisibleToUser){
+        if(isVisibleToUser && getActivity() != null){
             Utility.setKeyboardResizing(getActivity());
         }
     }
@@ -208,13 +212,13 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
         mCameraButton.setOnClickListener(listener -> {
             ImageManager manager = new ImageManager();
             File intentImage = manager.startCameraIntent(getActivity(), mImageName);
-            mActivityCommunicator.setIntenImage(intentImage);
+            mActivityCommunicator.setIntentImage(intentImage);
         });
 
         mImageView.setOnClickListener(listener -> {
             ImageManager manager = new ImageManager();
             File intentImage = manager.startCameraIntent(getActivity(), mImageName);
-            mActivityCommunicator.setIntenImage(intentImage);
+            mActivityCommunicator.setIntentImage(intentImage);
         });
     }
 
@@ -231,7 +235,7 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
      */
     @Override
     public void onGettingPrimary(int oldPosition) {
-        mActivityCommunicator.fragmentBecamePrimary(mQuestion, mImageName);
+//        mActivityCommunicator.fragmentBecamePrimary(mQuestion, mImageName);
 
         if(!mGettingPrimaryCalledBefore){
             mReloadInitialized = initializeImageViews(oldPosition);
@@ -355,6 +359,7 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
         }
     }
 
+
     private class ThumbnailLoadedCallback implements Callback{
 
         private String imagePath;
@@ -408,10 +413,22 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
         }
     }
 
+    /********************************************
+     *          Event Listener
+     ********************************************/
+
+    @SuppressWarnings("unused")
+    public void onActivityInstanceAcquired(ActivityInstanceAcquiredEvent event){
+        if(mCurrentlyPrimary){
+            mActivityCommunicator = (TextFragmentCommunicator) event.getActivity();
+            mActivityCommunicator.fragmentBecamePrimary(mQuestion, mImageName);
+        }
+    }
+
     public interface TextFragmentCommunicator{
         void fragmentBecamePrimary(String question, String imageName);
         void displayProgressOverlay();
-        void setIntenImage(File intentImage);
+        void setIntentImage(File intentImage);
     }
 
     public String getmQuestion() {

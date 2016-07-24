@@ -13,9 +13,7 @@ import java.util.List;
 import de.fhb.campusapp.eval.interfaces.ProgressCommunicator;
 import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.FeatureSwitch;
-import de.fhb.campusapp.eval.utility.vos.MultipleChoiceQuestionVO;
 import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
-import de.fhb.campusapp.eval.utility.vos.TextQuestionVO;
 import fhb.de.campusappevaluationexp.R;
 
 /**

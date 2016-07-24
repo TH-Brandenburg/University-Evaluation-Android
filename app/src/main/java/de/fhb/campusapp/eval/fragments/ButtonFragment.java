@@ -21,10 +21,7 @@ import android.widget.TextView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
-import java.util.stream.*;
 
-import de.fhb.ca.dto.util.ChoiceDTO;
-import de.fhb.ca.dto.util.MultipleChoiceAnswerDTO;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterPageEvent;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
 import de.fhb.campusapp.eval.utility.DataHolder;
@@ -41,18 +38,13 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
     public static final String CHOICES = "CHOICES";
     public static final String POSITION = "POSITION";
 
-
-    private Color mInitialButtonColor;
     private String mQuestion;
     private ArrayList<ChoiceVO> mChoices;
     private ArrayList<Button> mButtons;
     private int mPosition;
-    private int mWindowWidth;
-    private int mWindowHeight;
     private View mRootView;
     private ViewTreeObserver.OnGlobalLayoutListener mGlobalObserver;
     private DisplayMetrics mDisplayMetrics;
-    private static ObjectMapper mMapper = new ObjectMapper();
 
     @InjectView(R.id.question_text_view)
     private TextView mQuestionTextView;
@@ -74,9 +66,10 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
-        if(isVisibleToUser){
+        if(isVisibleToUser && getActivity() != null){
             Utility.setKeyboardOverlapping(getActivity());
         }
+
     }
 
     @Override
@@ -192,8 +185,6 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
                 rootView.getWindowVisibleDisplayFrame(r);
                 int heightDiff = rootView.getRootView().getHeight() - (r.bottom - r.top);
                 heightDiff = Utility.convertPixelsToDp(heightDiff, mDisplayMetrics);
-                mWindowWidth = rootView.getWidth();
-                mWindowHeight = rootView.getHeight();
 
                 // get all buttons within the layout
                 mButtons = getButtonsOfLayout(rootView);
@@ -298,13 +289,7 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
 
     @Override
     public void onLeavingPrimary(int newPosition) {
-//        if(mRootView != null) {
-//            if (Build.VERSION.SDK_INT < 16) {
-//                mRootView.getViewTreeObserver().removeGlobalOnLayoutListener(mGlobalObserver);
-//            } else {
-//                mRootView.getViewTreeObserver().removeOnGlobalLayoutListener(mGlobalObserver);
-//            }
-//        }
+
     }
 
     private class InnerOnClickListener implements View.OnClickListener{

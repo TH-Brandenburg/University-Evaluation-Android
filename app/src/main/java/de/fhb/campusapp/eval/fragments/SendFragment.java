@@ -10,8 +10,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
-import de.fhb.ca.dto.AnswersDTO;
-import de.fhb.ca.dto.util.*;
 import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.Utility;
 import de.fhb.campusapp.eval.utility.vos.AnswersVO;
