@@ -40,6 +40,8 @@ public class DataHolder {
     private static final String RECOLOR_NAVIGATION_LIST = "RECOLOR_NAVIGATION_LIST";
     private static final String APP_STARTING_TIME_KEY = "APP_STARTING_TIME";
     private static final String GALLERY_LIST_KEY = "GALLERY_LIST_KEY";
+    private static final String CURRENT_QUESTION = "CURRENT_QUESTION";
+    private static final String CURRENT_PAGER_POSITION = "CURRENT_PAGER_POSITION";
 
     private static final String COLLECTION_TYPE = "COLLECTION_TYPE";
     private static final String MAP_TYPE = "MAP_TYPE";
@@ -57,6 +59,9 @@ public class DataHolder {
     private static HashMap<String, ImageDataVO> commentaryImageMap;
     private static boolean recolorNavigationList = false;
     private static HashSet<String> galleryList;
+
+    private static String currentQuestion;
+    private static int currentPagerPosition = -1;
 
 
     private static Instant appStart;
@@ -257,7 +262,7 @@ public class DataHolder {
      * @return
      */
     public static List<TextQuestionVO> getQuestionTexts() {
-        if(getQuestionsVO() != null){
+        if(getQuestionsVO() != null && getQuestionsVO().getTextQuestions() != null){
             return getQuestionsVO().getTextQuestions();
         } else {
             return null;
@@ -269,7 +274,7 @@ public class DataHolder {
      * @return
      */
     public static List<MultipleChoiceQuestionVO> getMCQuestionTexts() {
-        if(getQuestionsVO() != null){
+        if(getQuestionsVO() != null && getQuestionsVO().getMultipleChoiceQuestionVOs() != null){
             return getQuestionsVO().getMultipleChoiceQuestionVOs();
         } else {
             return null;
@@ -417,6 +422,37 @@ public class DataHolder {
         DataHolder.galleryList = galleryList;
     }
 
+    public static String getCurrentQuestion() {
+        if(currentQuestion == null){
+            currentQuestion = retrieveFromStorage(CURRENT_QUESTION, String.class);
+        }
+
+        return currentQuestion;
+    }
+
+    public static void setCurrentQuestion(String currentQuestion) {
+        if(currentQuestion != null){
+            storeToStorage(CURRENT_QUESTION, currentQuestion);
+        } else {
+            removeFromStorage(CURRENT_QUESTION);
+        }
+
+        DataHolder.currentQuestion = currentQuestion;
+    }
+
+    public static int getCurrentPagerPosition() {
+        if(currentPagerPosition == -1){
+            currentPagerPosition = retrieveFromStorage(CURRENT_PAGER_POSITION, Integer.class);
+        }
+
+        return currentPagerPosition;
+    }
+
+    public static void setCurrentPagerPosition(int currentPagerPosition) {
+        storeToStorage(CURRENT_PAGER_POSITION, currentPagerPosition);
+        DataHolder.currentPagerPosition = currentPagerPosition;
+    }
+
     /**
      * Deletes data of questionsVO, answerDTO, uuid and hostName variables.
      * Deletes also all entries of mentioned variables in sharedPreferences
@@ -430,6 +466,8 @@ public class DataHolder {
         recolorNavigationList = false;
         appStart = null;
         galleryList = null;
+        currentQuestion = null;
+        currentPagerPosition = -1;
         removeFromStorage(RECOLOR_NAVIGATION_LIST);
         removeFromStorage(QUESTIONS_VO_KEY);
         removeFromStorage(ANSWER_VO_KEY);
@@ -438,6 +476,8 @@ public class DataHolder {
         removeFromStorage(APP_STARTING_TIME_KEY);
         removeFromStorage(GALLERY_LIST_KEY);
         removeFromStorage(HOST_NAME_KEY);
+        removeFromStorage(CURRENT_QUESTION);
+        removeFromStorage(CURRENT_PAGER_POSITION);
     }
 
     /**
@@ -452,6 +492,29 @@ public class DataHolder {
         storeToStorage(APP_STARTING_TIME_KEY, appStart);
         storeToStorage(GALLERY_LIST_KEY, galleryList);
         storeToStorage(HOST_NAME_KEY, hostName);
+        storeToStorage(CURRENT_PAGER_POSITION, currentPagerPosition);
+        storeToStorage(CURRENT_QUESTION, currentQuestion);
+    }
+
+    /**
+     * Tests weather data in shared preferences is still usable.
+     * @return true if data is usable and false otherwise
+     */
+    public static boolean validateAllData(){
+        boolean isValid;
+        isValid = getQuestionsVO() != null
+                && getQuestionsVO().getTextQuestions() != null
+                && getQuestionsVO().getMultipleChoiceQuestionVOs() != null
+                && getQuestionsVO().getStudyPaths() != null
+                && getCommentaryImageMap() != null
+                &&uuid != null
+                && getAppStart() != null
+                && getHostName() != null
+                && getAnswersVO() != null
+                && getAnswersVO().getDeviceID() != null
+                && getAnswersVO().getVoteToken() != null;
+
+        return isValid;
     }
 
     /************************************************************
@@ -518,11 +581,12 @@ public class DataHolder {
 
     /**
      * Method that retrieves complex objects with custom types from shared preferences
-     * @param key The key identifiying the object within sharedPreferences
+     * @param key The key identifying the object within sharedPreferences
      * @param type technical parameter needed by the ObjectMapper. It is used to identify the method the mapper needs to call.
-     *             Concrete: It specifies wether the returned type is a map or a collection. There a different methods but those 2 are currently supported
+     *             Concrete: It specifies wether the returned type is a map or a collection. There a different methods but those
+     *             2 are currently supported
      * @param returnType The type of the object this method is to return.
-     * @param paramType list of parameters containing the typed the generic returnType will be resolved with. Example: HashMap<paramType[0], paramType[1]>
+     * @param paramType list of parameters containing the typed generic returnType will be resolved with. Example: HashMap<paramType[0], paramType[1]>
      * @return the retrieved object of type returnType.
      */
     private static <T> T retrieveComplexType(String key, String type, Class<T> returnType, Class ... paramType){

@@ -76,8 +76,8 @@ public class CustomFragmentStatePagerAdapter extends FragmentStatePagerAdapter{
     public CharSequence getPageTitle(int position) {
         Resources res = mContext.getResources();
 
-        if(position == 0){
-           return res.getString(R.string.tab_view_button_choose);
+        if(position == 0) {
+            return res.getString(R.string.tab_view_button_choose);
         } else if((position + 1) < getCount()){
            return res.getString(R.string.tab_view_button_question) + " " + (position) + "/" + (getCount() - 1);
         } else {

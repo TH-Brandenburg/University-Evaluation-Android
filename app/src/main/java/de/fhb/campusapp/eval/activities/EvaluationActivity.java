@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
@@ -111,7 +112,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
      * The navigation utility directly below the toolbar.
      */
     @InjectView(R.id.button_pager_tab_strip)
-    private View mPagerTabStrip;
+    private PagerTabStrip mPagerTabStrip;
 
     /**
      * Overlay ListView used to navigate within the app. Placed in ActionBar
@@ -360,7 +361,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
             manager.testForPossibility(getContentResolver(), mCurrentIntentImage);
 
             TextFragment fragment = ((TextFragment) mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem()));
-            fragment.onPhotoTaken(mCurrentQuestionText, mCurrentIntentImage.getAbsolutePath());
+            fragment.onPhotoTaken(DataHolder.getCurrentQuestion(), mCurrentIntentImage.getAbsolutePath());
         }
     }
 
@@ -658,12 +659,14 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
                 if((textAnswerVO == null || textAnswerVO.getAnswerText().equals("")) && pathObj == null){
                     needed = true;
                 }
-            } else if (fragment == null) {
-                Log.e("IsKeyboardNeededError", "Fragment was null");
             }
-        } else {
-            Log.e("IsKeyboardNeededError", "Adapter is: " + mCollectionPagerAdapter + " and Pager is: " + mViewPager);
+//            else if (fragment == null) {
+//                Log.e("IsKeyboardNeededError", "Fragment was null");
+//            }
         }
+//        else {
+//            Log.e("IsKeyboardNeededError", "Adapter is: " + mCollectionPagerAdapter + " and Pager is: " + mViewPager);
+//        }
         return needed;
     }
 
@@ -862,8 +865,8 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 
     @Override
     public void fragmentBecamePrimary(String question, String imageName) {
-        mCurrentQuestionText = question;
-        mCurrentImageName = imageName;
+//        mCurrentQuestionText = question;
+//        mCurrentImageName = imageName;
     }
 
     @Override

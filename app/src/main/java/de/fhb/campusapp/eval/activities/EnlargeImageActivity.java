@@ -64,7 +64,7 @@ public class EnlargeImageActivity extends RoboActionBarActivity {
                 Picasso.with(EnlargeImageActivity.this)
                         .load(new File(imageFilePath))
                         .fit()
-                        .centerCrop()
+//                        .centerCrop()
                         .into(mImageView);
                 Utility.animateView(mImageView, View.VISIBLE, 1.0f, 100);
             }

@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">CampusAppEvaluationExp</string>
     <string name="close_button">Close</string>
-    <string name="edit_text_click_hint_photo">Enter an answer here or send a photo containing the answer by clicking the camera symbol in the toolbar.</string>
+    <string name="edit_text_click_hint_photo">Enter an answer here or make a photo below.</string>
     <string name="error_404_403_message">No data received from server</string>
     <string name="error_404_403_title">Wrong Adress</string>
     <string name="error_500_502_message">You may inform the developers.</string>

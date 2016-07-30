@@ -3,6 +3,7 @@
     <dimen name="button_margin_top_bottom">2dp</dimen>
     <dimen name="button_margin_left_right">2dp</dimen>
     <dimen name="button_border_thickness">6dp</dimen>
+    <dimen name="eight_dp">8dp</dimen>
 
 
 </resources>

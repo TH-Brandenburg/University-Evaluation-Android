@@ -67,19 +67,19 @@ public class CustomViewPager extends ViewPager {
     }
 
     public interface CustomViewPagerCommunicator {
-        public boolean isKeyboardNeeded();
+         boolean isKeyboardNeeded();
 
-        public boolean isCameraSymbolNeeded();
+         boolean isCameraSymbolNeeded();
 
-        public void hideKeyboard();
+         void hideKeyboard();
 
-        public void showKeyboard(/*SwipeDirectionEnum direction*/);
+         void showKeyboard(/*SwipeDirectionEnum direction*/);
 
-        public void setLayoutResizing();
+         void setLayoutResizing();
 
-        public void setLayoutOverlapping();
+         void setLayoutOverlapping();
 
-        public void changeToolbarIcons(boolean isCameraSymbolNeeded);
+         void changeToolbarIcons(boolean isCameraSymbolNeeded);
     }
 
     public enum SwipeDirectionEnum {

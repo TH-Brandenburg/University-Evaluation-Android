@@ -9,8 +9,8 @@
     <string name="toolbar_activate_camera_mode">Wechsle zu Kamera-Modus</string>
     <string name="send_dialogue_answers_uncomplete">Es wurde(n) erst %1$s von %2$s Frage beantwortet. Antworten wirklich abschicken?\n\nDie unbeantworteten Fragen sind in der Navigationsliste (Toolbar) jetzt farbig markiert.</string>
     <!--<string name="send_dialogue_answers_complete">Wirklich </string>-->
-    <string name="edit_text_click_hint_photo">Gib hier eine Antwort ein oder versende ein Photo mit der Antwort durch klick auf das Photoapparat-Symbol in der Toolbar.</string>
-    <string name="edit_text_click_hint_numeric">Gib hier eine Antwort ein.</string>
+    <string name="edit_text_click_hint_photo">Geben Sie hier eine Antwort ein oder machen Sie unten ein Photo. </string>
+    <string name="edit_text_click_hint_numeric">Geben Sie hier eine Antwort ein.</string>
 
     <string name="title_activity_inner_section">InnerSectionActivity</string>
     <!--Website %1$s isn\'t yet available, I\'m working on it, please wait %2$s-->

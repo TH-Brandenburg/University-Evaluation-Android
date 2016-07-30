@@ -10,8 +10,8 @@ public class FeatureSwitch {
     public static final boolean NAVIGATION_MARK_SELECTED = true;
     public static final boolean CUSTOM_PAGER_ANIMATION = true;
     public static final boolean AUTO_KEYBOARD = false;
-    public static final boolean TOOLBAR_CAMERA_ICON = true;
-    public static final boolean IMAGEVIEW_OPENS_CAMERA_INTENT = false;
+    public static final boolean TOOLBAR_CAMERA_ICON = false;
+    public static final boolean IMAGEVIEW_OPENS_CAMERA_INTENT = true;
     public static final boolean ENTER_JUMPS_TO_NEXT_QUESTION = true;
 
 }

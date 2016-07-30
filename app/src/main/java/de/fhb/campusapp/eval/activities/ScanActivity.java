@@ -34,6 +34,7 @@ import java.net.HttpURLConnection;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.EnumSet;
+import java.util.Set;
 import java.util.UUID;
 
 import de.fhb.ca.dto.QuestionsDTO;
@@ -121,10 +122,11 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
             DataHolder.setAppStart(new Instant());
         }
 
-        // Ensure that all data of previous evaluations is deleted
-        DeleteImagesObservable observable = new DeleteImagesObservable();
-        observable.deleteImageMapInBackground(DataHolder.getCommentaryImageMap()).observeOn(AndroidSchedulers.mainThread()).subscribe();
-        DataHolder.deleteAllData();
+        //if data in shared preferences is still usable open evaluationactivity instead
+//        if(DataHolder.validateAllData()){
+//            Intent evalIntent = new Intent(this, EvaluationActivity.class);
+//            startActivity(evalIntent);
+//        }
 
         //start the app
         Window window = getWindow();
@@ -147,8 +149,8 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
 
         //starts the cleanUpService -> deletes all images when app is closed
         if(!mCleanupServiceStarted){
-            Intent intent = new Intent(this, CleanUpService.class);
-            startService(intent);
+            Intent serviceIntent = new Intent(this, CleanUpService.class);
+            startService(serviceIntent);
             mCleanupServiceStarted = true;
         }
 
@@ -216,6 +218,11 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
             mBarcodeFragment.setAlwaysDecodeOnResume(false);
             mBarcodeFragment.setDecodeFor(EnumSet.of(BarcodeFormat.QR_CODE));
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
     }
 
     @Override
@@ -353,13 +360,6 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
                 }
             }
         }
-    }
-
-
-
-    @Override
-    protected void onStart() {
-        super.onStart();
     }
 
     @Override

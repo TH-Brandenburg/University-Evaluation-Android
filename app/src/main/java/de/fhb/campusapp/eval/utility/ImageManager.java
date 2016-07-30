@@ -55,7 +55,7 @@ public class ImageManager {
         Cursor cursor = null;
         Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
-        if(intentImage.exists() && intentImage.length() > 0){
+        if(intentImage != null && intentImage.exists() && intentImage.length() > 0){
 
             if (uri != null) {
                 cursor = contentResolver.query(uri, projection, null, null, null);

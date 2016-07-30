@@ -112,9 +112,6 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         mActivityCommunicator = (TextFragmentCommunicator) activity;
-        if(mCurrentlyPrimary && mGettingPrimaryCalledBefore){
-            EventBus.get().post(new ActivityInstanceAcquiredEvent(activity));
-        }
     }
 
     @Override
@@ -147,6 +144,10 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
     @Override
     public void onViewCreated(final View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+      /*  if(mCurrentlyPrimary){
+            mActivityCommunicator.fragmentBecamePrimary(mQuestion, mImageName);
+        }*/
 
         mTextView.setText(mQuestion);
         mTextView.setMovementMethod(new ScrollingMovementMethod());
@@ -235,7 +236,12 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
      */
     @Override
     public void onGettingPrimary(int oldPosition) {
-//        mActivityCommunicator.fragmentBecamePrimary(mQuestion, mImageName);
+//        if(mActivityCommunicator != null){
+//            mActivityCommunicator.fragmentBecamePrimary(mQuestion, mImageName);
+//        }
+
+        DataHolder.setCurrentQuestion(mQuestion);
+        DataHolder.setCurrentPagerPosition(mPosition);
 
         if(!mGettingPrimaryCalledBefore){
             mReloadInitialized = initializeImageViews(oldPosition);
@@ -327,34 +333,34 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
             Utility.animateView(mImageView, View.INVISIBLE, 0, 100);
 
             if(FeatureSwitch.IMAGEVIEW_OPENS_CAMERA_INTENT){
-                Utility.animateView(mCameraButton, View.INVISIBLE, 0, 100);
+                Utility.animateView(mCameraButton, View.INVISIBLE, 0, 0);
             }
 
             Picasso.with(getActivity()).cancelRequest(mImageView);
             Picasso.with(getActivity())
                     .load(imageFile)
                     .fit()
-                    .centerCrop()
+//                    .centerCrop()
                     .into(mImageView, new ThumbnailLoadedCallback(imagePath));
         }
     }
 
     public void onReloadImage(){
         if(DataHolder.getCommentaryImageMap().containsKey(mQuestion)){
+            if(FeatureSwitch.IMAGEVIEW_OPENS_CAMERA_INTENT){
+                Utility.animateView(mCameraButton, View.INVISIBLE, 0, 0);
+            }
             //it is made visible in the onViewCreated method (GlobalLayoutListener)
-            Utility.animateView(mProgressBar, View.INVISIBLE, 1.0f, 0);
+            Utility.animateView(mProgressBar, View.VISIBLE, 1.0f, 0);
             Utility.animateView(mImageView, View.INVISIBLE, 0, 100);
 
-            if(FeatureSwitch.IMAGEVIEW_OPENS_CAMERA_INTENT){
-                Utility.animateView(mCameraButton, View.INVISIBLE, 0, 100);
-            }
 
             ImageDataVO pathObj = DataHolder.getCommentaryImageMap().get(mQuestion);
             Picasso.with(getActivity()).cancelRequest(mImageView);
             Picasso.with(getActivity())
                     .load(new File(pathObj.getmLargeImageFilePath()))
                     .fit()
-                    .centerCrop()
+//                    .centerCrop()
                     .into(mImageView, new ThumbnailLoadedCallback(pathObj.getmLargeImageFilePath()));
         }
     }
@@ -370,9 +376,6 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
 
         @Override
         public void onSuccess() {
-            if(FeatureSwitch.IMAGEVIEW_OPENS_CAMERA_INTENT){
-                Utility.animateView(mCameraButton, View.INVISIBLE, 0, 0);
-            }
             Utility.animateView(mProgressBar, View.INVISIBLE, 0, 100);
             Utility.animateView(mImageView, View.VISIBLE, 1.0f, 100);
             Utility.animateView(mDeleteButton, View.VISIBLE, 1.0f, 100);
@@ -417,13 +420,6 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
      *          Event Listener
      ********************************************/
 
-    @SuppressWarnings("unused")
-    public void onActivityInstanceAcquired(ActivityInstanceAcquiredEvent event){
-        if(mCurrentlyPrimary){
-            mActivityCommunicator = (TextFragmentCommunicator) event.getActivity();
-            mActivityCommunicator.fragmentBecamePrimary(mQuestion, mImageName);
-        }
-    }
 
     public interface TextFragmentCommunicator{
         void fragmentBecamePrimary(String question, String imageName);
