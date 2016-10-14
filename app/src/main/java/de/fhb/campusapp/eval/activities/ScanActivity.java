@@ -1,13 +1,12 @@
 package de.fhb.campusapp.eval.activities;
 
+import android.app.Dialog;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.v4.util.Pair;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -25,6 +24,7 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.android.camera.CameraManager;
 import com.squareup.otto.Subscribe;
 
+import org.apache.commons.lang3.tuple.Triple;
 import org.joda.time.Instant;
 
 import java.io.IOException;
@@ -34,24 +34,28 @@ import java.net.HttpURLConnection;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.EnumSet;
-import java.util.Set;
 import java.util.UUID;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import de.fhb.ca.dto.QuestionsDTO;
 import de.fhb.ca.dto.RequestDTO;
 import de.fhb.ca.dto.ResponseDTO;
 import de.fhb.ca.dto.util.ErrorType;
-import de.fhb.campusapp.eval.fragments.MessageFragment;
+import de.fhb.campusapp.eval.helper.RetrofitHelper;
 import de.fhb.campusapp.eval.interfaces.RetroRequestService;
 import de.fhb.campusapp.eval.services.CleanUpService;
+import de.fhb.campusapp.eval.ui.base.BaseActivity;
+import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
+import de.fhb.campusapp.eval.utility.ActivityUtil;
 import de.fhb.campusapp.eval.utility.ClassMapper;
 import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.utility.DialogFactory;
 import de.fhb.campusapp.eval.utility.EventBus;
+import de.fhb.campusapp.eval.utility.Events.RequestErrorEvent;
 import de.fhb.campusapp.eval.utility.Events.NetworkErrorEvent;
-import de.fhb.campusapp.eval.utility.Events.NetworkFailureEvent;
-import de.fhb.campusapp.eval.utility.Events.NetworkSuccessEvent;
+import de.fhb.campusapp.eval.utility.Events.RequestSuccessEvent;
 import de.fhb.campusapp.eval.utility.Events.RestartQRScanningEvent;
-import de.fhb.campusapp.eval.utility.Observer.DeleteImagesObservable;
 import de.fhb.campusapp.eval.utility.QrPojo;
 import de.fhb.campusapp.eval.utility.Utility;
 import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
@@ -62,12 +66,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import roboguice.inject.ContentView;
-import roboguice.inject.InjectView;
-import rx.android.schedulers.AndroidSchedulers;
 
-@ContentView(R.layout.activity_scan)
-public class ScanActivity extends BaseActivity implements IScanResultHandler, ICameraManagerListener, MessageFragment.MessageFragmentCommunicator {
+public class ScanActivity extends BaseActivity implements IScanResultHandler, ICameraManagerListener{
 
     private static final String TAG = ScanActivity.class.getSimpleName();
     private static final String PACKAGE_NAME = ScanActivity.class.getPackage().getName();
@@ -85,7 +85,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
     private Runnable mDelayRunnable;
     private ScaleGestureDetector mScaleDetector;
 //    private Retrofit mRetrofit;
-    private Retrofit mRetrofitRest;
+    private Retrofit mRetrofit;
 //    private JacksonConverter mJacksonConverter;
     /*
     * The QrPojo object that was created from the last scanned QR code.
@@ -97,23 +97,21 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
     private boolean mIsScanning;
     private boolean mCleanupServiceStarted = false;
     private boolean mRequestRunning = false;
+    private RetrofitHelper mRetrofitHelper = new RetrofitHelper();
 
-    @InjectView(R.id.progress_overlay)
-    private View mProgressOverlay;
+    @BindView(R.id.progress_overlay)
+    View mProgressOverlay;
 
-    @InjectView(R.id.my_awesome_toolbar)
-    private Toolbar mToolBar;
+    @BindView(R.id.my_awesome_toolbar)
+    Toolbar mToolBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_scan);
+        ButterKnife.bind(this);
 
-        // fixes the orientation to portrait
-        if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        } else {
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        }
+        super.fixOrientationToPortrait();
 
         // DataHolder gets ability to freely serialize/deserialize its variables
         DataHolder.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
@@ -154,55 +152,51 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
             mCleanupServiceStarted = true;
         }
 
-        if (getIntent().getBooleanExtra(MessageFragment.GO_TO_SCAN, false)) {
+        if (getIntent().getBooleanExtra("GO_TO_SCAN", false)) {
             DataHolder.deleteAllData();
         }
 
         //sets the uuid for this session
         DataHolder.setUuid(UUID.randomUUID().toString());
 
-        mScaleDetector = new ScaleGestureDetector(this, new ScaleGestureDetector.OnScaleGestureListener() {
-            private float x;
-            private final float factor = 0.5f;
-
-            @Override
-            public void onScaleEnd(ScaleGestureDetector detector) {
-            }
-
-            @Override
-            public boolean onScaleBegin(ScaleGestureDetector detector) {
-                x = detector.getScaleFactor();
-                return true;
-            }
-
-            @Override
-            public boolean onScale(ScaleGestureDetector detector) {
-                if (mIsScanning) {
-                    float y = detector.getScaleFactor();
-                    float z = (y - x) * factor;
-                    // Cut off some jittery digits.
-                    z = ((float) ((int) (z * 100.0f))) / 100.0f;
-                    zoom(z);
-                }
-
-                return false;
-            }
-        });
+//        mScaleDetector = new ScaleGestureDetector(this, new ScaleGestureDetector.OnScaleGestureListener() {
+//            private float x;
+//            private final float factor = 0.5f;
+//
+//            @Override
+//            public void onScaleEnd(ScaleGestureDetector detector) {
+//            }
+//
+//            @Override
+//            public boolean onScaleBegin(ScaleGestureDetector detector) {
+//                x = detector.getScaleFactor();
+//                return true;
+//            }
+//
+//            @Override
+//            public boolean onScale(ScaleGestureDetector detector) {
+//                if (mIsScanning) {
+//                    float y = detector.getScaleFactor();
+//                    float z = (y - x) * factor;
+//                    // Cut off some jittery digits.
+//                    z = ((float) ((int) (z * 100.0f))) / 100.0f;
+//                    zoom(z);
+//                }
+//
+//                return false;
+//            }
+//        });
         initBarcodeFragment();
-        if(mRequestRunning){
-
-        }
+//        if(mRequestRunning){
+//
+//        }
         mIsScanning = true;
 
         //close the application
-        if (getIntent().getBooleanExtra(MessageFragment.CLOSE, false)) {
+        if (getIntent().getBooleanExtra("CLOSE", false)) {
             // delete all data and close application (as best as android lets you)
             DataHolder.deleteAllData();
-            if(Build.VERSION.SDK_INT < 21){
-                finish();
-            } else {
-                finishAndRemoveTask();
-            }
+            ActivityUtil.saveFinish(this);
         }
     }
 
@@ -239,11 +233,11 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
         super.onResume();
     }
 
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        mScaleDetector.onTouchEvent(event);
-        return true;
-    }
+//    @Override
+//    public boolean onTouchEvent(MotionEvent event) {
+//        mScaleDetector.onTouchEvent(event);
+//        return true;
+//    }
 
     @Override
     public void scanResult(ScanResult result) {
@@ -265,8 +259,13 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
             performQuestionRequest(/*mLastPojo, spiceManager*/);
             mCameraManager.stopPreview();
         } catch (IOException e) {
-            MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.wrong_qr_code_error_title), mResources.getString(R.string.wrong_qr_code_error_message), true, MessageFragment.Option.None);
-            fragment.show(getSupportFragmentManager(), "wrongQR");
+            Dialog dialog = DialogFactory.createSimpleOkErrorDialog(this
+                    ,R.string.wrong_qr_code_error_title
+                    ,R.string.wrong_qr_code_error_message
+                    ,true);
+            dialog.show();
+            //            MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.wrong_qr_code_error_title), mResources.getString(R.string.wrong_qr_code_error_message), true, MessageFragment.Option.None);
+//            fragment.show(getSupportFragmentManager(), "wrongQR");
             Log.e("ScanActivity.scanResult", e.getMessage());
         }
     }
@@ -276,18 +275,6 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
         mCameraManager = manager;
         if(mRequestRunning && mCameraManager != null){
             mCameraManager.stopPreview();
-        }
-
-        // Will be set to null onPause.
-        if (mCameraManager != null) {
-            // Set framing rect to fullscreen. Yes, always. Fuck it.
-//            mCameraManager.setManualFramingRect(Integer.MAX_VALUE, Integer.MAX_VALUE);
-            // Check if zooming is supported and if so, show zoom controls.
-            if (mCameraManager.getMaxZoom() != 0) {
-//                mZoomControls.setVisibility(View.VISIBLE);
-            }
-        } else {
-//            mZoomControls.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -383,8 +370,8 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
 //        }
 
         // create retrofit instance after receiving host address
-        if(mRetrofitRest == null){
-            mRetrofitRest = new Retrofit.Builder()
+        if(mRetrofit == null){
+            mRetrofit = new Retrofit.Builder()
                     .baseUrl(mLastPojo.getHost())
                     .addConverterFactory(JacksonConverterFactory.create())
                     .build();
@@ -393,7 +380,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
         mToolBar.setTitle(mResources.getText(R.string.scan_send));
         Utility.animateView(mProgressOverlay, View.VISIBLE, 0.8f, 100);
         RequestDTO requestDTO = new RequestDTO(mLastPojo.getVoteToken(), DataHolder.getUuid());
-        RetroRequestService requestService = mRetrofitRest.create(RetroRequestService.class);
+        RetroRequestService requestService = mRetrofit.create(RetroRequestService.class);
         Call<QuestionsDTO> response = requestService.requestQuestions(requestDTO);
         response.enqueue(new RetrofitCallback());
         mRequestRunning = true;
@@ -402,7 +389,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
     /***********************************************
      * START MESSAGE_FRAGMENT_COMMUNICATOR SECTION
      ************************************************/
-    @Override
+
     public void onRestartQRScanning() {
         EventBus.get().post(new RestartQRScanningEvent());
     }
@@ -418,7 +405,6 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
     }
 
 
-    @Override
     public void onStartServerCommunication() {
         performQuestionRequest();
     }
@@ -430,7 +416,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
      ******************************/
     @Subscribe
     @SuppressWarnings("unused")
-    public void onNetworkSuccess(NetworkSuccessEvent<QuestionsDTO> event){
+    public void onRequestSuccess(RequestSuccessEvent<QuestionsDTO> event){
         QuestionsVO vo = ClassMapper.questionsDTOToQuestionsVOMapper(event.getRequestedObject());
         DataHolder.setQuestionsVO(vo);
         // Hide progress overlay (with animation):
@@ -441,80 +427,49 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
 
     @Subscribe
     @SuppressWarnings("unused")
-    public void onNetworkFailure(NetworkFailureEvent event){
+    public void onNetworkError(NetworkErrorEvent event){
         mRequestRunning = false;
         Throwable t = event.getRetrofitError();
+        Pair<String, String> errorText = mRetrofitHelper.processNetworkError(t, mResources);
+
+        Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
+                , errorText.first
+                , errorText.second
+                , (dialogInterface, i) -> onRestartQRScanning()
+                , dialogInterface -> onRestartQRScanning()
+                , true);
+
+        dialog.show();
+
+        mToolBar.setTitle(mResources.getText(R.string.scan_search));
         Utility.animateView(mProgressOverlay, View.GONE, 0, 100);
 
-        if(t != null){
-            t.printStackTrace();
-            mToolBar.setTitle(mResources.getText(R.string.scan_search));
 
-            if (t.getClass() == ConnectException.class) {
-                MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.no_network_title), mResources.getString(R.string.no_network_message), false, MessageFragment.Option.RetryCommunication);
-                fragment.show(getSupportFragmentManager(), "NoInternet");
-            } else if(t.getClass() == SocketTimeoutException.class || t.getClass() == SocketException.class){
-                MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.socket_timeout_title), mResources.getString(R.string.socket_timeout_message), true, MessageFragment.Option.RetryCommunication);
-                fragment.show(getSupportFragmentManager(), "ServerNotResponding");
-            } else {
-                MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.some_network_error_title), mResources.getString(R.string.some_network_error_message), true, MessageFragment.Option.RetryCommunication);
-                fragment.show(getSupportFragmentManager(), "SomeError");
-            }
-        }
     }
 
     @Subscribe
     @SuppressWarnings("unused")
-    public void onNetworkError(NetworkErrorEvent event){
-        ErrorResponseHandling(event.getResposne());
-        Utility.animateView(mProgressOverlay, View.GONE, 0, 100);
-    }
-
-    /**
-     * Error handling outsourced from onResponse
-     */
-    private void ErrorResponseHandling(Response<QuestionsDTO> response) {
-        int statusCode = response.code();
-
-        try {
-            ResponseBody body = response.errorBody();
-            // annotation array must be created in order to prevent nullPointer
-            ResponseDTO dto = (ResponseDTO) mRetrofitRest.responseBodyConverter(ResponseDTO.class, new Annotation[1] ).convert(body);
-
-            if (dto != null && dto.getType() == ErrorType.INVALID_TOKEN) {
-                MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.invalid_token_title), mResources.getString(R.string.invalid_token_message), true, MessageFragment.Option.RetryScan);
-                fragment.show(getSupportFragmentManager(), "InvalidToken");
-            } else if (dto != null && dto.getType() == ErrorType.TOKEN_ALLREADY_USED) {
-                MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.token_already_used_title), mResources.getString(R.string.token_already_used_message), true, MessageFragment.Option.RetryScan);
-                fragment.show(getSupportFragmentManager(), "TokenAlreadyUsed");
-            } else if (dto != null && dto.getType() == ErrorType.EVALUATION_CLOSED) {
-                MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.evaluation_closed_title), mResources.getString(R.string.evaluation_closed_message), true, MessageFragment.Option.RetryScan);
-                fragment.show(getSupportFragmentManager(), "EvaluationClosed");
-            } else if (dto != null && dto.getType() == ErrorType.UNKNOWN_ERROR) {
-                MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.unknown_error_title), mResources.getString(R.string.unknown_error_message), true, MessageFragment.Option.RetryScan);
-                fragment.show(getSupportFragmentManager(), "UnknownError");
-            } else if (dto != null && dto.getType() == ErrorType.MALFORMED_REQUEST) {
-                MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.unknown_error_title), mResources.getString(R.string.unknown_error_message), true, MessageFragment.Option.RetryScan);
-                fragment.show(getSupportFragmentManager(), "MalformedRequest");
-            } else {
-                // Check of status codes and display information to user
-                if (statusCode == HttpURLConnection.HTTP_BAD_GATEWAY || statusCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
-                    MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.error_500_502_title), mResources.getString(R.string.no_network_message), true, MessageFragment.Option.RetryCommunication);
-                    fragment.show(getSupportFragmentManager(), "500|502");
-                } else if (statusCode == HttpURLConnection.HTTP_UNAVAILABLE) {
-                    MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.error_503_title), mResources.getString(R.string.error_503_message), true, MessageFragment.Option.RetryCommunication);
-                    fragment.show(getSupportFragmentManager(), "503");
-                } else if (statusCode == HttpURLConnection.HTTP_FORBIDDEN || statusCode == HttpURLConnection.HTTP_NOT_FOUND) {
-                    MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.error_404_403_title), mResources.getString(R.string.error_404_403_message), true, MessageFragment.Option.RetryCommunication);
-                    fragment.show(getSupportFragmentManager(), "404|403");
-                } else if (statusCode == HttpURLConnection.HTTP_BAD_REQUEST) {
-                    MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.unknown_error_title), mResources.getString(R.string.unknown_error_message), true, MessageFragment.Option.RetryCommunication);
-                    fragment.show(getSupportFragmentManager(), "400");
-                }
-            }
-        } catch (IOException | IllegalArgumentException e ) {
-            e.printStackTrace();
+    public void onRequestError(RequestErrorEvent event){
+        Triple<String, String, String> errorText = mRetrofitHelper.processRequestError(event.getResposne(), mResources, mRetrofit);
+        Dialog dialog = null;
+        if(errorText.getRight().equals("RETRY_SCAN")){
+            dialog  = DialogFactory.createSimpleOkErrorDialog(this
+                    , errorText.getLeft()
+                    , errorText.getMiddle()
+                    , (dialogInterface, i) -> onRestartQRScanning()
+                    , dialogInterface -> onRestartQRScanning()
+                    , true);
+        } else if(errorText.getRight().equals("RETRY_COMMUNICATION")){
+           dialog  = DialogFactory.createSimpleOkErrorDialog(this
+                    , errorText.getLeft()
+                    , errorText.getMiddle()
+                    , (dialogInterface, i) -> onStartServerCommunication()
+                    , dialogInterface -> onStartServerCommunication()
+                    , true);
         }
+
+        dialog.show();
+        Utility.animateView(mProgressOverlay, View.GONE, 0, 100);
     }
 
     private class RetrofitCallback implements Callback<QuestionsDTO> {
@@ -526,17 +481,65 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
             int statusCode = response.code();
 
             if(response.isSuccessful()){
-                EventBus.get().post(new NetworkSuccessEvent<>(response.body(), response));
+                EventBus.get().post(new RequestSuccessEvent<>(response.body(), response));
             } else {
-                EventBus.get().post(new NetworkErrorEvent<>(response));
+                EventBus.get().post(new RequestErrorEvent<>(response));
             }
         }
 
         @Override
         public void onFailure(Call<QuestionsDTO> call, Throwable t) {
-            EventBus.get().post(new NetworkFailureEvent(t));
+            EventBus.get().post(new NetworkErrorEvent(t));
         }
     }
+
+
+//    /**
+//     * Error handling outsourced from onResponse
+//     */
+//    private void ErrorResponseHandling(Response<QuestionsDTO> response) {
+//        int statusCode = response.code();
+//
+//        try {
+//            ResponseBody body = response.errorBody();
+//            // annotation array must be created in order to prevent nullPointer
+//            ResponseDTO dto = (ResponseDTO) mRetrofit.responseBodyConverter(ResponseDTO.class, new Annotation[1] ).convert(body);
+//
+//            if (dto != null && dto.getType() == ErrorType.INVALID_TOKEN) {
+////                MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.invalid_token_title), mResources.getString(R.string.invalid_token_message), true, MessageFragment.Option.RetryScan);
+////                fragment.show(getSupportFragmentManager(), "InvalidToken");
+//            } else if (dto != null && dto.getType() == ErrorType.TOKEN_ALLREADY_USED) {
+////                MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.token_already_used_title), mResources.getString(R.string.token_already_used_message), true, MessageFragment.Option.RetryScan);
+////                fragment.show(getSupportFragmentManager(), "TokenAlreadyUsed");
+//            } else if (dto != null && dto.getType() == ErrorType.EVALUATION_CLOSED) {
+////                MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.evaluation_closed_title), mResources.getString(R.string.evaluation_closed_message), true, MessageFragment.Option.RetryScan);
+////                fragment.show(getSupportFragmentManager(), "EvaluationClosed");
+//            } else if (dto != null && dto.getType() == ErrorType.UNKNOWN_ERROR) {
+////                MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.unknown_error_title), mResources.getString(R.string.unknown_error_message), true, MessageFragment.Option.RetryScan);
+////                fragment.show(getSupportFragmentManager(), "UnknownError");
+//            } else if (dto != null && dto.getType() == ErrorType.MALFORMED_REQUEST) {
+////                MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.unknown_error_title), mResources.getString(R.string.unknown_error_message), true, MessageFragment.Option.RetryScan);
+////                fragment.show(getSupportFragmentManager(), "MalformedRequest");
+//            } else {
+//                // Check of status codes and display information to user
+//                if (statusCode == HttpURLConnection.HTTP_BAD_GATEWAY || statusCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+////                    MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.error_500_502_title), mResources.getString(R.string.no_network_message), true, MessageFragment.Option.RetryCommunication);
+////                    fragment.show(getSupportFragmentManager(), "500|502");
+//                } else if (statusCode == HttpURLConnection.HTTP_UNAVAILABLE) {
+////                    MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.error_503_title), mResources.getString(R.string.error_503_message), true, MessageFragment.Option.RetryCommunication);
+////                    fragment.show(getSupportFragmentManager(), "503");
+//                } else if (statusCode == HttpURLConnection.HTTP_FORBIDDEN || statusCode == HttpURLConnection.HTTP_NOT_FOUND) {
+////                    MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.error_404_403_title), mResources.getString(R.string.error_404_403_message), true, MessageFragment.Option.RetryCommunication);
+////                    fragment.show(getSupportFragmentManager(), "404|403");
+//                } else if (statusCode == HttpURLConnection.HTTP_BAD_REQUEST) {
+////                    MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.unknown_error_title), mResources.getString(R.string.unknown_error_message), true, MessageFragment.Option.RetryCommunication);
+////                    fragment.show(getSupportFragmentManager(), "400");
+//                }
+//            }
+//        } catch (IOException | IllegalArgumentException e ) {
+//            e.printStackTrace();
+//        }
+//    }
 
 
 //    @Subscribe @SuppressWarnings("unused")
@@ -548,7 +551,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
 //    }
 
 //    @Subscribe @SuppressWarnings("unused")
-//    public void onNetworkSuccess(NetworkSuccessEvent<QuestionsDTO> event){
+//    public void onRequestSuccess(NetworkSuccessEvent<QuestionsDTO> event){
 //        mToolBar.setTitle(mResources.getText(R.string.scan_search));
 //        mRequestRunning = false;
 //
@@ -571,7 +574,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
 //    }
 
 //    @Subscribe @SuppressWarnings("unused")
-//    public void onNetworkFailure(NetworkFailureEvent event){
+//    public void onNetworkError(NetworkFailureEvent event){
 //        int statusCode = 0;
 //        ResponseDTO dto = null;
 //        mRequestRunning = false;

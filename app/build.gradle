@@ -1,4 +1,7 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.github.triplet.play'
+apply plugin: 'com.neenbedankt.android-apt'
+apply plugin: 'me.tatarka.retrolambda'
 
 android {
     compileSdkVersion 24
@@ -45,12 +48,24 @@ repositories {
 }
 
 dependencies {
+    final BUTTERKNIFE_VERSION = '8.1.0'
+    final ANDROID_PERMISSION_MANAGER_VERSION = '1.0.0'
+    final GUAVA_VERSION = '19.0'
+    final CWAC_CAM2_VERSION = '0.6.9'
+
+
+    compile "com.google.guava:guava:$GUAVA_VERSION"
+    compile "com.jakewharton:butterknife:$BUTTERKNIFE_VERSION"
+    apt "com.jakewharton:butterknife-compiler:$BUTTERKNIFE_VERSION"
+    compile "com.github.buchandersenn:android-permission-manager:$ANDROID_PERMISSION_MANAGER_VERSION"
+    compile "com.commonsware.cwac:cam2:$CWAC_CAM2_VERSION"
+
     compile 'com.android.support:appcompat-v7:24.1.1'
     compile 'com.google.zxing:core:3.2.0'
     compile 'de.fhb.BarcodeFragmentLibrary:app:1.3'
     compile 'de.fhb.ca.dto:CADtos:1.13'
-    compile 'org.roboguice:roboguice:3.0.1'
-    provided 'org.roboguice:roboblender:3.0.1'
+//    compile 'org.roboguice:roboguice:3.0.1'
+//    provided 'org.roboguice:roboblender:3.0.1'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.5.2'
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
     compile group: 'commons-io', name: 'commons-io', version: '2.5'
@@ -67,16 +82,3 @@ dependencies {
     // time
     compile 'net.danlew:android.joda:2.9.3.1'
 }
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-
-    dependencies {
-        classpath 'me.tatarka:gradle-retrolambda:3.2.4'
-    }
-}
-
-
-apply plugin: 'me.tatarka.retrolambda'

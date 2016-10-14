@@ -13,20 +13,20 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
 import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.EventBus;
 import de.fhb.campusapp.eval.utility.Events.ClickedChoiceButtonEvent;
 import fhb.de.campusappevaluationexp.R;
-import roboguice.inject.InjectView;
-
 
 public class InnerSectionFragment extends BaseFragment implements ListView.OnItemClickListener {
     private static final String POSITION = "POSITION";
 
 
-    @InjectView(R.id.inner_section_list_view)
-    private ListView mListView;
+    @BindView(R.id.inner_section_list_view)
+    ListView mListView;
 
     private int mPosition;
 
@@ -46,6 +46,8 @@ public class InnerSectionFragment extends BaseFragment implements ListView.OnIte
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
         if (this.getArguments() != null) {
             Bundle args = this.getArguments();
             mPosition = args.getInt(POSITION);
@@ -57,6 +59,7 @@ public class InnerSectionFragment extends BaseFragment implements ListView.OnIte
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_inner_section, container, false);
+        ButterKnife.bind(this, view);
         return view;
     }
 

@@ -4,7 +4,9 @@
     package="fhb.de.campusappevaluationexp"
     android:installLocation="preferExternal">
 
-    <uses-sdk tools:overrideLibrary="com.abhi.barcode.frag.libv2, com.commonsware.cwac.cam2" />
+    <uses-sdk tools:overrideLibrary="com.abhi.barcode.frag.libv2, com.commonsware.cwac.cam2, com.github.buchandersenn.android_permission_manager" />
+
+
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
@@ -40,21 +42,17 @@
             android:windowSoftInputMode="adjustResize"/>
 
         <activity
-            android:name="de.fhb.campusapp.eval.activities.EvaluationActivity"
+            android:name="de.fhb.campusapp.eval.ui.eval.EvaluationActivity"
             android:label="@string/action_bar_title"/>
         <activity
             android:name="de.fhb.campusapp.eval.activities.EnlargeImageActivity"
             android:label="@string/action_bar_title"/>
-
-        <service
-            android:name="de.fhb.campusapp.eval.custom.CustomJsonSpiceService"
-            android:exported="false" />
         <service
             android:name="de.fhb.campusapp.eval.services.CleanUpService"
             android:exported="false"
             android:stopWithTask="false" />
 
-        <activity android:name="de.fhb.campusapp.eval.activities.SplashActivity"
+        <activity android:name="de.fhb.campusapp.eval.ui.splash.SplashActivity"
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -10,13 +10,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.Utility;
 import de.fhb.campusapp.eval.utility.vos.AnswersVO;
 import de.fhb.campusapp.eval.utility.vos.TextAnswerVO;
 import fhb.de.campusappevaluationexp.R;
-import roboguice.fragment.RoboDialogFragment;
-import roboguice.inject.InjectView;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -25,8 +25,8 @@ public class SendFragment extends BaseFragment {
 
     public static final String POSITION = "POSITION";
 
-    @InjectView(R.id.send_button)
-    private Button mSendButton;
+    @BindView(R.id.send_button)
+    Button mSendButton;
 
     private int mPosition;
     private SendFragmentCommunicator mActivityCommunicator;
@@ -69,8 +69,9 @@ public class SendFragment extends BaseFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View rootView = inflater.inflate(R.layout.fragment_send, container, false);
-        return rootView;
+        View view = inflater.inflate(R.layout.fragment_send, container, false);
+        ButterKnife.bind(this, view);
+        return view;
     }
 
     @Override
@@ -89,8 +90,8 @@ public class SendFragment extends BaseFragment {
 
                 // insist that a subject is chosen
                 if(!subjectChoosen){
-                    RoboDialogFragment newFragment = MessageFragment.newInstance(res.getString(R.string.subject_not_chosen_title), res.getString(R.string.subject_not_chosen_message), true, MessageFragment.Option.None);
-                    newFragment.show(getActivity().getSupportFragmentManager(), "Subject not chosen");
+//                    RoboDialogFragment newFragment = MessageFragment.newInstance(res.getString(R.string.subject_not_chosen_title), res.getString(R.string.subject_not_chosen_message), true, MessageFragment.Option.None);
+//                    newFragment.show(getActivity().getSupportFragmentManager(), "Subject not chosen");
                 } else {
                     //count only non empty texts and photos as answered
                     for(TextAnswerVO answer : answersVO.getTextAnswers()){
@@ -104,8 +105,8 @@ public class SendFragment extends BaseFragment {
 
                     if(answered < total){
                         mActivityCommunicator.onRecolorUnansweredQuestions();
-                        RoboDialogFragment newFragment = SendDialogFragment.newInstance(answered, total);
-                        newFragment.show(getActivity().getSupportFragmentManager(), "SendDialog");
+//                        RoboDialogFragment newFragment = SendDialogFragment.newInstance(answered, total);
+//                        newFragment.show(getActivity().getSupportFragmentManager(), "SendDialog");
                     } else {
                         mActivityCommunicator.onPreServerCommunication();
                     }

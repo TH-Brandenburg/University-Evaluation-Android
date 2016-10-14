@@ -1,5 +1,6 @@
-package de.fhb.campusapp.eval.activities;
+package de.fhb.campusapp.eval.ui.eval;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
@@ -7,7 +8,9 @@ import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.Pair;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
@@ -22,6 +25,8 @@ import android.widget.ListPopupWindow;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.buchandersenn.android_permission_manager.PermissionManager;
+import com.github.buchandersenn.android_permission_manager.PermissionRequest;
 import com.squareup.otto.Produce;
 import com.squareup.otto.Subscribe;
 
@@ -36,6 +41,8 @@ import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import de.fhb.ca.dto.AnswersDTO;
 import de.fhb.ca.dto.ResponseDTO;
 import de.fhb.ca.dto.util.ErrorType;
@@ -43,24 +50,27 @@ import de.fhb.campusapp.eval.custom.CustomFragmentStatePagerAdapter;
 import de.fhb.campusapp.eval.custom.CustomScroller;
 import de.fhb.campusapp.eval.custom.CustomViewPager;
 import de.fhb.campusapp.eval.custom.CustomWindowPopupAdapter;
-import de.fhb.campusapp.eval.fragments.MessageFragment;
 import de.fhb.campusapp.eval.fragments.SendDialogFragment;
 import de.fhb.campusapp.eval.fragments.SendFragment;
 import de.fhb.campusapp.eval.fragments.TextFragment;
+import de.fhb.campusapp.eval.helper.RetrofitHelper;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
 import de.fhb.campusapp.eval.interfaces.ProgressCommunicator;
 import de.fhb.campusapp.eval.interfaces.RequestCommunicator;
 import de.fhb.campusapp.eval.interfaces.RetroRespondService;
+import de.fhb.campusapp.eval.ui.base.BaseActivity;
+import de.fhb.campusapp.eval.utility.ActivityUtil;
 import de.fhb.campusapp.eval.utility.ClassMapper;
 import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.utility.DialogFactory;
 import de.fhb.campusapp.eval.utility.EventBus;
 import de.fhb.campusapp.eval.utility.Events.DisplayProgressOverlayEvent;
 import de.fhb.campusapp.eval.utility.Events.HideProgressOverlayEvent;
 import de.fhb.campusapp.eval.utility.Events.NetworkErrorEvent;
-import de.fhb.campusapp.eval.utility.Events.NetworkFailureEvent;
-import de.fhb.campusapp.eval.utility.Events.NetworkSuccessEvent;
 import de.fhb.campusapp.eval.utility.Events.PhotoTakenEvent;
 import de.fhb.campusapp.eval.utility.Events.PreServerCommunicationEvent;
+import de.fhb.campusapp.eval.utility.Events.RequestErrorEvent;
+import de.fhb.campusapp.eval.utility.Events.RequestSuccessEvent;
 import de.fhb.campusapp.eval.utility.Events.StartServerCommunicationEvent;
 import de.fhb.campusapp.eval.utility.FeatureSwitch;
 import de.fhb.campusapp.eval.utility.ImageManager;
@@ -82,14 +92,11 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import roboguice.inject.ContentView;
-import roboguice.inject.InjectView;
 import rx.android.schedulers.AndroidSchedulers;
 
-@ContentView(R.layout.activity_button)
 public class EvaluationActivity extends BaseActivity implements ProgressCommunicator, PagerAdapterSetPrimary, ViewPager.PageTransformer,
         CustomViewPager.CustomViewPagerCommunicator, AdapterView.OnItemClickListener, TextFragment.TextFragmentCommunicator,
-        RequestCommunicator, SendFragment.SendFragmentCommunicator, SendDialogFragment.SendDialogFragmentCommunicator, MessageFragment.MessageFragmentCommunicator {
+        RequestCommunicator, SendFragment.SendFragmentCommunicator, SendDialogFragment.SendDialogFragmentCommunicator, EvalMvpView{
 
     /**
      * Constant used to put and extract the state of mListPopupReopen from Bundle
@@ -102,17 +109,26 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     private static final String RESTORE_TOOLBAR = "RESTORE_TOOLBAR";
     private static final int REQUEST_CAPTURE_IMAGE = 1;
 
-    @InjectView(R.id.button_pager)
-    private CustomViewPager mViewPager;
+    @BindView(R.id.button_pager)
+    CustomViewPager mViewPager;
 
-    @InjectView(R.id.progress_overlay)
-    private View mProgressOverlay;
+    @BindView(R.id.progress_overlay)
+    View mProgressOverlay;
 
     /**
      * The navigation utility directly below the toolbar.
      */
-    @InjectView(R.id.button_pager_tab_strip)
-    private PagerTabStrip mPagerTabStrip;
+    @BindView(R.id.button_pager_tab_strip)
+    PagerTabStrip mPagerTabStrip;
+
+    private RetrofitHelper mRetrofitHelper;
+
+    private Resources mResources;
+
+    private EvalPresenter mEvalPresenter;
+
+    private PermissionManager mPermissionManager;
+
 
     /**
      * Overlay ListView used to navigate within the app. Placed in ActionBar
@@ -191,17 +207,21 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_button);
+        ButterKnife.bind(this);
+
+        mResources = getResources();
+        mEvalPresenter = new EvalPresenter();
+        mPermissionManager = PermissionManager.create(this);
+
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.show();
         }
 
         // fixes the orientation to portrait
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        } else {
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        }
+        super.fixOrientationToPortrait();
+
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.my_awesome_toolbar);
         setSupportActionBar(toolbar);
@@ -341,8 +361,15 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         }
 
         if (id == R.id.camera_activation) {
-            ImageManager manager = new ImageManager();
-            mCurrentIntentImage = manager.startCameraIntent(this, mCurrentImageName);
+            mEvalPresenter.requestCameraPermission(mPermissionManager);
+            mEvalPresenter.requestStoragePermission(mPermissionManager);
+
+            mCurrentIntentImage = mEvalPresenter.startCameraIntent(mCurrentImageName);
+
+//            ImageManager manager = new ImageManager();
+//            mCurrentIntentImage = manager.startCameraIntent(this, mCurrentImageName);
+
+
         }
         return super.onOptionsItemSelected(item);
     }
@@ -357,12 +384,39 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_CAPTURE_IMAGE && resultCode == RESULT_OK) {
-            ImageManager manager = new ImageManager();
-            manager.testForPossibility(getContentResolver(), mCurrentIntentImage);
+//            ImageManager manager = new ImageManager();
+//            manager.testForPossibility(getContentResolver(), mCurrentIntentImage);
 
             TextFragment fragment = ((TextFragment) mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem()));
             fragment.onPhotoTaken(DataHolder.getCurrentQuestion(), mCurrentIntentImage.getAbsolutePath());
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        mPermissionManager.handlePermissionResult(requestCode, grantResults);
+    }
+
+    @Override
+    public void showCameraExplanation(PermissionRequest request) {
+        Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
+                , R.string.camera_permission_explanation_title
+                , R.string.camera_permission_explanation_message
+                , (dialogInterface, i) -> request.acceptPermissionRationale()
+                , null
+                , true);
+        dialog.show();
+    }
+
+    @Override
+    public void showStorageExplanation(PermissionRequest request) {
+        Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
+                , R.string.storage_permission_explanation_title
+                , R.string.storage_permission_explanation_message
+                , (dialogInterface, i) -> request.acceptPermissionRationale()
+                , null
+                , true);
+        dialog.show();
     }
 
 
@@ -802,7 +856,6 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     @Override
     public void performAnswerRequest() {
 
-
         if(mRetrofitRest == null){
             mRetrofitRest = new Retrofit.Builder()
                     .baseUrl(DataHolder.getHostName() + '/')
@@ -932,49 +985,65 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 
     @Subscribe
     @SuppressWarnings("unused")
-    public void onNetworkSuccess(NetworkSuccessEvent event){
+    public void onRequestSuccess(RequestSuccessEvent event){
         // delete obsolete data
 //        File picDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
 //        File dcimDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
 //
 //        Utility.fileDelete(picDir, 1500, 0);
 //        Utility.fileDelete(dcimDir, 1500, 0);
+        Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
+                , R.string.answers_transmission_success_title
+                , R.string.answers_transmission_success_message
+                , (dialogInterface, i) -> ActivityUtil.saveFinish(this)
+                , dialogInterface -> ActivityUtil.saveFinish(this)
+                , true);
+        dialog.show();
 
-        Resources resources = getResources();
-        MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.answers_transmission_success_title), resources.getString(R.string.answers_transmission_success_message), false, MessageFragment.Option.CloseApp);
-        fragment.show(getSupportFragmentManager(), "Success");
+//        Resources resources = getResources();
+//        MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.answers_transmission_success_title), resources.getString(R.string.answers_transmission_success_message), false, MessageFragment.Option.CloseApp);
+//        fragment.show(getSupportFragmentManager(), "Success");
         Utility.animateView(mProgressOverlay, View.GONE, 0, 100);
     }
 
     @Subscribe
     @SuppressWarnings("unused")
-    public void onNetworkFailure(NetworkFailureEvent event){
+    public void onNetworkError(NetworkErrorEvent event){
         Resources resources = getResources();
         Throwable t = event.getRetrofitError();
         boolean dialogsCanceable = true;
         int statusCode = 0;
         ResponseDTO dto = null;
 
-      if(event.getClass() != null){
-            t.printStackTrace();
-            if (t.getClass() == ConnectException.class) {
-                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.no_network_title), resources.getString(R.string.no_network_message), false, MessageFragment.Option.RetryCommunication);
-                fragment.show(getSupportFragmentManager(), "NoInternet");
-            } else if (t.getClass() == SocketTimeoutException.class || t.getClass() == SocketException.class) {
-                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.socket_timeout_title), resources.getString(R.string.socket_timeout_message), true, MessageFragment.Option.RetryCommunication);
-                fragment.show(getSupportFragmentManager(), "ServerNotResponding");
-            } else {
-                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.some_network_error_title), resources.getString(R.string.some_network_error_message), true, MessageFragment.Option.RetryCommunication);
-                fragment.show(getSupportFragmentManager(), "SomeError");
-            }
-        }
+        Pair<String, String> errorText = mRetrofitHelper.processNetworkError(t, mResources);
+        Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
+                , errorText.first
+                , errorText.second
+                , (dialogInterface, i) -> onStartServerCommunication()
+                , dialogInterface -> onStartServerCommunication()
+                , true);
+        dialog.show();
+
+//      if(event.getClass() != null){
+//            t.printStackTrace();
+//            if (t.getClass() == ConnectException.class) {
+//                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.no_network_title), resources.getString(R.string.no_network_message), false, MessageFragment.Option.RetryCommunication);
+//                fragment.show(getSupportFragmentManager(), "NoInternet");
+//            } else if (t.getClass() == SocketTimeoutException.class || t.getClass() == SocketException.class) {
+//                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.socket_timeout_title), resources.getString(R.string.socket_timeout_message), true, MessageFragment.Option.RetryCommunication);
+//                fragment.show(getSupportFragmentManager(), "ServerNotResponding");
+//            } else {
+//                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.some_network_error_title), resources.getString(R.string.some_network_error_message), true, MessageFragment.Option.RetryCommunication);
+//                fragment.show(getSupportFragmentManager(), "SomeError");
+//            }
+//        }
         Utility.animateView(mProgressOverlay, View.GONE, 0, 100);
     }
 
     @Subscribe
     @SuppressWarnings("unused")
-    public void onNetworkError(NetworkErrorEvent<ResponseDTO> event){
-        ErrorResponseHandling(event.getResposne());
+    public void onNetworkError(RequestErrorEvent<ResponseDTO> event){
+//        ErrorResponseHandling(event.getResposne());
         Utility.animateView(mProgressOverlay, View.GONE, 0, 100);
     }
 
@@ -999,74 +1068,70 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         }
     }
 
-    private void ErrorResponseHandling(Response<ResponseDTO> response) {
-        int statusCode = response.code();
-        Resources resources = getResources();
-        try {
-            ResponseBody body = response.errorBody();
-            // anootatoin array needed in order to prevent nullPointer
-            ResponseDTO dto = (ResponseDTO) mRetrofitRest.responseBodyConverter(ResponseDTO.class, new Annotation[1]).convert(body);
+//    private void ErrorResponseHandling(Response<ResponseDTO> response) {
+//        int statusCode = response.code();
+//        Resources resources = getResources();
+//        try {
+//            ResponseBody body = response.errorBody();
+//            // anootatoin array needed in order to prevent nullPointer
+//            ResponseDTO dto = (ResponseDTO) mRetrofitRest.responseBodyConverter(ResponseDTO.class, new Annotation[1]).convert(body);
+//
+//            if (dto != null && dto.getType() == ErrorType.INVALID_TOKEN) {
+//                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.invalid_token_title), resources.getString(R.string.invalid_token_message), true, MessageFragment.Option.RetryScan);
+//                fragment.show(getSupportFragmentManager(), "InvalidToken");
+//            } else if (dto != null && dto.getType() == ErrorType.TOKEN_ALLREADY_USED) {
+//                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.token_already_used_title), resources.getString(R.string.token_already_used_message), true, MessageFragment.Option.RetryScan);
+//                fragment.show(getSupportFragmentManager(), "TokenAlreadyUsed");
+//            } else if (dto != null && dto.getType() == ErrorType.EVALUATION_CLOSED) {
+//                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.evaluation_closed_title), resources.getString(R.string.evaluation_closed_message), true, MessageFragment.Option.RetryScan);
+//                fragment.show(getSupportFragmentManager(), "EvaluationClosed");
+//            } else if (dto != null && dto.getType() == ErrorType.UNKNOWN_ERROR) {
+//                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.unknown_error_title), resources.getString(R.string.unknown_error_message), true, MessageFragment.Option.RetryScan);
+//                fragment.show(getSupportFragmentManager(), "UnknownError");
+//            } else if (dto != null && dto.getType() == ErrorType.MALFORMED_REQUEST) {
+//                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.unknown_error_title), resources.getString(R.string.unknown_error_message), true, MessageFragment.Option.RetryScan);
+//                fragment.show(getSupportFragmentManager(), "MalformedRequest");
+//            } else {
+//                // Check of status codes and display information to user
+//                if (statusCode == HttpURLConnection.HTTP_BAD_GATEWAY || statusCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+//                    MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.error_500_502_title), resources.getString(R.string.no_network_message), true, MessageFragment.Option.RetryCommunication);
+//                    fragment.show(getSupportFragmentManager(), "500|502");
+//                } else if (statusCode == HttpURLConnection.HTTP_UNAVAILABLE) {
+//                    MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.error_503_title), resources.getString(R.string.error_503_message), true, MessageFragment.Option.RetryCommunication);
+//                    fragment.show(getSupportFragmentManager(), "503");
+//                } else if (statusCode == HttpURLConnection.HTTP_FORBIDDEN || statusCode == HttpURLConnection.HTTP_NOT_FOUND) {
+//                    MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.error_404_403_title), resources.getString(R.string.error_404_403_message), true, MessageFragment.Option.RetryCommunication);
+//                    fragment.show(getSupportFragmentManager(), "404|403");
+//                } else if (statusCode == HttpURLConnection.HTTP_BAD_REQUEST) {
+//                    MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.unknown_error_title), resources.getString(R.string.unknown_error_message), true, MessageFragment.Option.RetryCommunication);
+//                    fragment.show(getSupportFragmentManager(), "400");
+//                }
+//            }
+//        } catch (IOException | IllegalArgumentException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
-            if (dto != null && dto.getType() == ErrorType.INVALID_TOKEN) {
-                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.invalid_token_title), resources.getString(R.string.invalid_token_message), true, MessageFragment.Option.RetryScan);
-                fragment.show(getSupportFragmentManager(), "InvalidToken");
-            } else if (dto != null && dto.getType() == ErrorType.TOKEN_ALLREADY_USED) {
-                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.token_already_used_title), resources.getString(R.string.token_already_used_message), true, MessageFragment.Option.RetryScan);
-                fragment.show(getSupportFragmentManager(), "TokenAlreadyUsed");
-            } else if (dto != null && dto.getType() == ErrorType.EVALUATION_CLOSED) {
-                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.evaluation_closed_title), resources.getString(R.string.evaluation_closed_message), true, MessageFragment.Option.RetryScan);
-                fragment.show(getSupportFragmentManager(), "EvaluationClosed");
-            } else if (dto != null && dto.getType() == ErrorType.UNKNOWN_ERROR) {
-                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.unknown_error_title), resources.getString(R.string.unknown_error_message), true, MessageFragment.Option.RetryScan);
-                fragment.show(getSupportFragmentManager(), "UnknownError");
-            } else if (dto != null && dto.getType() == ErrorType.MALFORMED_REQUEST) {
-                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.unknown_error_title), resources.getString(R.string.unknown_error_message), true, MessageFragment.Option.RetryScan);
-                fragment.show(getSupportFragmentManager(), "MalformedRequest");
-            } else {
-                // Check of status codes and display information to user
-                if (statusCode == HttpURLConnection.HTTP_BAD_GATEWAY || statusCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
-                    MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.error_500_502_title), resources.getString(R.string.no_network_message), true, MessageFragment.Option.RetryCommunication);
-                    fragment.show(getSupportFragmentManager(), "500|502");
-                } else if (statusCode == HttpURLConnection.HTTP_UNAVAILABLE) {
-                    MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.error_503_title), resources.getString(R.string.error_503_message), true, MessageFragment.Option.RetryCommunication);
-                    fragment.show(getSupportFragmentManager(), "503");
-                } else if (statusCode == HttpURLConnection.HTTP_FORBIDDEN || statusCode == HttpURLConnection.HTTP_NOT_FOUND) {
-                    MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.error_404_403_title), resources.getString(R.string.error_404_403_message), true, MessageFragment.Option.RetryCommunication);
-                    fragment.show(getSupportFragmentManager(), "404|403");
-                } else if (statusCode == HttpURLConnection.HTTP_BAD_REQUEST) {
-                    MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.unknown_error_title), resources.getString(R.string.unknown_error_message), true, MessageFragment.Option.RetryCommunication);
-                    fragment.show(getSupportFragmentManager(), "400");
-                }
-            }
-        } catch (IOException | IllegalArgumentException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void onRestartQRScanning() {
-
-    }
-
-    @Override
     public void onStartServerCommunication() {
         EventBus.get().post(new StartServerCommunicationEvent());
     }
+
+
 
     private class RetrofitCallback implements Callback<ResponseDTO>{
 
         @Override
         public void onResponse(Call<ResponseDTO> call, Response<ResponseDTO> response) {
             if(response.isSuccessful()){
-                EventBus.get().post(new NetworkSuccessEvent<>(response.body() ,response));
+                EventBus.get().post(new RequestSuccessEvent<>(response.body() ,response));
             } else {
-                EventBus.get().post(new NetworkErrorEvent<>(response));
+                EventBus.get().post(new RequestErrorEvent<>(response));
             }
         }
 
         @Override
         public void onFailure(Call<ResponseDTO> call, Throwable t) {
-            EventBus.get().post(new NetworkFailureEvent(t));
+            EventBus.get().post(new NetworkErrorEvent(t));
         }
     }
 

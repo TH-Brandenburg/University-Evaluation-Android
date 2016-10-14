@@ -3,13 +3,13 @@ package de.fhb.campusapp.eval.fragments;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 
-import roboguice.fragment.RoboFragment;
 
 /**
- * Created by Admin on 15.12.2015.
+ * Created by Sebastian Müller on 15.12.2015.
  */
-public abstract class BaseFragment extends RoboFragment{
+public abstract class BaseFragment extends Fragment{
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);

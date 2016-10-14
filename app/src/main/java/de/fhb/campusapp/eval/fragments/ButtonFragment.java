@@ -17,10 +17,13 @@ import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import org.roboguice.shaded.goole.common.collect.Iterables;
+
+import com.google.common.collect.Iterables;
 
 import java.util.ArrayList;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterPageEvent;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
 import de.fhb.campusapp.eval.utility.DataHolder;
@@ -30,7 +33,6 @@ import de.fhb.campusapp.eval.utility.Utility;
 import de.fhb.campusapp.eval.utility.vos.ChoiceVO;
 import de.fhb.campusapp.eval.utility.vos.MultipleChoiceAnswerVO;
 import fhb.de.campusappevaluationexp.R;
-import roboguice.inject.InjectView;
 
 public class ButtonFragment extends BaseFragment implements PagerAdapterPageEvent {
     public static final String QUESTION = "QUESTION";
@@ -45,8 +47,8 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
     private ViewTreeObserver.OnGlobalLayoutListener mGlobalObserver;
     private DisplayMetrics mDisplayMetrics;
 
-    @InjectView(R.id.question_text_view)
-    private TextView mQuestionTextView;
+    @BindView(R.id.question_text_view)
+    TextView mQuestionTextView;
 
     public static ButtonFragment newInstance(String question, ArrayList<ChoiceVO> choices, int position) {
         ButtonFragment fragment = new ButtonFragment();
@@ -99,15 +101,19 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        View view;
+
         if(Iterables.tryFind(mChoices, choice -> choice.getGrade() == 0).orNull() != null){
-            NoCommentLayoutChooser(inflater, container);
+           view = NoCommentLayoutChooser(inflater, container);
         } else {
-            NoCommentlessLayoutChooser(inflater, container);
+           view = NoCommentlessLayoutChooser(inflater, container);
         }
 
-        mGlobalObserver = initObserver(mRootView);
-        mRootView.getViewTreeObserver().addOnGlobalLayoutListener(mGlobalObserver);
-        return mRootView;
+        ButterKnife.bind(this, view);
+        mGlobalObserver = initObserver(view);
+        mRootView = view;
+        view.getViewTreeObserver().addOnGlobalLayoutListener(mGlobalObserver);
+        return view;
     }
 
     /**
@@ -115,42 +121,44 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
      * @param inflater
      * @param container
      */
-    private void NoCommentlessLayoutChooser(LayoutInflater inflater, ViewGroup container) {
+    private View NoCommentlessLayoutChooser(LayoutInflater inflater, ViewGroup container) {
+        View view = null;
         if((mChoices.size()) % 2 == 1 && mChoices.get((int)Math.floor(mChoices.size() / 2)).getGrade() == 1){
             switch(mChoices.size()-1){
                 case 3:
-                    mRootView = inflater.inflate(R.layout.fragment_button_3_positive_middle, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_3_positive_middle, container, false);
                     break;
                 case 5:
-                    mRootView = inflater.inflate(R.layout.fragment_button_5_positive_middle, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_5_positive_middle, container, false);
                     break;
                 case 7:
-                    mRootView = inflater.inflate(R.layout.fragment_button_7_positive_middle, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_7_positive_middle, container, false);
                     break;
             }
             // choose a layout where top button is very positive answer if above does not apply
         } else {
             switch(mChoices.size()-1){
                 case 2:
-                    mRootView = inflater.inflate(R.layout.fragment_button_2, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_2, container, false);
                     break;
                 case 3:
-                    mRootView = inflater.inflate(R.layout.fragment_button_3, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_3, container, false);
                     break;
                 case 4:
-                    mRootView = inflater.inflate(R.layout.fragment_button_4, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_4, container, false);
                     break;
                 case 5:
-                    mRootView = inflater.inflate(R.layout.fragment_button_5, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_5, container, false);
                     break;
                 case 6:
-                    mRootView = inflater.inflate(R.layout.fragment_button_6, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_6, container, false);
                     break;
                 case 7:
-                    mRootView = inflater.inflate(R.layout.fragment_button_7, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_7, container, false);
                     break;
             }
         }
+        return view;
     }
 
     /**
@@ -158,44 +166,46 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
      * @param inflater
      * @param container
      */
-    private void NoCommentLayoutChooser(LayoutInflater inflater, ViewGroup container) {
+    private View NoCommentLayoutChooser(LayoutInflater inflater, ViewGroup container) {
+        View view = null;
         // Inflate layout corresponding to number of choices
         // Choose a layout where central button is very positive answer if choice in the middle has grade of 1
         if((mChoices.size()-1) % 2 == 1 && mChoices.get(mChoices.size() / 2).getGrade() == 1){
             switch(mChoices.size()-1){
                 case 3:
-                    mRootView = inflater.inflate(R.layout.fragment_button_3_positive_middle_nc, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_3_positive_middle_nc, container, false);
                     break;
                 case 5:
-                    mRootView = inflater.inflate(R.layout.fragment_button_5_positive_middle_nc, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_5_positive_middle_nc, container, false);
                     break;
                 case 7:
-                    mRootView = inflater.inflate(R.layout.fragment_button_7_positive_middle_nc, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_7_positive_middle_nc, container, false);
                     break;
             }
         // choose a layout where top button is very positive answer if above does not apply
         } else {
             switch(mChoices.size()-1){
                 case 2:
-                    mRootView = inflater.inflate(R.layout.fragment_button_2_nc, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_2_nc, container, false);
                     break;
                 case 3:
-                    mRootView = inflater.inflate(R.layout.fragment_button_3_nc, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_3_nc, container, false);
                     break;
                 case 4:
-                    mRootView = inflater.inflate(R.layout.fragment_button_4_nc, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_4_nc, container, false);
                     break;
                 case 5:
-                    mRootView = inflater.inflate(R.layout.fragment_button_5_nc, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_5_nc, container, false);
                     break;
                 case 6:
-                    mRootView = inflater.inflate(R.layout.fragment_button_6_nc, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_6_nc, container, false);
                     break;
                 case 7:
-                    mRootView = inflater.inflate(R.layout.fragment_button_7_nc, container, false);
+                    view = inflater.inflate(R.layout.fragment_button_7_nc, container, false);
                     break;
             }
         }
+        return view;
     }
 
     @Override

@@ -26,6 +26,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import de.fhb.campusapp.eval.activities.EnlargeImageActivity;
 import de.fhb.campusapp.eval.custom.CustomEditText;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterPageEvent;
@@ -41,7 +43,6 @@ import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
 import de.fhb.campusapp.eval.utility.vos.TextAnswerVO;
 import de.fhb.campusapp.eval.utility.vos.TextQuestionVO;
 import fhb.de.campusappevaluationexp.R;
-import roboguice.inject.InjectView;
 import rx.android.schedulers.AndroidSchedulers;
 
 public class TextFragment extends BaseFragment implements PagerAdapterPageEvent {
@@ -67,29 +68,29 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
 
     private TextFragmentCommunicator mActivityCommunicator;
 
-    @InjectView(R.id.question_text_view)
-    private TextView mTextView;
+    @BindView(R.id.question_text_view)
+    TextView mTextView;
 
-    @InjectView(R.id.edit_text)
-    private CustomEditText mEditText;
+    @BindView(R.id.edit_text)
+    CustomEditText mEditText;
 
-    @InjectView(R.id.comment_thumbnail)
-    private ImageView mImageView;
+    @BindView(R.id.comment_thumbnail)
+    ImageView mImageView;
 
-    @InjectView(R.id.camera_button)
-    private ImageButton mCameraButton;
+    @BindView(R.id.camera_button)
+    ImageButton mCameraButton;
 
-    @InjectView(R.id.scrollView)
-    private ScrollView mScrollView;
+    @BindView(R.id.scrollView)
+    ScrollView mScrollView;
 
-    @InjectView(R.id.image_progress_bar)
-    private ProgressBar mProgressBar;
+    @BindView(R.id.image_progress_bar)
+    ProgressBar mProgressBar;
 
-    @InjectView(R.id.text_fragment_root_layout)
-    private RelativeLayout mRootLayout;
+    @BindView(R.id.text_fragment_root_layout)
+    RelativeLayout mRootLayout;
 
-    @InjectView(R.id.delete_image_button)
-    private ImageButton mDeleteButton;
+    @BindView(R.id.delete_image_button)
+    ImageButton mDeleteButton;
 
 //    private QuestionCommunicator questionCommunicator;
 
@@ -138,7 +139,9 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_text_view, container, false);
+        View view = inflater.inflate(R.layout.fragment_text_view, container, false);
+        ButterKnife.bind(this, view);
+        return view;
     }
 
     @Override

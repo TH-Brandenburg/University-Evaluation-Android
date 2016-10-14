@@ -1,25 +1,21 @@
 package de.fhb.campusapp.eval.utility.Events;
 
-import retrofit2.Response;
 
 /**
- * Created by Admin on 14.06.2016.
- * Signifies that information was send over the network but some error occured during transmission.
- * Either the server had an error (5xx), was unreachable or answered with an error message.
- *
+ * Created by Admin on 14.12.2015.
  */
-public class NetworkErrorEvent <T> {
-    Response<T> resposne;
+public class NetworkErrorEvent {
+    private Throwable retrofitError;
 
-    public NetworkErrorEvent(Response<T> resposne) {
-        this.resposne = resposne;
+    public NetworkErrorEvent(Throwable retrofitError) {
+        this.retrofitError = retrofitError;
     }
 
-    public Response<T> getResposne() {
-        return resposne;
+    public Throwable getRetrofitError() {
+        return retrofitError;
     }
 
-    public void setResposne(Response<T> resposne) {
-        this.resposne = resposne;
+    public void setRetrofitError(Throwable retrofitError) {
+        this.retrofitError = retrofitError;
     }
 }

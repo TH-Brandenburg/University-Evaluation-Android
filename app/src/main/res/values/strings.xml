@@ -16,6 +16,7 @@
     <!--Website %1$s isn\'t yet available, I\'m working on it, please wait %2$s-->
 
     <!--Error messages-->
+    <string name="generic_error_title">Sorry</string>
     <string name="no_network_title">Keine Verbindung zum Server möglich.</string>
     <string name="no_network_message">Aktivieren Sie Ihre Verbindung zum Internet.</string>
     <string name="error_500_502_title">Interner Fehler aufgetreten.</string>
@@ -47,10 +48,21 @@
     <string name="subject_not_chosen_title">Studiengang nicht gewählt</string>
     <string name="subject_not_chosen_message">Sie müssen zu Beginn des Fragenbogens einen Studiengang wählen, wenn Sie Ihre Antworten absenden wollen.</string>
 
+    <string name="camera_permission_not_granted_title">Kamera-Berechtigung erforderlich</string>
+    <string name="camera_permission_not_granted_message">Die App wird beendet. Zentrale Features dieser App, wie das einlesen von QR-Codes, benötigen den Zugriff auf die Kamera. Ohne diesen ist die App nicht funktionstüchtig.</string>
+
+
+
     <!--Success Messages-->
     <string name="answers_transmission_success_title">Übertragung erfolgreich.</string>
     <string name="answers_transmission_success_message">Die Evaluation ist beendet. Die Applikation wird geschlossen.</string>
 
+    <!--Permission Explanations-->
+    <string name="camera_permission_explanation_title">Kamera-Berechtigung erforderlich</string>
+    <string name="camera_permission_explanation_message">Zentrale Features dieser App, wie das einlesen von QR-Codes oder das aufnehmen von Bildern, benötigen den Zugriff auf die Kamera. Ohne diese Berechtigung ist die App funktionsunfähig.</string>
+
+    <string name="storage_permission_explanation_title">Speicherzugriff erforderlich</string>
+    <string name="storage_permission_explanation_message">Bilder die Sie aufgenommen haben, müssen auf Ihrem Handy gespeichert werden. Ohne Zugriff auf den Speicher kann die App Ihre Fotos nicht persistieren.</string>
     <!--Button texts-->
     <string name="ok_button">Okay</string>
     <string name="abort_button">Abbrechen</string>

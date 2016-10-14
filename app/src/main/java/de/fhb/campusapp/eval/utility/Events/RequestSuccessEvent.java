@@ -6,11 +6,11 @@ import retrofit2.Response;
 /**
  * Created by Admin on 14.12.2015.
  */
-public class NetworkSuccessEvent <T>{
+public class RequestSuccessEvent<T>{
     private T requestedObject;
     private Response response;
 
-   public NetworkSuccessEvent(T requestedObject, Response response) {
+   public RequestSuccessEvent(T requestedObject, Response response) {
         this.response = response;
         this.requestedObject = requestedObject;
     }

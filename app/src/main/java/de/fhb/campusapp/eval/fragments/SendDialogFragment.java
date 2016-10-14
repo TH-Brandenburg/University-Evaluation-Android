@@ -3,14 +3,14 @@ package de.fhb.campusapp.eval.fragments;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import fhb.de.campusappevaluationexp.R;
-import roboguice.fragment.RoboDialogFragment;
 
-public class SendDialogFragment extends RoboDialogFragment {
+public class SendDialogFragment extends DialogFragment {
 
     public final static String QUESTIONS_ANSWERED = "QUESTIONS_ANSWERED";
     public final static String QUESTIONS_TOTAL = "QUESTIONS_TOTAL";

@@ -9,6 +9,9 @@ import android.provider.BaseColumns;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import com.commonsware.cwac.cam2.CameraActivity;
+import com.commonsware.cwac.cam2.Facing;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -263,16 +266,24 @@ public class ImageManager {
     public File startCameraIntent(Activity activity, String intentImageName){
         // create Intent to take a picture and return control to the calling application
         File intentImage =  Utility.createImageFile(intentImageName, activity);
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        Intent intent = new CameraActivity.IntentBuilder(activity)
+                .skipConfirm()
+                .facing(Facing.BACK)
+                .to(intentImage)
+                .build();
 
-        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(intentImage));
 
-        fillPhotoList(activity.getContentResolver());
-
-        // start the image capture Intent
-        if (takePictureIntent.resolveActivity(activity.getPackageManager()) != null) { // ensure that there is an intent that supports the request
-            activity.startActivityForResult(takePictureIntent, REQUEST_CAPTURE_IMAGE);
-        }
+        activity.startActivityForResult(intent, REQUEST_CAPTURE_IMAGE);
+//        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//
+//        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(intentImage));
+//
+//        fillPhotoList(activity.getContentResolver());
+//
+//        // start the image capture Intent
+//        if (takePictureIntent.resolveActivity(activity.getPackageManager()) != null) { // ensure that there is an intent that supports the request
+//            activity.startActivityForResult(takePictureIntent, REQUEST_CAPTURE_IMAGE);
+//        }
         return intentImage;
     }
 
@@ -341,204 +352,4 @@ public class ImageManager {
 
 
     }
-
-
-
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        if (requestCode == REQUEST_CAPTURE_IMAGE && resultCode == RESULT_OK) {
-//
-//            // array containing properties we want to know about the images on this system.
-//            String[] projection = { MediaStore.Images.ImageColumns.SIZE,
-//                    MediaStore.Images.ImageColumns.DISPLAY_NAME,// the path to the image including name
-//                    MediaStore.Images.ImageColumns.DATA,
-//                    MediaStore.Images.ImageColumns._ID};
-//
-//            Cursor cursor = null;
-//            Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-//
-//            // 3 possibilities:
-//            // - Some devices use it completely and skip the gallery.
-//            // - Some devices ignore it completely and ONLY use the gallery.
-//            // - Some devices really suck and save a full sized image to the gallery,
-//            //   and save a thumbnail only to the location specified.
-//            // All must be addressed and dealt with.
-//            // Poss 1: Best case -> we dont need to do anything
-//            // Poss 2: Copy the Gallery pick to the intended location.
-//            // Poss 3: Delete the thumbnail and copy the full sized picture to specified location.
-//
-//            // test for poss 2
-//            if(mCurrentImageFile.exists() && mCurrentImageFile.length() > 0){
-//                // test passed -> the intent stored SOMETHING into the intended file
-//
-//                // test for poss 3 -> search for image in gallery
-//                if (uri != null)
-//                {
-//                    cursor = getContentResolver().query(uri, projection, null, null, null);
-//                }
-//
-//                if(cursor != null && cursor.moveToFirst()) {
-//                    cursor = findGalleryImageInDatabase(cursor);
-//                    if(pair.second != null && !pair.second.isEmpty()) {
-//
-//                    }
-//                    // if this is false -> we found the new Image!
-//                    File file = new File(cursor.getString(2));
-//                    // if our image is smaller than the gallery one ours is only a thumbnail
-//                    // delete and copy
-//                    if (file.exists() && mCurrentImageFile.length() < cursor.getLong(0) && file.delete()) {
-//                        try{
-//                            mCurrentImageFile.createNewFile();
-//                            FileChannel source = null;
-//                            FileChannel destination = null;
-//                            try {
-//                                source = new FileInputStream(file).getChannel();
-//                                destination = new FileOutputStream(mCurrentImageFile).getChannel();
-//                                destination.transferFrom(source, 0, source.size());
-//                            } finally {
-//                                if (source != null) {
-//                                    source.close();
-//                                }
-//                                if (destination != null) {
-//                                    destination.close();
-//                                }
-//                            }
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-//                        getContentResolver().delete(
-//                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, BaseColumns._ID + "=" + cursor.getString(3), null);
-//                        break;
-//                    }
-//                }
-//
-//
-//            }
-//        } else {
-//            // the intent stored nothing inside the file
-//        }
-//
-//
-//
-//        if(mCurrentImageFile != null){
-//            if (uri != null && mCurrentImageFile.length() > 0)
-//            {
-//                cursor = getContentResolver().query(uri, projection, null, null, null);
-//            }
-//
-//            if(cursor != null && cursor.moveToFirst()){
-//                do{
-//                    boolean imageFound = false;
-//                    if(DataHolder.getGalleryList().contains(cursor.getString(1))){
-//                        imageFound = true;
-//                    }
-//
-//                    if(!imageFound){
-//                        // if this is false -> we found the new Image!
-//                        File file = new File(cursor.getString(2));
-//
-//                        // Delete it and remove its entry from the MediaStore Database.
-//                        // Congrats. You have removed the offending duplicate.
-//                        if(file.exists() && file.delete()){
-//                            getContentResolver().delete(
-//                                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI, BaseColumns._ID + "=" + cursor.getString(3), null);
-//                            break;
-//                        } else {
-//                            Log.e("FILE_DELETE_FAILED", "Image could not be deleted!");
-//                            throw new IllegalStateException("Could not delete file. Either it does not exist or its locked.");
-//                        }
-//                    }
-//                } while (cursor.moveToNext());
-//            }
-//            if(cursor != null){
-//                cursor.close();
-//            }
-//        }
-//        TextFragment fragment = ((TextFragment) mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem()));
-//        fragment.onPhotoTaken(mCurrentQuestionText, mCurrentImageFile.getAbsolutePath());
-//    }
-
-
-
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        // based on the result we either set the preview or show a quick toast splash.
-//        if (resultCode != RESULT_OK) {
-//            return;
-//        }
-//
-//        // This is ##### ridiculous.  Some versions of Android save
-//        // to the MediaStore as well.  Not sure why!  We don't know what
-//        // name Android will give either, so we get to search for this
-//        // manually and remove it.
-//        String[] projection = {MediaStore.Images.ImageColumns.SIZE,
-//                MediaStore.Images.ImageColumns.DISPLAY_NAME,
-//                MediaStore.Images.ImageColumns.DATA,
-//                BaseColumns._ID,};
-//        //
-//        // intialize the Uri and the Cursor, and the current expected size.
-//        Cursor cursor = null;
-//        Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-//        //
-//        if (mCurrentImageFile != null) {
-//            // Query the Uri to get the data path.  Only if the Uri is valid,
-//            // and we had a valid size to be searching for.
-//            if ((uri != null) && (mCurrentImageFile.length() > 0)) {
-//                cursor = getContentResolver().query(uri, projection, null, null, null);
-//            }
-//            //
-//            // If we found the cursor and found a record in it (we also have the size).
-//            if ((cursor != null) && (cursor.moveToFirst())) {
-//                do {
-//                    // Check each area in the gallary we built before.
-//                    boolean imageFound = false;
-//                    if (DataHolder.getGalleryList().contains(cursor.getString(1))) {
-//                        imageFound = true;
-//                    }
-//                    //
-//                    // To here we looped the full gallery.
-//                    if (!imageFound) {
-//                        // This is the NEW image.  If the size is bigger, copy it.
-//                        // Then delete it!
-//                        File file = new File(cursor.getString(2));
-//
-//                        // Ensure it's there, check size, and delete!
-//                        if ((file.exists()) && (mCurrentImageFile.length() < cursor.getLong(0)) && (mCurrentImageFile.delete())) {
-//                            // Finally we can stop the copy.
-//                            try {
-//                                mCurrentImageFile.createNewFile();
-//                                FileChannel source = null;
-//                                FileChannel destination = null;
-//                                try {
-//                                    source = new FileInputStream(file).getChannel();
-//                                    destination = new FileOutputStream(mCurrentImageFile).getChannel();
-//                                    destination.transferFrom(source, 0, source.size());
-//                                } finally {
-//                                    if (source != null) {
-//                                        source.close();
-//                                    }
-//                                    if (destination != null) {
-//                                        destination.close();
-//                                    }
-//                                }
-//                            } catch (IOException e) {
-//                                e.printStackTrace();
-//                            }
-//                        }
-//                        //
-//                        ContentResolver cr = getContentResolver();
-//                        cr.delete(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-//                                BaseColumns._ID + "=" + cursor.getString(3), null);
-//                        break;
-//                    }
-//                }
-//                while (cursor.moveToNext());
-//                cursor.close();
-//
-//            }
-//            TextFragment fragment = ((TextFragment) mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem()));
-//            fragment.onPhotoTaken(mCurrentQuestionText, mCurrentImageFile.getAbsolutePath());
-//        }
-//    }
-
-
 }

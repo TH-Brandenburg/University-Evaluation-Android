@@ -23,3 +23,4 @@
     <item android:state_focused="true" android:drawable="@drawable/campusapptheme_textfield_disabled_focused_holo_light" />
     <item android:drawable="@drawable/campusapptheme_textfield_disabled_holo_light" />
 </selector>
+

@@ -9,9 +9,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionLikeType;
 import com.fasterxml.jackson.databind.type.MapLikeType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.google.common.collect.Iterables;
 
 import org.joda.time.Instant;
-import org.roboguice.shaded.goole.common.collect.Iterables;
 
 import java.io.IOException;
 import java.util.ArrayList;

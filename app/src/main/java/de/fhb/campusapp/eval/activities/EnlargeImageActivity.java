@@ -13,27 +13,28 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import de.fhb.campusapp.eval.ui.base.BaseActivity;
 import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.Utility;
 import fhb.de.campusappevaluationexp.R;
-import roboguice.activity.RoboActionBarActivity;
-import roboguice.inject.ContentView;
-import roboguice.inject.InjectView;
 
-@ContentView(R.layout.activity_enlarge_image)
-public class EnlargeImageActivity extends RoboActionBarActivity {
+public class EnlargeImageActivity extends BaseActivity {
 
     public static final String IMAGE_FILE_PATH = "IMAGE_FILE_PATH";
 
-    @InjectView(R.id.enlarged_image_view)
+    @BindView(R.id.enlarged_image_view)
     ImageView mImageView;
 
-    @InjectView(R.id.my_awesome_toolbar_2)
+    @BindView(R.id.my_awesome_toolbar_2)
     Toolbar mToolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_enlarge_image);
+        ButterKnife.bind(this);
 
         String nullTester = null;
         final String imageFilePath;
