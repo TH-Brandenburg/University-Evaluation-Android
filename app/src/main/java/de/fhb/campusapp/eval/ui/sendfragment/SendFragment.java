@@ -10,9 +10,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import de.fhb.campusapp.eval.fragments.BaseFragment;
+import de.fhb.campusapp.eval.ui.EvaluationApplication;
+import de.fhb.campusapp.eval.ui.base.BaseActivity;
+import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
 import de.fhb.campusapp.eval.utility.DialogFactory;
 import de.fhb.campusapp.eval.utility.Utility;
 import fhb.de.campusappevaluationexp.R;
@@ -29,7 +34,9 @@ public class SendFragment extends BaseFragment implements SendMvpView{
 
     private int mPosition;
     private SendFragmentCommunicator mActivityCommunicator;
-    private SendPresenter mSendPresenter;
+
+    @Inject
+    public SendPresenter mSendPresenter;
 
     public SendFragment() { }
 
@@ -58,11 +65,14 @@ public class SendFragment extends BaseFragment implements SendMvpView{
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ((BaseActivity)getActivity()).mActicityComponent.bind(this);
+
         if(this.getArguments() != null){
             Bundle args = this.getArguments();
             mPosition = args.getInt(POSITION);
         }
-        mSendPresenter = new SendPresenter();
+
+//        mSendPresenter = new SendPresenter();
         mSendPresenter.attachView(this);
     }
 

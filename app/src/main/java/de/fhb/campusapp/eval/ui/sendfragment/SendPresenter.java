@@ -1,5 +1,7 @@
 package de.fhb.campusapp.eval.ui.sendfragment;
 
+import javax.inject.Inject;
+
 import de.fhb.campusapp.eval.ui.base.BasePresenter;
 import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.vos.AnswersVO;
@@ -9,6 +11,12 @@ import de.fhb.campusapp.eval.utility.vos.TextAnswerVO;
  * Created by Sebastian Müller on 14.10.2016.
  */
 public class SendPresenter extends BasePresenter<SendFragment> {
+
+    @Inject
+    public SendPresenter(){
+
+    }
+
 
     public void sendButtonPressed(){
         int total = DataHolder.getQuestionsVO().getMultipleChoiceQuestionVOs().size() + DataHolder.getQuestionsVO().getTextQuestions().size();

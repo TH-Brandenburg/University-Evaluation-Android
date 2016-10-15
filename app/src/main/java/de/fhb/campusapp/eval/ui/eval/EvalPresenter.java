@@ -12,6 +12,8 @@ import com.github.buchandersenn.android_permission_manager.PermissionManager;
 
 import java.io.File;
 
+import javax.inject.Inject;
+
 import de.fhb.campusapp.eval.ui.base.BasePresenter;
 import de.fhb.campusapp.eval.utility.ActivityUtil;
 import de.fhb.campusapp.eval.utility.Utility;
@@ -20,6 +22,9 @@ import de.fhb.campusapp.eval.utility.Utility;
  * Created by Sebastian Müller on 09.10.2016.
  */
 public class EvalPresenter extends BasePresenter<EvaluationActivity>{
+
+    @Inject
+    public EvalPresenter(){}
 
     private static final int REQUEST_CAPTURE_IMAGE = 111;
 

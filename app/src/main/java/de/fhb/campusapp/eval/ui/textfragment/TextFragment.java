@@ -33,6 +33,7 @@ import de.fhb.campusapp.eval.custom.CustomEditText;
 import de.fhb.campusapp.eval.fragments.BaseFragment;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterPageEvent;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
+import de.fhb.campusapp.eval.ui.base.BaseActivity;
 import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.FeatureSwitch;
 import de.fhb.campusapp.eval.utility.Observer.DeleteImagesObservable;
@@ -116,6 +117,8 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent,
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ((BaseActivity)getActivity()).mActicityComponent.bind(this);
+
         if (getArguments() != null) {
             Bundle args = this.getArguments();
             mPosition = args.getInt(POSITION);

@@ -12,6 +12,8 @@ import java.net.HttpURLConnection;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
+import javax.inject.Inject;
+
 import de.fhb.ca.dto.QuestionsDTO;
 import de.fhb.ca.dto.ResponseDTO;
 import de.fhb.ca.dto.util.ErrorType;
@@ -25,7 +27,9 @@ import retrofit2.Retrofit;
  */
 public class RetrofitHelper {
 
-
+    @Inject
+    public RetrofitHelper() {
+    }
 
     public Pair<String, String> processNetworkError(Throwable t, Resources resources){
         Pair<String, String> result = null;

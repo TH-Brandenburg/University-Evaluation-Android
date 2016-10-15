@@ -33,6 +33,8 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import de.fhb.ca.dto.AnswersDTO;
@@ -47,6 +49,7 @@ import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
 import de.fhb.campusapp.eval.interfaces.ProgressCommunicator;
 import de.fhb.campusapp.eval.interfaces.RequestCommunicator;
 import de.fhb.campusapp.eval.interfaces.RetroRespondService;
+import de.fhb.campusapp.eval.ui.EvaluationApplication;
 import de.fhb.campusapp.eval.ui.base.BaseActivity;
 import de.fhb.campusapp.eval.ui.sendfragment.SendFragment;
 import de.fhb.campusapp.eval.ui.textfragment.TextFragment;
@@ -104,19 +107,26 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     @BindView(R.id.progress_overlay)
     View mProgressOverlay;
 
+    @BindView(R.id.my_awesome_toolbar)
+    Toolbar mToolbar;
+
     /**
      * The navigation utility directly below the toolbar.
      */
     @BindView(R.id.button_pager_tab_strip)
     PagerTabStrip mPagerTabStrip;
 
-    private RetrofitHelper mRetrofitHelper;
+    @Inject
+    RetrofitHelper mRetrofitHelper;
 
-    private Resources mResources;
+    @Inject
+    Resources mResources;
 
-    private EvalPresenter mEvalPresenter;
+    @Inject
+    EvalPresenter mEvalPresenter;
 
-    private PermissionManager mPermissionManager;
+    @Inject
+    PermissionManager mPermissionManager;
 
 
     /**
@@ -198,10 +208,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_button);
         ButterKnife.bind(this);
-
-        mResources = getResources();
-        mEvalPresenter = new EvalPresenter();
-        mPermissionManager = PermissionManager.create(this);
+        super.mActicityComponent.bind(this);
 
         mEvalPresenter.attachView(this);
 
@@ -213,9 +220,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         // fixes the orientation to portrait
         super.fixOrientationToPortrait();
 
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.my_awesome_toolbar);
-        setSupportActionBar(toolbar);
+        setSupportActionBar(mToolbar);
 
         //just in case it became null thanks to android
         DataHolder.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));

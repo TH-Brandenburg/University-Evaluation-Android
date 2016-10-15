@@ -9,7 +9,10 @@ import android.support.v7.app.AlertDialog;
 import com.github.buchandersenn.android_permission_manager.PermissionManager;
 import com.github.buchandersenn.android_permission_manager.PermissionRequest;
 
+import javax.inject.Inject;
+
 import de.fhb.campusapp.eval.activities.ScanActivity;
+import de.fhb.campusapp.eval.ui.EvaluationApplication;
 import de.fhb.campusapp.eval.ui.base.BaseActivity;
 import de.fhb.campusapp.eval.utility.ActivityUtil;
 import de.fhb.campusapp.eval.utility.DialogFactory;
@@ -17,18 +20,22 @@ import fhb.de.campusappevaluationexp.R;
 
 public class SplashActivity extends BaseActivity implements SplashMvpView {
 
-    private SplashPresenter mSplashPresenter;
-    private PermissionManager mPermissionManager;
+    @Inject
+    SplashPresenter mSplashPresenter;
+
+    @Inject
+    PermissionManager mPermissionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        super.mActicityComponent.bind(this);
         super.fixOrientationToPortrait();
 
-        mPermissionManager = PermissionManager.create(this);
 
-        mSplashPresenter = new SplashPresenter();
+//        mPermissionManager = PermissionManager.create(this);
+
+//        mSplashPresenter = new SplashPresenter();
         mSplashPresenter.attachView(this);
         mSplashPresenter.requestCameraPermission(mPermissionManager);
 

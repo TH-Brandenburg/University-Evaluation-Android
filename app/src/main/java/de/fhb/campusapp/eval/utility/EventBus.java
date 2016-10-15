@@ -4,7 +4,7 @@ import com.squareup.otto.Bus;
 import com.squareup.otto.ThreadEnforcer;
 
 /**
- * Created by Admin on 06.12.2015.
+ * Created by Sebastian Müller on 06.12.2015.
  */
 public class EventBus {
 

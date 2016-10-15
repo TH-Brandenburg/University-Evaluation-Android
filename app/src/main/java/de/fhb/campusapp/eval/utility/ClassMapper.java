@@ -18,9 +18,9 @@ import de.fhb.campusapp.eval.utility.vos.TextAnswerVO;
 import de.fhb.campusapp.eval.utility.vos.TextQuestionVO;
 
 /**
- * Created by Admin on 15.05.2016.
+ * Created by Sebastian Müller on 15.05.2016.
  */
-public class ClassMapper {
+public class ClassMapper{
 
     public static AnswersVO answersDTOToAnswersVOMapper(AnswersDTO dto){
         AnswersVO vo = new AnswersVO();
