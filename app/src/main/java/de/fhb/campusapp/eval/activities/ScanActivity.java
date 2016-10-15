@@ -9,7 +9,8 @@ import android.preference.PreferenceManager;
 import android.support.v4.util.Pair;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.MotionEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.Window;
@@ -28,11 +29,6 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.joda.time.Instant;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.net.ConnectException;
-import java.net.HttpURLConnection;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.util.EnumSet;
 import java.util.UUID;
 
@@ -40,9 +36,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import de.fhb.ca.dto.QuestionsDTO;
 import de.fhb.ca.dto.RequestDTO;
-import de.fhb.ca.dto.ResponseDTO;
-import de.fhb.ca.dto.util.ErrorType;
-import de.fhb.campusapp.eval.helper.RetrofitHelper;
+import de.fhb.campusapp.eval.data.local.RetrofitHelper;
 import de.fhb.campusapp.eval.interfaces.RetroRequestService;
 import de.fhb.campusapp.eval.services.CleanUpService;
 import de.fhb.campusapp.eval.ui.base.BaseActivity;
@@ -50,17 +44,18 @@ import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
 import de.fhb.campusapp.eval.utility.ActivityUtil;
 import de.fhb.campusapp.eval.utility.ClassMapper;
 import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.utility.DebugConfigurator;
 import de.fhb.campusapp.eval.utility.DialogFactory;
 import de.fhb.campusapp.eval.utility.EventBus;
 import de.fhb.campusapp.eval.utility.Events.RequestErrorEvent;
 import de.fhb.campusapp.eval.utility.Events.NetworkErrorEvent;
 import de.fhb.campusapp.eval.utility.Events.RequestSuccessEvent;
 import de.fhb.campusapp.eval.utility.Events.RestartQRScanningEvent;
+import de.fhb.campusapp.eval.utility.FeatureSwitch;
 import de.fhb.campusapp.eval.utility.QrPojo;
 import de.fhb.campusapp.eval.utility.Utility;
 import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
 import fhb.de.campusappevaluationexp.R;
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -159,37 +154,8 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
         //sets the uuid for this session
         DataHolder.setUuid(UUID.randomUUID().toString());
 
-//        mScaleDetector = new ScaleGestureDetector(this, new ScaleGestureDetector.OnScaleGestureListener() {
-//            private float x;
-//            private final float factor = 0.5f;
-//
-//            @Override
-//            public void onScaleEnd(ScaleGestureDetector detector) {
-//            }
-//
-//            @Override
-//            public boolean onScaleBegin(ScaleGestureDetector detector) {
-//                x = detector.getScaleFactor();
-//                return true;
-//            }
-//
-//            @Override
-//            public boolean onScale(ScaleGestureDetector detector) {
-//                if (mIsScanning) {
-//                    float y = detector.getScaleFactor();
-//                    float z = (y - x) * factor;
-//                    // Cut off some jittery digits.
-//                    z = ((float) ((int) (z * 100.0f))) / 100.0f;
-//                    zoom(z);
-//                }
-//
-//                return false;
-//            }
-//        });
         initBarcodeFragment();
-//        if(mRequestRunning){
-//
-//        }
+
         mIsScanning = true;
 
         //close the application
@@ -233,11 +199,43 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
         super.onResume();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        if(FeatureSwitch.DEBUG_ACTIVE){
+            getMenuInflater().inflate(R.menu.action_bar_navigator_only, menu);
+        }
+        return super.onCreateOptionsMenu(menu);
+    }
+
 //    @Override
-//    public boolean onTouchEvent(MotionEvent event) {
-//        mScaleDetector.onTouchEvent(event);
-//        return true;
+//    public boolean onPrepareOptionsMenu(Menu menu) {
+//        return super.onPrepareOptionsMenu(menu);
 //    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        if (id == R.id.question_search) {
+            DataHolder.setQuestionsVO(new QuestionsVO(
+                    DebugConfigurator.getDemoStudyPaths(),
+                    DebugConfigurator.getDemoTextQuestions(),
+                    DebugConfigurator.getDemoMultipleChoiceQuestionDTOs(),
+                    false
+            ));
+
+            DataHolder.getAnswersVO().setVoteToken(DebugConfigurator.genericVoteToken);
+            DataHolder.getAnswersVO().setDeviceID(DebugConfigurator.genericID);
+
+            Intent intent = new Intent(ScanActivity.this, EvaluationActivity.class);
+            startActivity(intent);
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     public void scanResult(ScanResult result) {
@@ -284,69 +282,6 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
         outState.putBoolean(CLEANUP_SERVICE_STARTED, mCleanupServiceStarted);
         outState.putBoolean(REQUEST_RUNNING, mRequestRunning);
         super.onSaveInstanceState(outState);
-    }
-
-    /**
-     * Briefly shows the given text and switches back
-     * to the default text after t seconds.
-     *
-     * @param text The text to display.
-     * @param t    Delay in miliseconds.
-     */
-
-    private void displayText(String text, int t) {
-//        mTextView.setText(text);
-        mToolBar.setTitle(text);
-
-        if (mDelayHandler != null) {
-            mDelayHandler.removeCallbacks(mDelayRunnable);
-            mDelayHandler = null;
-        }
-
-        mDelayHandler = new Handler();
-        mDelayRunnable = new Runnable() {
-            public void run() {
-//                mTextView.setText(mResources.getText(R.string.scan_search));
-                mToolBar.setTitle(mResources.getText(R.string.scan_search));
-
-            }
-        };
-
-        mDelayHandler.postDelayed(mDelayRunnable, t);
-    }
-
-    /**
-     * Zooms in/out.
-     *
-     * @param z Zoom factor.
-     */
-    private void zoom(float z) {
-        int maxZoom, prevZoom, zoom;
-
-        if (mCameraManager != null) {
-            maxZoom = mCameraManager.getMaxZoom();
-            if (maxZoom == 0) {
-                displayText(mResources.getText(R.string.zoom_not_supported).toString(), 2000);
-            } else {
-                zoom = mZoom + Math.round(maxZoom * z);
-                prevZoom = mZoom;
-
-                if (zoom < 0) {
-                    mZoom = 0;
-                } else if (zoom > maxZoom) {
-                    mZoom = maxZoom;
-                } else {
-                    mZoom = zoom;
-                }
-
-                if (prevZoom != zoom) {
-                    //mCameraManager.stopSmoothZoom();
-                    //mCameraManager.startSmoothZoom(mZoom);
-                    mCameraManager.setZoom(mZoom);
-                    displayText("Zoom: " + mZoom + " / " + maxZoom, 2000);
-                }
-            }
-        }
     }
 
     @Override

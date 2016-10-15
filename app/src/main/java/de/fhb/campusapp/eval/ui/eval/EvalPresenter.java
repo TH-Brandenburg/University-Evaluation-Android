@@ -61,6 +61,4 @@ public class EvalPresenter extends BasePresenter<EvaluationActivity>{
                 .onPermissionShowRationale(request -> getMvpView().showStorageExplanation(request))
                 .request();
     }
-
-
 }

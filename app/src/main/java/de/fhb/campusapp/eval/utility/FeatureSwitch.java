@@ -5,6 +5,8 @@ package de.fhb.campusapp.eval.utility;
  */
 
 public class FeatureSwitch {
+    public static final boolean DEBUG_ACTIVE = true;
+
 
     public static final boolean NAVIGATION_ALWAYS_MARK_UNASWERED = false;
     public static final boolean NAVIGATION_MARK_SELECTED = true;

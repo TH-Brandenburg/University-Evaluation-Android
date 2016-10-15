@@ -2,8 +2,6 @@ package de.fhb.campusapp.eval.ui.eval;
 
 import android.app.Dialog;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
@@ -31,13 +29,7 @@ import com.squareup.otto.Produce;
 import com.squareup.otto.Subscribe;
 
 import java.io.File;
-import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.net.ConnectException;
-import java.net.HttpURLConnection;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,20 +37,19 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import de.fhb.ca.dto.AnswersDTO;
 import de.fhb.ca.dto.ResponseDTO;
-import de.fhb.ca.dto.util.ErrorType;
 import de.fhb.campusapp.eval.custom.CustomFragmentStatePagerAdapter;
 import de.fhb.campusapp.eval.custom.CustomScroller;
 import de.fhb.campusapp.eval.custom.CustomViewPager;
 import de.fhb.campusapp.eval.custom.CustomWindowPopupAdapter;
+import de.fhb.campusapp.eval.data.local.RetrofitHelper;
 import de.fhb.campusapp.eval.fragments.SendDialogFragment;
-import de.fhb.campusapp.eval.fragments.SendFragment;
-import de.fhb.campusapp.eval.fragments.TextFragment;
-import de.fhb.campusapp.eval.helper.RetrofitHelper;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
 import de.fhb.campusapp.eval.interfaces.ProgressCommunicator;
 import de.fhb.campusapp.eval.interfaces.RequestCommunicator;
 import de.fhb.campusapp.eval.interfaces.RetroRespondService;
 import de.fhb.campusapp.eval.ui.base.BaseActivity;
+import de.fhb.campusapp.eval.ui.sendfragment.SendFragment;
+import de.fhb.campusapp.eval.ui.textfragment.TextFragment;
 import de.fhb.campusapp.eval.utility.ActivityUtil;
 import de.fhb.campusapp.eval.utility.ClassMapper;
 import de.fhb.campusapp.eval.utility.DataHolder;
@@ -73,7 +64,6 @@ import de.fhb.campusapp.eval.utility.Events.RequestErrorEvent;
 import de.fhb.campusapp.eval.utility.Events.RequestSuccessEvent;
 import de.fhb.campusapp.eval.utility.Events.StartServerCommunicationEvent;
 import de.fhb.campusapp.eval.utility.FeatureSwitch;
-import de.fhb.campusapp.eval.utility.ImageManager;
 import de.fhb.campusapp.eval.utility.Observer.CreateUploadImageObservable;
 import de.fhb.campusapp.eval.utility.Utility;
 import de.fhb.campusapp.eval.utility.vos.ChoiceVO;
@@ -86,7 +76,6 @@ import fhb.de.campusappevaluationexp.R;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -214,6 +203,8 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         mEvalPresenter = new EvalPresenter();
         mPermissionManager = PermissionManager.create(this);
 
+        mEvalPresenter.attachView(this);
+
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.show();
@@ -318,7 +309,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.action_bar_normal, menu);
+        getMenuInflater().inflate(R.menu.action_bar_navigator_only, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -349,7 +340,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.question_search && !mListPopupToggle) {
-//            View view = findViewById(R.id.action_bar_normal);
+//            View view = findViewById(R.id.action_bar_navigator_only);
             View view = findViewById(R.id.my_awesome_toolbar);
             mListPopupWindow.setAnchorView(view);
             mListPopupWindow.show();
@@ -365,10 +356,6 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
             mEvalPresenter.requestStoragePermission(mPermissionManager);
 
             mCurrentIntentImage = mEvalPresenter.startCameraIntent(mCurrentImageName);
-
-//            ImageManager manager = new ImageManager();
-//            mCurrentIntentImage = manager.startCameraIntent(this, mCurrentImageName);
-
 
         }
         return super.onOptionsItemSelected(item);
@@ -642,6 +629,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     @Override
     protected void onStop() {
         DataHolder.storeAllData();
+        mEvalPresenter.detachView();
         super.onStop();
     }
 
@@ -856,6 +844,15 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     @Override
     public void performAnswerRequest() {
 
+        if(FeatureSwitch.DEBUG_ACTIVE && DataHolder.getHostName() == null){
+            Utility.animateView(mProgressOverlay, View.GONE, 0.8f, 100);
+
+            DialogFactory.createSimpleOkErrorDialog(this,
+                    "Abort Debug", "Host not set and debug mode active. Aborting"
+                    , null, null, true).show();
+            return;
+        }
+
         if(mRetrofitRest == null){
             mRetrofitRest = new Retrofit.Builder()
                     .baseUrl(DataHolder.getHostName() + '/')
@@ -958,7 +955,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 //    }
 
     private void onPreServerCommunicationEvent(PreServerCommunicationEvent event){
-        Utility.animateView(mProgressOverlay, View.VISIBLE, 0.8f, 100);;
+        Utility.animateView(mProgressOverlay, View.VISIBLE, 0.8f, 100);
 
         CreateUploadImageObservable observable = new CreateUploadImageObservable();
         observable.prepareImageUploadInBackground(this).observeOn(AndroidSchedulers.mainThread())

@@ -1,4 +1,4 @@
-package de.fhb.campusapp.eval.fragments;
+package de.fhb.campusapp.eval.ui.textfragment;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -30,13 +30,11 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import de.fhb.campusapp.eval.activities.EnlargeImageActivity;
 import de.fhb.campusapp.eval.custom.CustomEditText;
+import de.fhb.campusapp.eval.fragments.BaseFragment;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterPageEvent;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
 import de.fhb.campusapp.eval.utility.DataHolder;
-import de.fhb.campusapp.eval.utility.EventBus;
-import de.fhb.campusapp.eval.utility.Events.ActivityInstanceAcquiredEvent;
 import de.fhb.campusapp.eval.utility.FeatureSwitch;
-import de.fhb.campusapp.eval.utility.ImageManager;
 import de.fhb.campusapp.eval.utility.Observer.DeleteImagesObservable;
 import de.fhb.campusapp.eval.utility.Utility;
 import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
@@ -45,7 +43,7 @@ import de.fhb.campusapp.eval.utility.vos.TextQuestionVO;
 import fhb.de.campusappevaluationexp.R;
 import rx.android.schedulers.AndroidSchedulers;
 
-public class TextFragment extends BaseFragment implements PagerAdapterPageEvent {
+public class TextFragment extends BaseFragment implements PagerAdapterPageEvent, TextMvpView {
 
     public static final String QUESTION = "QUESTION";
     public static final String POSITION = "POSITION";
@@ -198,13 +196,6 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
             }
         });
         mEditText.setPagerAdapter((PagerAdapterSetPrimary) getActivity());
-//
-//        mEditText.setImeActionLabel("Done", KeyEvent.KEYCODE_ENTER);
-//
-//        mEditText.setOnEditorActionListener((textView, i, keyEvent) -> {
-//            ((PagerAdapterSetPrimary) getActivity()).setPrimaryFragment(mPosition + 1);
-//            return true;
-//        });
     }
 
     private void configureImageViewAsButton() {
@@ -214,15 +205,15 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent 
         Utility.animateView(mCameraButton, View.VISIBLE, 1.0f, 100);
 
         mCameraButton.setOnClickListener(listener -> {
-            ImageManager manager = new ImageManager();
-            File intentImage = manager.startCameraIntent(getActivity(), mImageName);
-            mActivityCommunicator.setIntentImage(intentImage);
+//            ImageManager manager = new ImageManager();
+//            File intentImage = manager.startCameraIntent(getActivity(), mImageName);
+//            mActivityCommunicator.setIntentImage(intentImage);
         });
 
         mImageView.setOnClickListener(listener -> {
-            ImageManager manager = new ImageManager();
-            File intentImage = manager.startCameraIntent(getActivity(), mImageName);
-            mActivityCommunicator.setIntentImage(intentImage);
+//            ImageManager manager = new ImageManager();
+//            File intentImage = manager.startCameraIntent(getActivity(), mImageName);
+//            mActivityCommunicator.setIntentImage(intentImage);
         });
     }
 

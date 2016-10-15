@@ -8,7 +8,7 @@ import android.view.Gravity;
 import android.widget.Button;
 
 /**
- * Created by Admin on 02.01.2016.
+ * Created by Sebastian Müller on 02.01.2016.
  */
 public class CustomVerticalButton extends Button {
     final boolean topDown;

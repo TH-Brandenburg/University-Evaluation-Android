@@ -69,10 +69,10 @@
     <string name="close_button">Schließen</string>
     <string name="send_button">Abschicken</string>
     <string name="retry_button">Wiederholen</string>
+    <string name="send_anyway_button">Trotzdem abschicken</string>
     <string name="tab_view_button_question">Frage </string>
-    <string name="tab_view_button_send">Abschicken</string>
+    <string name="tab_view_button_send">Trotzdem senden</string>
     <string name="tab_view_button_choose">Wähle deinen Studiengang</string>
-
 
     <!--ScanActivity status texts-->
     <string name="scan_search">QR-Code einlesen</string>

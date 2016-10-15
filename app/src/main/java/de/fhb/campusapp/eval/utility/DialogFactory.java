@@ -96,17 +96,87 @@ public final class DialogFactory {
         return createGenericErrorDialog(context, context.getString(messageResource));
     }
 
-    public static AlertDialog createAcceptDenyDialog(Context context, String title, String message, DialogInterface.OnClickListener accept, DialogInterface.OnClickListener deny){
+    /**
+     * Creates a 2 options dialog.
+     * @param context
+     * @param title headline of the dialog
+     * @param message main text of the dialog
+     * @param accept listener for the accept button
+     * @param deny listener for deny button
+     * @param acceptText text of the positive answer button
+     * @param denyText text of the negative answer button
+     * @param cancelable weather a click to anywhere but the presented buttons dismisses the dialog
+     * @return a created dialog instance. To display it call show()
+     */
+    public static AlertDialog createAcceptDenyDialog(Context context,
+                                                     String title, String message, String acceptText,
+                                                     String denyText, boolean cancelable,
+                                                     DialogInterface.OnClickListener accept,
+                                                     DialogInterface.OnClickListener deny,
+                                                     DialogInterface.OnDismissListener dismiss){
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(context)
                 .setTitle(title)
                 .setMessage(message)
-                .setPositiveButton("Accept", accept)
-                .setNegativeButton("Deny", deny);
+                .setPositiveButton(acceptText, accept)
+                .setNegativeButton(denyText, deny)
+                .setCancelable(cancelable)
+                .setOnDismissListener(dismiss);
         return alertDialog.create();
     }
 
-    public static AlertDialog createAcceptDenyDialog(Context context, @StringRes int titleRessource, @StringRes int messageRessource, DialogInterface.OnClickListener accept, DialogInterface.OnClickListener deny){
-        return createAcceptDenyDialog(context, context.getString(titleRessource), context.getString(messageRessource), accept, deny);
+    /**
+     * Creates a 2 options dialog.
+     * @param context
+     * @param title headline of the dialog
+     * @param message main text of the dialog
+     * @param accept listener for the accept button
+     * @param deny listener for deny button
+     * @param acceptText text of the positive answer button
+     * @param denyText text of the negative answer button
+     * @param cancelable weather a click to anywhere but the presented buttons dismisses the dialog
+     * @return a created dialog instance. To display it call show()
+     */
+    public static AlertDialog createAcceptDenyDialog(Context context,
+                                                     @StringRes int title, @StringRes int message,
+                                                     @StringRes int acceptText, @StringRes int denyText,
+                                                     boolean cancelable,
+                                                     DialogInterface.OnClickListener accept,
+                                                     DialogInterface.OnClickListener deny,
+                                                     DialogInterface.OnDismissListener dismiss){
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton(acceptText, accept)
+                .setNegativeButton(denyText, deny)
+                .setCancelable(cancelable)
+                .setOnDismissListener(dismiss);
+        return alertDialog.create();
+    }
+
+    /**
+     * Creates a 2 options dialog. The options are set to "accept" and "deny". It is non dismissable.
+     * @param context
+     * @param title headline of the dialog
+     * @param message main text of the dialog
+     * @param accept listener for the accept button
+     * @param deny listener for deny button
+     * @return a created dialog instance. To display it call show()
+     */
+    public static AlertDialog createAcceptDenyDialog(Context context, String title, String message, DialogInterface.OnClickListener accept, DialogInterface.OnClickListener deny){
+        return createAcceptDenyDialog(context, title, message, "Accept", "Deny", false, accept, deny, null);
+    }
+
+    /**
+     * Creates a 2 options dialog. The options are set to "accept" and "deny". It is non dismissable.
+     * @param context
+     * @param titleResource headline of the dialog
+     * @param messageResource main text of the dialog
+     * @param accept listener for the accept button
+     * @param deny listener for deny button
+     * @return a created dialog instance. To display it call show()
+     */
+    public static AlertDialog createAcceptDenyDialog(Context context, @StringRes int titleResource, @StringRes int messageResource, DialogInterface.OnClickListener accept, DialogInterface.OnClickListener deny){
+        return createAcceptDenyDialog(context, context.getString(titleResource), context.getString(messageResource), accept, deny);
     }
 
     public static ProgressDialog createProgressDialog(Context context, String message) {

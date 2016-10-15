@@ -13,9 +13,9 @@ import java.util.List;
 
 import de.fhb.campusapp.eval.fragments.ButtonFragment;
 import de.fhb.campusapp.eval.fragments.InnerSectionFragment;
-import de.fhb.campusapp.eval.fragments.SendFragment;
-import de.fhb.campusapp.eval.fragments.TextFragment;
+import de.fhb.campusapp.eval.ui.sendfragment.SendFragment;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterPageEvent;
+import de.fhb.campusapp.eval.ui.textfragment.TextFragment;
 import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.vos.ChoiceVO;
 import de.fhb.campusapp.eval.utility.vos.MultipleChoiceQuestionVO;

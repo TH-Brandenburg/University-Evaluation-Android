@@ -18,7 +18,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import de.fhb.campusapp.eval.custom.CustomFragmentStatePagerAdapter;
-import de.fhb.campusapp.eval.fragments.TextFragment;
+import de.fhb.campusapp.eval.ui.textfragment.TextFragment;
 import de.fhb.campusapp.eval.utility.Utility;
 import fhb.de.campusappevaluationexp.R;
 import rx.Observable;

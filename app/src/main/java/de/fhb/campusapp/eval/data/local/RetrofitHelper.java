@@ -1,4 +1,4 @@
-package de.fhb.campusapp.eval.helper;
+package de.fhb.campusapp.eval.data.local;
 
 import android.content.res.Resources;
 import android.support.v4.util.Pair;
