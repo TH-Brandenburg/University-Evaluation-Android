@@ -9,6 +9,7 @@ import javax.inject.Singleton;
 import dagger.Binds;
 import dagger.Component;
 import de.fhb.campusapp.eval.data.local.RetrofitHelper;
+import de.fhb.campusapp.eval.injection.ApplicationContext;
 import de.fhb.campusapp.eval.injection.module.ActivityModule;
 import de.fhb.campusapp.eval.injection.module.ApplicationModule;
 import de.fhb.campusapp.eval.ui.eval.EvalPresenter;
@@ -31,7 +32,7 @@ public interface ApplicationComponent {
     void bind(EvalPresenter evalPresenter);
     void bind(SendPresenter sendPresenter);
 
-    Context context();
+    @ApplicationContext Context context();
     Application application();
     ClassMapper classMapper();
     Resources resources();

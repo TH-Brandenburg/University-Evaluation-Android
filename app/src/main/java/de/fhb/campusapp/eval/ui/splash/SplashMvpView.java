@@ -12,4 +12,5 @@ import de.fhb.campusapp.eval.ui.base.MvpView;
 public interface SplashMvpView extends MvpView {
     void showCameraExplanation(PermissionRequest request);
     void startScanActivity();
+    void callSaveFinish();
 }

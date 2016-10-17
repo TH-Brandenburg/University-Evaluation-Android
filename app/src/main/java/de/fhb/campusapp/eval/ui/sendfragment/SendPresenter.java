@@ -10,11 +10,11 @@ import de.fhb.campusapp.eval.utility.vos.TextAnswerVO;
 /**
  * Created by Sebastian Müller on 14.10.2016.
  */
-public class SendPresenter extends BasePresenter<SendFragment> {
+public class SendPresenter extends BasePresenter<SendMvpView> {
 
     @Inject
     public SendPresenter(){
-
+        super();
     }
 
 

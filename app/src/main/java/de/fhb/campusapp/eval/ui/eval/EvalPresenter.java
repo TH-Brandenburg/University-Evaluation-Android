@@ -5,65 +5,125 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.v4.content.ContextCompat;
+import android.view.View;
 
 import com.commonsware.cwac.cam2.CameraActivity;
 import com.commonsware.cwac.cam2.Facing;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.buchandersenn.android_permission_manager.PermissionManager;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import javax.inject.Inject;
 
+import de.fhb.ca.dto.AnswersDTO;
+import de.fhb.ca.dto.ResponseDTO;
+import de.fhb.campusapp.eval.interfaces.RetroRespondService;
 import de.fhb.campusapp.eval.ui.base.BasePresenter;
 import de.fhb.campusapp.eval.utility.ActivityUtil;
+import de.fhb.campusapp.eval.utility.ClassMapper;
+import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.utility.DialogFactory;
+import de.fhb.campusapp.eval.utility.EventBus;
+import de.fhb.campusapp.eval.utility.Events.NetworkErrorEvent;
+import de.fhb.campusapp.eval.utility.Events.RequestErrorEvent;
+import de.fhb.campusapp.eval.utility.Events.RequestSuccessEvent;
+import de.fhb.campusapp.eval.utility.FeatureSwitch;
 import de.fhb.campusapp.eval.utility.Utility;
+import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 /**
  * Created by Sebastian Müller on 09.10.2016.
  */
-public class EvalPresenter extends BasePresenter<EvaluationActivity>{
+public class EvalPresenter extends BasePresenter<EvalMvpView>{
 
     @Inject
-    public EvalPresenter(){}
+    public EvalPresenter(){
+        super();
+    }
 
-    private static final int REQUEST_CAPTURE_IMAGE = 111;
+    /*
+ * Executes request retrieving questions and choices from REST server
+ * */
 
-    public File startCameraIntent(String intentImageName){
-        boolean permissionsGranted =
-                PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getMvpView(), Manifest.permission.CAMERA)
-             && PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(getMvpView(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
+    private void performAnswerRequest() {
 
-        File intentImage = null;
-
-        if(permissionsGranted){
-           intentImage = startIntent(intentImageName);
+        if(FeatureSwitch.DEBUG_ACTIVE && DataHolder.getHostName() == null){
+            getMvpView().hideProgressOverlay();
+            getMvpView().showDebugMessage();
+            return;
         }
 
-        return intentImage;
-    }
-
-    private File startIntent(String intentImageName){
-        // create Intent to take a picture and return control to the calling application
-        File intentImage =  Utility.createImageFile(intentImageName, getMvpView());
-        Intent intent = new CameraActivity.IntentBuilder(getMvpView())
-                .skipConfirm()
-                .facing(Facing.BACK)
-                .to(intentImage)
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(DataHolder.getHostName() + '/')
+                .addConverterFactory(JacksonConverterFactory.create())
                 .build();
 
-        getMvpView().startActivityForResult(intent, REQUEST_CAPTURE_IMAGE);
-        return intentImage;
+        //zip commentary pictures if there are any
+        ArrayList<File> imageFileList = new ArrayList<>();
+        for(ImageDataVO pathObj : DataHolder.getCommentaryImageMap().values()){
+            if(pathObj.getmUploadFilePath() != null){
+                imageFileList.add(new File(pathObj.getmUploadFilePath()));
+            }
+        }
+        File zippedImages = getMvpView().zipPictureFiles(imageFileList);
+
+//      manuel mapping to Json since I do not trust retrofit to do that
+        ObjectMapper mapper = new ObjectMapper();
+        String jsonAnswers = null;
+
+        try {
+            AnswersDTO dto = ClassMapper.answersVOToAnswerDTOMapper(DataHolder.getAnswersVO());
+            jsonAnswers = mapper.writeValueAsString(dto);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        RequestBody fileBody = RequestBody.create(MediaType.parse("multipart/form-data"), zippedImages);
+        RequestBody answerBody = RequestBody.create(MediaType.parse("multipart/form-data"), jsonAnswers);
+
+        MultipartBody.Part filePart = MultipartBody.Part.createFormData("images", zippedImages.getName(), fileBody);
+
+        RetroRespondService respondService = retrofit.create(RetroRespondService.class);
+        Call<ResponseDTO> response = respondService.sendAnswersWithPictures(answerBody, filePart);
+
+        response.enqueue(new RetrofitCallback());
     }
 
-    public void requestCameraPermission(PermissionManager manager){
-        manager.with(Manifest.permission.CAMERA)
-                .onPermissionShowRationale(request -> getMvpView().showCameraExplanation(request))
+
+    public void requestInternetPermissionAndConnectServer(PermissionManager manager){
+        manager.with(Manifest.permission.INTERNET)
+                .onPermissionGranted(() -> performAnswerRequest())
+                .onPermissionDenied(() -> getMvpView().callSaveFinish())
+                .onPermissionShowRationale(request -> getMvpView().showInternetExplanation(request))
                 .request();
     }
 
-    public void requestStoragePermission(PermissionManager manager){
-        manager.with(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                .onPermissionShowRationale(request -> getMvpView().showStorageExplanation(request))
-                .request();
+    private class RetrofitCallback implements Callback<ResponseDTO> {
+
+        @Override
+        public void onResponse(Call<ResponseDTO> call, Response<ResponseDTO> response) {
+            if(response.isSuccessful()){
+                EventBus.get().post(new RequestSuccessEvent<>(response.body() ,response));
+            } else {
+                EventBus.get().post(new RequestErrorEvent<>(response));
+            }
+        }
+
+        @Override
+        public void onFailure(Call<ResponseDTO> call, Throwable t) {
+            EventBus.get().post(new NetworkErrorEvent(t));
+        }
     }
+
 }

@@ -2,7 +2,7 @@
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                tools:context="de.fhb.campusapp.eval.activities.ScanActivity">
+                tools:context="de.fhb.campusapp.eval.ui.scan.ScanActivity">
 
     <include
         layout="@layout/include_toolbar"

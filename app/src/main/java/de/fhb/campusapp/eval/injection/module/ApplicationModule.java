@@ -1,17 +1,17 @@
 package de.fhb.campusapp.eval.injection.module;
 
-import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
 import android.content.res.Resources;
-
-import com.github.buchandersenn.android_permission_manager.PermissionManager;
 
 import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import de.fhb.campusapp.eval.injection.ApplicationContext;
 import de.fhb.campusapp.eval.utility.ClassMapper;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 /**
  * Created by Sebastian Müller on 14.10.2016.
@@ -26,7 +26,7 @@ public class ApplicationModule {
     @Provides
     Application provideApplication(){ return mApplication; }
 
-    @Provides
+    @Provides @ApplicationContext
     Context provideContext() { return mApplication; }
 
     @Provides @Singleton

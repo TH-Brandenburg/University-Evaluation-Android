@@ -1,4 +1,4 @@
-package de.fhb.campusapp.eval.fragments;
+package de.fhb.campusapp.eval.ui.base;
 
 import android.app.Activity;
 import android.os.Bundle;

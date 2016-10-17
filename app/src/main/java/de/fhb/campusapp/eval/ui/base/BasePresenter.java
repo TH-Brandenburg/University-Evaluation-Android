@@ -1,5 +1,7 @@
 package de.fhb.campusapp.eval.ui.base;
 
+import de.fhb.campusapp.eval.utility.EventBus;
+
 /**
  * Base class that implements the Presenter interface and provides a base implementation for
  * attachView() and detachView(). It also handles keeping a reference to the mvpView that
@@ -8,6 +10,14 @@ package de.fhb.campusapp.eval.ui.base;
 public class BasePresenter<T extends MvpView> implements Presenter<T> {
 
     private T mMvpView;
+
+    public BasePresenter(){
+        EventBus.get().register(this);
+    }
+
+    public void unregisterFromEventBus(){
+        EventBus.get().unregister(this);
+    }
 
     @Override
     public void attachView(T mvpView) {

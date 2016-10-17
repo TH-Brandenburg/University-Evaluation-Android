@@ -37,7 +37,7 @@
         android:theme="@style/app_theme"
         tools:replace="icon, theme">
         <activity
-            android:name="de.fhb.campusapp.eval.activities.ScanActivity"
+            android:name="de.fhb.campusapp.eval.ui.scan.ScanActivity"
             android:label="@string/app_name"
             android:windowSoftInputMode="adjustResize"/>
 
@@ -45,7 +45,7 @@
             android:name="de.fhb.campusapp.eval.ui.eval.EvaluationActivity"
             android:label="@string/action_bar_title"/>
         <activity
-            android:name="de.fhb.campusapp.eval.activities.EnlargeImageActivity"
+            android:name="de.fhb.campusapp.eval.ui.enlarge.EnlargeImageActivity"
             android:label="@string/action_bar_title"/>
         <service
             android:name="de.fhb.campusapp.eval.services.CleanUpService"

@@ -1,4 +1,4 @@
-package de.fhb.campusapp.eval.activities;
+package de.fhb.campusapp.eval.ui.enlarge;
 
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -13,6 +13,8 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import de.fhb.campusapp.eval.ui.base.BaseActivity;
@@ -20,9 +22,12 @@ import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.Utility;
 import fhb.de.campusappevaluationexp.R;
 
-public class EnlargeImageActivity extends BaseActivity {
+public class EnlargeImageActivity extends BaseActivity implements EnlargeMvpView {
 
     public static final String IMAGE_FILE_PATH = "IMAGE_FILE_PATH";
+
+    @Inject
+    EnlargePresenter mEnlargePresenter;
 
     @BindView(R.id.enlarged_image_view)
     ImageView mImageView;
@@ -33,8 +38,11 @@ public class EnlargeImageActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        super.mActicityComponent.bind(this);
         setContentView(R.layout.activity_enlarge_image);
         ButterKnife.bind(this);
+
+        mEnlargePresenter.attachView(this);
 
         String nullTester = null;
         final String imageFilePath;
@@ -65,7 +73,6 @@ public class EnlargeImageActivity extends BaseActivity {
                 Picasso.with(EnlargeImageActivity.this)
                         .load(new File(imageFilePath))
                         .fit()
-//                        .centerCrop()
                         .into(mImageView);
                 Utility.animateView(mImageView, View.VISIBLE, 1.0f, 100);
             }
@@ -73,12 +80,9 @@ public class EnlargeImageActivity extends BaseActivity {
 
         // petty hack needed for support actionBars which do not have a menu.
         // bug of android.
-        mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mImageView.setImageBitmap(null);
-                onBackPressed();
-            }
+        mToolbar.setNavigationOnClickListener(view -> {
+            mImageView.setImageBitmap(null);
+            onBackPressed();
         });
     }
 
@@ -91,24 +95,30 @@ public class EnlargeImageActivity extends BaseActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.action_bar_enlarge_image, menu);
-        return true;
+    protected void onDestroy() {
+        super.onDestroy();
+        mEnlargePresenter.detachView();
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        // Inflate the menu; this adds items to the action bar if it is present.
+//        getMenuInflater().inflate(R.menu.action_bar_enlarge_image, menu);
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        // Handle action bar item clicks here. The action bar will
+//        // automatically handle clicks on the Home/Up button, so long
+//        // as you specify a parent activity in AndroidManifest.xml.
+//        int id = item.getItemId();
+//
+//        //noinspection SimplifiableIfStatement
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
+//
+//        return super.onOptionsItemSelected(item);
+//    }
 }

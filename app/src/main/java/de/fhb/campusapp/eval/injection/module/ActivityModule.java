@@ -5,8 +5,12 @@ import android.content.Context;
 
 import com.github.buchandersenn.android_permission_manager.PermissionManager;
 
+import javax.inject.Named;
+
 import dagger.Module;
 import dagger.Provides;
+import de.fhb.campusapp.eval.injection.ActivityContext;
+import de.fhb.campusapp.eval.injection.ApplicationContext;
 
 /**
  * Created by Sebastian Müller on 14.10.2016.
@@ -25,8 +29,8 @@ public class ActivityModule {
         return mActivity;
     }
 
-    @Provides
-    Context providesContext() {
+    @Provides @ActivityContext
+    Context provideContext() {
         return mActivity;
     }
 

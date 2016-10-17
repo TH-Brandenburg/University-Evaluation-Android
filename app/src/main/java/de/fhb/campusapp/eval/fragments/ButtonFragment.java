@@ -26,6 +26,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterPageEvent;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
+import de.fhb.campusapp.eval.ui.base.BaseFragment;
 import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.EventBus;
 import de.fhb.campusapp.eval.utility.Events.ClickedChoiceButtonEvent;

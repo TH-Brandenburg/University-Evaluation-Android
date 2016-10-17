@@ -63,6 +63,13 @@
 
     <string name="storage_permission_explanation_title">Speicherzugriff erforderlich</string>
     <string name="storage_permission_explanation_message">Bilder die Sie aufgenommen haben, müssen auf Ihrem Handy gespeichert werden. Ohne Zugriff auf den Speicher kann die App Ihre Fotos nicht persistieren.</string>
+
+    <string name="storage_camera_explanation_title">Kamera und Speicherzugriffs Berechtigungen erforderlich</string>
+    <string name="storage_camera_explanation_message">Wenn Sie ein Bild als Antwort verschicken müssen, benötigt die App Zugriff auf Ihre Kamera sowie auf Ihren internen Speicher, um das Bild zu machen und anschließend bis zum Absenden der Antworten zu speichern. Keine Sorge, die Bilder werden nach Beendigung der Evaluation automatisch gelöscht.</string>
+
+    <string name="internet_explanation_title">Internetzugriff erforderlich</string>
+    <string name="internet_explanation_message">Die App benötigt Internet sowohl zum Empfangen des Fragebogens als auch zum senden Ihrer Antworten. Ohne diese Möglichkeit ist die App funktionsuntüchtig.</string>
+
     <!--Button texts-->
     <string name="ok_button">Okay</string>
     <string name="abort_button">Abbrechen</string>

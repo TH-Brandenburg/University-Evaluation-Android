@@ -1,6 +1,5 @@
 package de.fhb.campusapp.eval.ui.splash;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -11,8 +10,7 @@ import com.github.buchandersenn.android_permission_manager.PermissionRequest;
 
 import javax.inject.Inject;
 
-import de.fhb.campusapp.eval.activities.ScanActivity;
-import de.fhb.campusapp.eval.ui.EvaluationApplication;
+import de.fhb.campusapp.eval.ui.scan.ScanActivity;
 import de.fhb.campusapp.eval.ui.base.BaseActivity;
 import de.fhb.campusapp.eval.utility.ActivityUtil;
 import de.fhb.campusapp.eval.utility.DialogFactory;
@@ -62,6 +60,11 @@ public class SplashActivity extends BaseActivity implements SplashMvpView {
         Intent intent = new Intent(this, ScanActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    @Override
+    public void callSaveFinish() {
+        ActivityUtil.saveFinish(this);
     }
 
     @Override

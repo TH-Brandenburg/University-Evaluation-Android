@@ -29,6 +29,7 @@ import com.squareup.otto.Produce;
 import com.squareup.otto.Subscribe;
 
 import java.io.File;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,13 +45,13 @@ import de.fhb.campusapp.eval.custom.CustomScroller;
 import de.fhb.campusapp.eval.custom.CustomViewPager;
 import de.fhb.campusapp.eval.custom.CustomWindowPopupAdapter;
 import de.fhb.campusapp.eval.data.local.RetrofitHelper;
-import de.fhb.campusapp.eval.fragments.SendDialogFragment;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
 import de.fhb.campusapp.eval.interfaces.ProgressCommunicator;
 import de.fhb.campusapp.eval.interfaces.RequestCommunicator;
 import de.fhb.campusapp.eval.interfaces.RetroRespondService;
 import de.fhb.campusapp.eval.ui.EvaluationApplication;
 import de.fhb.campusapp.eval.ui.base.BaseActivity;
+import de.fhb.campusapp.eval.ui.scan.ScanPresenter;
 import de.fhb.campusapp.eval.ui.sendfragment.SendFragment;
 import de.fhb.campusapp.eval.ui.textfragment.TextFragment;
 import de.fhb.campusapp.eval.utility.ActivityUtil;
@@ -88,7 +89,7 @@ import rx.android.schedulers.AndroidSchedulers;
 
 public class EvaluationActivity extends BaseActivity implements ProgressCommunicator, PagerAdapterSetPrimary, ViewPager.PageTransformer,
         CustomViewPager.CustomViewPagerCommunicator, AdapterView.OnItemClickListener, TextFragment.TextFragmentCommunicator,
-        RequestCommunicator, SendFragment.SendFragmentCommunicator, SendDialogFragment.SendDialogFragmentCommunicator, EvalMvpView{
+        RequestCommunicator, SendFragment.SendFragmentCommunicator, EvalMvpView{
 
     /**
      * Constant used to put and extract the state of mListPopupReopen from Bundle
@@ -356,13 +357,13 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
             mListPopupReopen = false;
         }
 
-        if (id == R.id.camera_activation) {
-            mEvalPresenter.requestCameraPermission(mPermissionManager);
-            mEvalPresenter.requestStoragePermission(mPermissionManager);
+//        if (id == R.id.camera_activation) {
+//            mEvalPresenter.requestCameraPermission(mPermissionManager);
+//            mEvalPresenter.requestStoragePermission(mPermissionManager);
+//
+//            mCurrentIntentImage = mEvalPresenter.startCameraIntent(mCurrentImageName);
 
-            mCurrentIntentImage = mEvalPresenter.startCameraIntent(mCurrentImageName);
-
-        }
+//        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -371,18 +372,18 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         mCurrentIntentImage = intentImage;
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQUEST_CAPTURE_IMAGE && resultCode == RESULT_OK) {
-//            ImageManager manager = new ImageManager();
-//            manager.testForPossibility(getContentResolver(), mCurrentIntentImage);
-
-            TextFragment fragment = ((TextFragment) mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem()));
-            fragment.onPhotoTaken(DataHolder.getCurrentQuestion(), mCurrentIntentImage.getAbsolutePath());
-        }
-    }
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//
+//        if (requestCode == REQUEST_CAPTURE_IMAGE && resultCode == RESULT_OK) {
+////            ImageManager manager = new ImageManager();
+////            manager.testForPossibility(getContentResolver(), mCurrentIntentImage);
+//
+//            TextFragment fragment = ((TextFragment) mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem()));
+//            fragment.onPhotoTaken(DataHolder.getCurrentQuestion(), mCurrentIntentImage.getAbsolutePath());
+//        }
+//    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
@@ -411,6 +412,33 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         dialog.show();
     }
 
+    @Override
+    public void showInternetExplanation(PermissionRequest request) {
+        Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
+                , R.string.internet_explanation_title
+                , R.string.internet_explanation_message
+                , (dialogInterface, i) -> request.acceptPermissionRationale()
+                , null
+                , true);
+        dialog.show();
+    }
+
+    @Override
+    public void showDebugMessage() {
+            DialogFactory.createSimpleOkErrorDialog(this,
+                    "Abort Debug", "Host not set and debug mode active. Aborting"
+                    , null, null, true).show();
+    }
+
+    @Override
+    public void callSaveFinish() {
+        ActivityUtil.saveFinish(this);
+    }
+
+    @Override
+    public File zipPictureFiles(List<File> imageFileList) {
+        return Utility.zipFiles(this,(ArrayList<File>) imageFileList);
+    }
 
 
     //    @Override
@@ -634,12 +662,13 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     @Override
     protected void onStop() {
         DataHolder.storeAllData();
-        mEvalPresenter.detachView();
         super.onStop();
     }
 
     @Override
     protected void onDestroy(){
+        mEvalPresenter.detachView();
+
         super.onDestroy();
     }
 
@@ -843,58 +872,58 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         }
     }
 
-  /*
-  * Executes request retrieving questions and choices from REST server
-  * */
-    @Override
-    public void performAnswerRequest() {
-
-        if(FeatureSwitch.DEBUG_ACTIVE && DataHolder.getHostName() == null){
-            Utility.animateView(mProgressOverlay, View.GONE, 0.8f, 100);
-
-            DialogFactory.createSimpleOkErrorDialog(this,
-                    "Abort Debug", "Host not set and debug mode active. Aborting"
-                    , null, null, true).show();
-            return;
-        }
-
-        if(mRetrofitRest == null){
-            mRetrofitRest = new Retrofit.Builder()
-                    .baseUrl(DataHolder.getHostName() + '/')
-                    .addConverterFactory(JacksonConverterFactory.create())
-                    .build();
-        }
-
-        //zip commentary pictures if there are any
-        ArrayList<File> imageFileList = new ArrayList<>();
-        for(ImageDataVO pathObj : DataHolder.getCommentaryImageMap().values()){
-            if(pathObj.getmUploadFilePath() != null){
-                imageFileList.add(new File(pathObj.getmUploadFilePath()));
-            }
-        }
-        File zippedImages = Utility.zipFiles(this, imageFileList);
-
-//      manuel mapping to Json since I do not trust retrofit to do that
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonAnswers = null;
-
-        try {
-            AnswersDTO dto = ClassMapper.answersVOToAnswerDTOMapper(DataHolder.getAnswersVO());
-            jsonAnswers = mapper.writeValueAsString(dto);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
-        RequestBody fileBody = RequestBody.create(MediaType.parse("multipart/form-data"), zippedImages);
-        RequestBody answerBody = RequestBody.create(MediaType.parse("multipart/form-data"), jsonAnswers);
-
-        MultipartBody.Part filePart = MultipartBody.Part.createFormData("images", zippedImages.getName(), fileBody);
-
-        RetroRespondService respondService = mRetrofitRest.create(RetroRespondService.class);
-        Call<ResponseDTO> response = respondService.sendAnswersWithPictures(answerBody, filePart);
-
-        response.enqueue(new RetrofitCallback());
-    }
+//  /*
+//  * Executes request retrieving questions and choices from REST server
+//  * */
+//    @Override
+//    public void performAnswerRequest() {
+//
+//        if(FeatureSwitch.DEBUG_ACTIVE && DataHolder.getHostName() == null){
+//            Utility.animateView(mProgressOverlay, View.GONE, 0.8f, 100);
+//
+//            DialogFactory.createSimpleOkErrorDialog(this,
+//                    "Abort Debug", "Host not set and debug mode active. Aborting"
+//                    , null, null, true).show();
+//            return;
+//        }
+//
+//        if(mRetrofitRest == null){
+//            mRetrofitRest = new Retrofit.Builder()
+//                    .baseUrl(DataHolder.getHostName() + '/')
+//                    .addConverterFactory(JacksonConverterFactory.create())
+//                    .build();
+//        }
+//
+//        //zip commentary pictures if there are any
+//        ArrayList<File> imageFileList = new ArrayList<>();
+//        for(ImageDataVO pathObj : DataHolder.getCommentaryImageMap().values()){
+//            if(pathObj.getmUploadFilePath() != null){
+//                imageFileList.add(new File(pathObj.getmUploadFilePath()));
+//            }
+//        }
+//        File zippedImages = Utility.zipFiles(this, imageFileList);
+//
+////      manuel mapping to Json since I do not trust retrofit to do that
+//        ObjectMapper mapper = new ObjectMapper();
+//        String jsonAnswers = null;
+//
+//        try {
+//            AnswersDTO dto = ClassMapper.answersVOToAnswerDTOMapper(DataHolder.getAnswersVO());
+//            jsonAnswers = mapper.writeValueAsString(dto);
+//        } catch (JsonProcessingException e) {
+//            e.printStackTrace();
+//        }
+//
+//        RequestBody fileBody = RequestBody.create(MediaType.parse("multipart/form-data"), zippedImages);
+//        RequestBody answerBody = RequestBody.create(MediaType.parse("multipart/form-data"), jsonAnswers);
+//
+//        MultipartBody.Part filePart = MultipartBody.Part.createFormData("images", zippedImages.getName(), fileBody);
+//
+//        RetroRespondService respondService = mRetrofitRest.create(RetroRespondService.class);
+//        Call<ResponseDTO> response = respondService.sendAnswersWithPictures(answerBody, filePart);
+//
+//        response.enqueue(new RetrofitCallback());
+//    }
 
     /**********************************************************
      * START MIXED IMPLEMENTATION SECTION
@@ -926,7 +955,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 
     @Override
     public void displayProgressOverlay() {
-        onDisplayProgressOverlay(new DisplayProgressOverlayEvent());
+        showProgressOverlay();
     }
 
     /**********************************************************
@@ -971,17 +1000,15 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     }
 
     private void onStartServerCommunication(StartServerCommunicationEvent event) {
-        performAnswerRequest();
+        mEvalPresenter.requestInternetPermissionAndConnectServer(mPermissionManager);
     }
 
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void onDisplayProgressOverlay(DisplayProgressOverlayEvent event){
+    @Override
+    public void hideProgressOverlay(){
         Utility.animateView(mProgressOverlay, View.VISIBLE, 0.8f, 100);    }
 
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void onHideProgressOverlay(HideProgressOverlayEvent event){
+    @Override
+    public void showProgressOverlay(){
         Utility.animateView(mProgressOverlay, View.GONE, 0.8f, 100);
     }
 
@@ -1118,23 +1145,9 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         EventBus.get().post(new StartServerCommunicationEvent());
     }
 
-
-
-    private class RetrofitCallback implements Callback<ResponseDTO>{
-
-        @Override
-        public void onResponse(Call<ResponseDTO> call, Response<ResponseDTO> response) {
-            if(response.isSuccessful()){
-                EventBus.get().post(new RequestSuccessEvent<>(response.body() ,response));
-            } else {
-                EventBus.get().post(new RequestErrorEvent<>(response));
-            }
-        }
-
-        @Override
-        public void onFailure(Call<ResponseDTO> call, Throwable t) {
-            EventBus.get().post(new NetworkErrorEvent(t));
-        }
+    @Override
+    public void performAnswerRequest() {
+        mEvalPresenter.requestInternetPermissionAndConnectServer(mPermissionManager);
     }
 
     /**********************************

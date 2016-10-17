@@ -14,9 +14,9 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import de.fhb.campusapp.eval.fragments.BaseFragment;
 import de.fhb.campusapp.eval.ui.EvaluationApplication;
 import de.fhb.campusapp.eval.ui.base.BaseActivity;
+import de.fhb.campusapp.eval.ui.base.BaseFragment;
 import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
 import de.fhb.campusapp.eval.utility.DialogFactory;
 import de.fhb.campusapp.eval.utility.Utility;
@@ -85,9 +85,9 @@ public class SendFragment extends BaseFragment implements SendMvpView{
     }
 
     @Override
-    public void onStop() {
+    public void onDestroy() {
         mSendPresenter.detachView();
-        super.onStop();
+        super.onDestroy();
     }
 
     @Override

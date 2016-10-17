@@ -59,11 +59,15 @@ public class RetrofitHelper {
     public Triple<String, String, String> processRequestError(Response<QuestionsDTO> response, Resources resources, Retrofit retrofit) {
         int statusCode = response.code();
         Triple<String, String, String> result = null;
-
+        ResponseDTO dto = null;
         try {
             ResponseBody body = response.errorBody();
             // annotation array must be created in order to prevent nullPointer
-            ResponseDTO dto = (ResponseDTO) retrofit.responseBodyConverter(ResponseDTO.class, new Annotation[1] ).convert(body);
+            dto = (ResponseDTO) retrofit.responseBodyConverter(ResponseDTO.class, new Annotation[1] ).convert(body);
+        } catch (IOException | IllegalArgumentException e ) {
+            e.printStackTrace();
+        }
+
 
             if (dto != null && dto.getType() == ErrorType.INVALID_TOKEN) {
                 result = Triple.of(resources.getString(R.string.invalid_token_title), resources.getString(R.string.invalid_token_message), "RETRY_SCAN");
@@ -83,13 +87,11 @@ public class RetrofitHelper {
                     result = Triple.of(resources.getString(R.string.error_503_title), resources.getString(R.string.error_503_message), "RETRY_COMMUNICATION");
                 } else if (statusCode == HttpURLConnection.HTTP_FORBIDDEN || statusCode == HttpURLConnection.HTTP_NOT_FOUND) {
                     result = Triple.of(resources.getString(R.string.error_404_403_title), resources.getString(R.string.error_404_403_message), "RETRY_COMMUNICATION");
-                } else if (statusCode == HttpURLConnection.HTTP_BAD_REQUEST) {
+                } else {
                     result = Triple.of(resources.getString(R.string.unknown_error_title), resources.getString(R.string.unknown_error_message), "RETRY_COMMUNICATION");
                 }
             }
-        } catch (IOException | IllegalArgumentException e ) {
-            e.printStackTrace();
-        }
+
         return result;
     }
 }

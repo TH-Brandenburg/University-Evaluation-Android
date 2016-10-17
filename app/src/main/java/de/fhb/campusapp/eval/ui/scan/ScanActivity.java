@@ -1,0 +1,409 @@
+package de.fhb.campusapp.eval.ui.scan;
+
+import android.app.Dialog;
+import android.content.Intent;
+import android.content.res.Resources;
+import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
+import android.support.v4.util.Pair;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+
+import com.abhi.barcode.frag.libv2.BarcodeFragment;
+import com.abhi.barcode.frag.libv2.ICameraManagerListener;
+import com.abhi.barcode.frag.libv2.IScanResultHandler;
+import com.abhi.barcode.frag.libv2.ScanResult;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.buchandersenn.android_permission_manager.PermissionManager;
+import com.github.buchandersenn.android_permission_manager.PermissionRequest;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.client.android.camera.CameraManager;
+import com.squareup.otto.Subscribe;
+
+import org.joda.time.Instant;
+
+import java.io.IOException;
+import java.util.EnumSet;
+import java.util.UUID;
+
+import javax.inject.Inject;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import de.fhb.ca.dto.QuestionsDTO;
+import de.fhb.campusapp.eval.data.local.RetrofitHelper;
+import de.fhb.campusapp.eval.services.CleanUpService;
+import de.fhb.campusapp.eval.ui.base.BaseActivity;
+import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
+import de.fhb.campusapp.eval.utility.ActivityUtil;
+import de.fhb.campusapp.eval.utility.ClassMapper;
+import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.utility.DebugConfigurator;
+import de.fhb.campusapp.eval.utility.DialogFactory;
+import de.fhb.campusapp.eval.utility.EventBus;
+import de.fhb.campusapp.eval.utility.Events.NetworkErrorEvent;
+import de.fhb.campusapp.eval.utility.Events.RequestSuccessEvent;
+import de.fhb.campusapp.eval.utility.Events.RestartQRScanningEvent;
+import de.fhb.campusapp.eval.utility.FeatureSwitch;
+import de.fhb.campusapp.eval.utility.QrPojo;
+import de.fhb.campusapp.eval.utility.Utility;
+import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
+import fhb.de.campusappevaluationexp.R;
+
+public class ScanActivity extends BaseActivity implements IScanResultHandler, ICameraManagerListener, ScanMvpView{
+
+    private static final String TAG = ScanActivity.class.getSimpleName();
+    private static final String PACKAGE_NAME = ScanActivity.class.getPackage().getName();
+    public final static String ACTIVATE_SCANNING = "ACTIVATE_SCANNING";
+    private static final String CLEANUP_SERVICE_STARTED = "CLEANUP_SERVICE_STARTED";
+    private static final String REQUEST_RUNNING = "REQUEST_RUNNING";
+
+    // Retrieve the id, hash it and create a QuestionRequest with it.
+//    private String DEVICE_ID = "";
+
+    @Inject
+    Resources mResources;
+
+    @Inject
+    RetrofitHelper mRetrofitHelper = new RetrofitHelper();
+
+    @Inject
+    ScanPresenter mScanPresenter;
+
+    @Inject
+    PermissionManager mPermissionManager;
+
+    private BarcodeFragment mBarcodeFragment;
+    private CameraManager mCameraManager;
+
+//    private JacksonConverter mJacksonConverter;
+    /*
+    * The QrPojo object that was created from the last scanned QR code.
+    * */
+    private QrPojo mLastPojo;
+    private boolean mActivateScanning;
+    private boolean mCleanupServiceStarted = false;
+    private boolean mRequestRunning = false;
+
+    @BindView(R.id.progress_overlay)
+    View mProgressOverlay;
+
+    @BindView(R.id.my_awesome_toolbar)
+    Toolbar mToolBar;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        super.mActicityComponent.bind(this);
+        setContentView(R.layout.activity_scan);
+        ButterKnife.bind(this);
+        mScanPresenter.attachView(this);
+
+        super.fixOrientationToPortrait();
+
+        // DataHolder gets ability to freely serialize/deserialize its variables
+        DataHolder.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
+
+        if(DataHolder.getAppStart() == null){
+            DataHolder.setAppStart(new Instant());
+        }
+
+        //if data in shared preferences is still usable open evaluationactivity instead
+//        if(DataHolder.validateAllData()){
+//            Intent evalIntent = new Intent(this, EvaluationActivity.class);
+//            startActivity(evalIntent);
+//        }
+
+        //start the app
+        Window window = getWindow();
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        mResources = getResources();
+
+        setSupportActionBar(mToolBar);
+        mToolBar.setTitle(mResources.getText(R.string.scan_search));
+
+        if (savedInstanceState != null) {
+            mActivateScanning = savedInstanceState.getBoolean(ACTIVATE_SCANNING);
+            mCleanupServiceStarted = savedInstanceState.getBoolean(CLEANUP_SERVICE_STARTED);
+            mRequestRunning = savedInstanceState.getBoolean(REQUEST_RUNNING);
+        }
+
+        //if a request was running when orientation changed, display progress overlay
+        if(mRequestRunning){
+            Utility.animateView(mProgressOverlay, View.VISIBLE, 0.8f, 100);
+        }
+
+        //starts the cleanUpService -> deletes all images when app is closed
+        if(!mCleanupServiceStarted){
+            Intent serviceIntent = new Intent(this, CleanUpService.class);
+            startService(serviceIntent);
+            mCleanupServiceStarted = true;
+        }
+
+        if (getIntent().getBooleanExtra("GO_TO_SCAN", false)) {
+            DataHolder.deleteAllData();
+        }
+
+        //sets the uuid for this session
+        DataHolder.setUuid(UUID.randomUUID().toString());
+
+        initBarcodeFragment();
+        //close the application
+        if (getIntent().getBooleanExtra("CLOSE", false)) {
+            // delete all data and close application (as best as android lets you)
+            DataHolder.deleteAllData();
+            ActivityUtil.saveFinish(this);
+        }
+    }
+
+    /**
+     * inititializes the barcode fragment
+     */
+    private void initBarcodeFragment(){
+        if(mBarcodeFragment == null){
+            mBarcodeFragment = (BarcodeFragment) getSupportFragmentManager().findFragmentById(R.id.scan_view);
+            //mBarcodeFragment.setAlwaysDecodeOnResume(true); // Restore old behaviour.
+            mBarcodeFragment.setScanResultHandler(this);
+            mBarcodeFragment.setCameraManagerListener(this);
+            mBarcodeFragment.setAlwaysDecodeOnResume(false);
+            mBarcodeFragment.setDecodeFor(EnumSet.of(BarcodeFormat.QR_CODE));
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+    }
+
+    @Override
+    protected void onResume() {
+        // DataHolder gets ability to freely serialize/deserialize its variables
+        // Android might clear variable in DataHolder while App is in background leading to shit.
+        DataHolder.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
+        DataHolder.storeAllData();
+        if(!mRequestRunning){
+            mToolBar.setTitle(mResources.getText(R.string.scan_search));
+        } else {
+            mToolBar.setTitle(mResources.getText(R.string.scan_send));
+        }
+        super.onResume();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mScanPresenter.detachView();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        if(FeatureSwitch.DEBUG_ACTIVE){
+            getMenuInflater().inflate(R.menu.action_bar_navigator_only, menu);
+        }
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        if (id == R.id.question_search) {
+            DataHolder.setQuestionsVO(new QuestionsVO(
+                    DebugConfigurator.getDemoStudyPaths(),
+                    DebugConfigurator.getDemoTextQuestions(),
+                    DebugConfigurator.getDemoMultipleChoiceQuestionDTOs(),
+                    false
+            ));
+
+            DataHolder.getAnswersVO().setVoteToken(DebugConfigurator.genericVoteToken);
+            DataHolder.getAnswersVO().setDeviceID(DebugConfigurator.genericID);
+
+            Intent intent = new Intent(ScanActivity.this, EvaluationActivity.class);
+            startActivity(intent);
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void scanResult(ScanResult result) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            mLastPojo = mapper.readValue(result.getRawResult().getText(), QrPojo.class);
+            // store vote token within answerDTO
+            if (mLastPojo != null && mLastPojo.getHost() != null && !mLastPojo.getHost().equals("") && mLastPojo.getVoteToken() != null && !mLastPojo.getVoteToken().equals("")) {
+                DataHolder.getAnswersVO().setVoteToken(mLastPojo.getVoteToken());
+            } else {
+                throw new IOException("QRPojo was not initialized correctly");
+            }
+
+            DataHolder.getAnswersVO().setDeviceID(DataHolder.getUuid());
+
+            // share host name between activities
+            DataHolder.setHostName(mLastPojo.getHost());
+            mScanPresenter.requestInternetPermissionAndConnectServer(mPermissionManager);
+            mCameraManager.stopPreview();
+        } catch (IOException e) {
+            Dialog dialog = DialogFactory.createSimpleOkErrorDialog(this
+                    ,R.string.wrong_qr_code_error_title
+                    ,R.string.wrong_qr_code_error_message
+                    ,true);
+            dialog.show();
+            Log.e("ScanActivity.scanResult", e.getMessage());
+        }
+    }
+
+    @Override
+    public void setCameraManager(CameraManager manager) {
+        mCameraManager = manager;
+        if(mRequestRunning && mCameraManager != null){
+            mCameraManager.stopPreview();
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(ACTIVATE_SCANNING, mActivateScanning);
+        outState.putBoolean(CLEANUP_SERVICE_STARTED, mCleanupServiceStarted);
+        outState.putBoolean(REQUEST_RUNNING, mRequestRunning);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onStop() {
+        DataHolder.storeAllData();
+        super.onStop();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        mPermissionManager.handlePermissionResult(requestCode, grantResults);
+    }
+
+    /***********************************************
+     * START MESSAGE_FRAGMENT_COMMUNICATOR SECTION
+     ************************************************/
+
+    public void onRestartQRScanning() {
+        EventBus.get().post(new RestartQRScanningEvent());
+    }
+
+    /**
+     * Restarts the scanner.
+     */
+    @Subscribe
+    public void scanAgain(RestartQRScanningEvent event) {
+        mCameraManager.startPreview();
+        mBarcodeFragment.restart();
+    }
+
+
+    public void onStartServerCommunication() {
+        mScanPresenter.requestInternetPermissionAndConnectServer(mPermissionManager);
+    }
+    /***********************************************
+     * END MESSAGE_FRAGMENT_COMMUNICATOR SECTION
+     ************************************************/
+    /******************************
+     * EVENT LISTENER SECTION START
+     ******************************/
+    @Subscribe
+    @SuppressWarnings("unused")
+    public void onRequestSuccess(RequestSuccessEvent<QuestionsDTO> event){
+        QuestionsVO vo = ClassMapper.questionsDTOToQuestionsVOMapper(event.getRequestedObject());
+        DataHolder.setQuestionsVO(vo);
+        // Hide progress overlay (with animation):
+        Utility.animateView(mProgressOverlay, View.GONE, 0, 100);
+        Intent intent = new Intent(ScanActivity.this, EvaluationActivity.class);
+        startActivity(intent);
+    }
+
+    @Subscribe
+    @SuppressWarnings("unused")
+    public void onNetworkError(NetworkErrorEvent event){
+        mRequestRunning = false;
+        Throwable t = event.getRetrofitError();
+        Pair<String, String> errorText = mRetrofitHelper.processNetworkError(t, mResources);
+
+        Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
+                , errorText.first
+                , errorText.second
+                , (dialogInterface, i) -> onRestartQRScanning()
+                , dialogInterface -> onRestartQRScanning()
+                , true);
+
+        dialog.show();
+
+        mToolBar.setTitle(mResources.getText(R.string.scan_search));
+        Utility.animateView(mProgressOverlay, View.GONE, 0, 100);
+
+
+    }
+
+    @Override
+    public void hideProgressOverlay() {
+        Utility.animateView(mProgressOverlay, View.GONE, 0, 100);
+    }
+
+    @Override
+    public void showProgressOverlay() {
+        Utility.animateView(mProgressOverlay, View.VISIBLE, 0.8f, 100);
+    }
+
+    @Override
+    public void changeToolbarTitle(String title) {
+        mToolBar.setTitle(title);
+    }
+
+    @Override
+    public void setRequestRunning(boolean running) {
+        mRequestRunning = running;
+    }
+
+    @Override
+    public void showInternetExplanation(PermissionRequest request) {
+        AlertDialog dialog = DialogFactory.createAcceptDenyDialog(this
+                ,R.string.internet_explanation_title
+                ,R.string.internet_explanation_message
+                ,(dialogInterface, i) -> request.acceptPermissionRationale()
+                ,(dialogInterface, i) -> ActivityUtil.saveFinish(this));
+        dialog.show();
+    }
+
+    @Override
+    public void callSaveFinish() {
+        ActivityUtil.saveFinish(this);
+    }
+
+    @Override
+    public void showRetryScanDialog(String title, String message) {
+        Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
+                , title
+                , message
+                , (dialogInterface, i) -> onRestartQRScanning()
+                , dialogInterface -> onRestartQRScanning()
+                , true);
+        dialog.show();
+    }
+
+    @Override
+    public void showRetryServerCommunicationDialog(String title, String message) {
+        Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
+                , title
+                , message
+                , (dialogInterface, i) -> onStartServerCommunication()
+                , dialogInterface -> onRestartQRScanning()
+                , true);
+        dialog.show();
+    }
+}
