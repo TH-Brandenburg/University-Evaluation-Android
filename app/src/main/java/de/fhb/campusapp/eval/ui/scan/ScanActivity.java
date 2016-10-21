@@ -1,11 +1,13 @@
 package de.fhb.campusapp.eval.ui.scan;
 
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
@@ -137,7 +139,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
 
         //if a request was running when orientation changed, display progress overlay
         if(mRequestRunning){
-            Utility.animateView(mProgressOverlay, View.VISIBLE, 0.8f, 100);
+            showProgressOverlay();
         }
 
         //starts the cleanUpService -> deletes all images when app is closed
@@ -145,6 +147,13 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
             Intent serviceIntent = new Intent(this, CleanUpService.class);
             startService(serviceIntent);
             mCleanupServiceStarted = true;
+        }
+
+        //close the application
+        if (getIntent().getBooleanExtra("CLOSE", false)) {
+            // delete all data and close application (as best as android lets you)
+            DataHolder.deleteAllData();
+            ActivityUtil.saveTerminateTask(this);
         }
 
         if (getIntent().getBooleanExtra("GO_TO_SCAN", false)) {
@@ -155,12 +164,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
         DataHolder.setUuid(UUID.randomUUID().toString());
 
         initBarcodeFragment();
-        //close the application
-        if (getIntent().getBooleanExtra("CLOSE", false)) {
-            // delete all data and close application (as best as android lets you)
-            DataHolder.deleteAllData();
-            ActivityUtil.saveFinish(this);
-        }
+
     }
 
     /**
@@ -174,6 +178,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
             mBarcodeFragment.setCameraManagerListener(this);
             mBarcodeFragment.setAlwaysDecodeOnResume(false);
             mBarcodeFragment.setDecodeFor(EnumSet.of(BarcodeFormat.QR_CODE));
+            mBarcodeFragment.restart();
         }
     }
 
@@ -188,10 +193,15 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
         // Android might clear variable in DataHolder while App is in background leading to shit.
         DataHolder.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         DataHolder.storeAllData();
+
+        mScanPresenter.registerToEventBus();
+
         if(!mRequestRunning){
             mToolBar.setTitle(mResources.getText(R.string.scan_search));
+            hideProgressOverlay();
         } else {
             mToolBar.setTitle(mResources.getText(R.string.scan_send));
+            showProgressOverlay();
         }
         super.onResume();
     }
@@ -280,6 +290,13 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        mScanPresenter.unregisterFromEventBus();
+
+    }
+
+    @Override
     protected void onStop() {
         DataHolder.storeAllData();
         super.onStop();
@@ -317,38 +334,6 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
     /******************************
      * EVENT LISTENER SECTION START
      ******************************/
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void onRequestSuccess(RequestSuccessEvent<QuestionsDTO> event){
-        QuestionsVO vo = ClassMapper.questionsDTOToQuestionsVOMapper(event.getRequestedObject());
-        DataHolder.setQuestionsVO(vo);
-        // Hide progress overlay (with animation):
-        Utility.animateView(mProgressOverlay, View.GONE, 0, 100);
-        Intent intent = new Intent(ScanActivity.this, EvaluationActivity.class);
-        startActivity(intent);
-    }
-
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void onNetworkError(NetworkErrorEvent event){
-        mRequestRunning = false;
-        Throwable t = event.getRetrofitError();
-        Pair<String, String> errorText = mRetrofitHelper.processNetworkError(t, mResources);
-
-        Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
-                , errorText.first
-                , errorText.second
-                , (dialogInterface, i) -> onRestartQRScanning()
-                , dialogInterface -> onRestartQRScanning()
-                , true);
-
-        dialog.show();
-
-        mToolBar.setTitle(mResources.getText(R.string.scan_search));
-        Utility.animateView(mProgressOverlay, View.GONE, 0, 100);
-
-
-    }
 
     @Override
     public void hideProgressOverlay() {
@@ -366,6 +351,11 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
     }
 
     @Override
+    public void changeToolbarTitle(@StringRes int title) {
+        mToolBar.setTitle(mResources.getString(title));
+    }
+
+    @Override
     public void setRequestRunning(boolean running) {
         mRequestRunning = running;
     }
@@ -376,13 +366,13 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
                 ,R.string.internet_explanation_title
                 ,R.string.internet_explanation_message
                 ,(dialogInterface, i) -> request.acceptPermissionRationale()
-                ,(dialogInterface, i) -> ActivityUtil.saveFinish(this));
+                ,(dialogInterface, i) -> ActivityUtil.saveTerminateTask(this));
         dialog.show();
     }
 
     @Override
-    public void callSaveFinish() {
-        ActivityUtil.saveFinish(this);
+    public void callSaveTerminateTask() {
+        ActivityUtil.saveTerminateTask(this);
     }
 
     @Override
@@ -398,12 +388,34 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
 
     @Override
     public void showRetryServerCommunicationDialog(String title, String message) {
+        Dialog dialog  = DialogFactory.createAcceptDenyDialog(this
+                , title
+                , message
+                , mResources.getString(R.string.retry_button)
+                , mResources.getString(R.string.abort_button)
+                , true
+                , (dialogInterface, i) -> onStartServerCommunication()
+                , (dialogInterface, i) -> onRestartQRScanning()
+                , dialogInterface -> onRestartQRScanning());
+        dialog.show();
+    }
+
+    @Override
+    public void showNetworkErrorDialog(String title, String message) {
         Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
                 , title
                 , message
-                , (dialogInterface, i) -> onStartServerCommunication()
+                , (dialogInterface, i) -> onRestartQRScanning()
                 , dialogInterface -> onRestartQRScanning()
                 , true);
+
         dialog.show();
+
+    }
+
+    @Override
+    public void startEvaluationActivity() {
+        Intent intent = new Intent(this, EvaluationActivity.class);
+        startActivity(intent);
     }
 }

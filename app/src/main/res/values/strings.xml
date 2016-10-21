@@ -55,7 +55,7 @@
 
     <!--Success Messages-->
     <string name="answers_transmission_success_title">Übertragung erfolgreich.</string>
-    <string name="answers_transmission_success_message">Die Evaluation ist beendet. Die Applikation wird geschlossen.</string>
+    <string name="answers_transmission_success_message">Die Evaluation ist beendet. Die Applikation wird zurückgesetzt.</string>
 
     <!--Permission Explanations-->
     <string name="camera_permission_explanation_title">Kamera-Berechtigung erforderlich</string>
@@ -78,7 +78,8 @@
     <string name="retry_button">Wiederholen</string>
     <string name="send_anyway_button">Trotzdem abschicken</string>
     <string name="tab_view_button_question">Frage </string>
-    <string name="tab_view_button_send">Trotzdem senden</string>
+    <string name="tab_view_button_send">
+        Senden</string>
     <string name="tab_view_button_choose">Wähle deinen Studiengang</string>
 
     <!--ScanActivity status texts-->

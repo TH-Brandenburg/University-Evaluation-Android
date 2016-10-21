@@ -79,7 +79,7 @@ public class CustomFragmentStatePagerAdapter extends FragmentStatePagerAdapter{
         if(position == 0) {
             return res.getString(R.string.tab_view_button_choose);
         } else if((position + 1) < getCount()){
-           return res.getString(R.string.tab_view_button_question) + " " + (position) + "/" + (getCount() - 1);
+           return res.getString(R.string.tab_view_button_question) + " " + (position) + "/" + (getCount() - 2);
         } else {
            return res.getString(R.string.tab_view_button_send);
         }

@@ -12,6 +12,10 @@ public class BasePresenter<T extends MvpView> implements Presenter<T> {
     private T mMvpView;
 
     public BasePresenter(){
+
+    }
+
+    public void registerToEventBus(){
         EventBus.get().register(this);
     }
 

@@ -110,8 +110,6 @@ public class DebugConfigurator {
         out.add("Applied Computer Science");
         out.add("Informatik");
         out.add("Medizininformatik");
-        out.add("Medieninformatik");
-        out.add("Informatik");
         out.add("Digitale Medien");
         out.add("Medieninformatik");
 

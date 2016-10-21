@@ -51,7 +51,7 @@ public class SplashActivity extends BaseActivity implements SplashMvpView {
                 ,R.string.camera_permission_explanation_title
                 ,R.string.camera_permission_explanation_message
                 ,(dialogInterface, i) -> request.acceptPermissionRationale()
-                ,(dialogInterface, i) -> ActivityUtil.saveFinish(this));
+                ,(dialogInterface, i) -> ActivityUtil.saveTerminateTask(this));
         dialog.show();
     }
 
@@ -64,7 +64,7 @@ public class SplashActivity extends BaseActivity implements SplashMvpView {
 
     @Override
     public void callSaveFinish() {
-        ActivityUtil.saveFinish(this);
+        ActivityUtil.saveTerminateTask(this);
     }
 
     @Override

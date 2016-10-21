@@ -458,6 +458,7 @@ public class DataHolder {
      * Deletes also all entries of mentioned variables in sharedPreferences
      */
     public static void deleteAllData(){
+        preferences.edit().clear().commit();
         questionsVO = null;
         answersVO = null;
         uuid = null;
@@ -468,16 +469,16 @@ public class DataHolder {
         galleryList = null;
         currentQuestion = null;
         currentPagerPosition = -1;
-        removeFromStorage(RECOLOR_NAVIGATION_LIST);
-        removeFromStorage(QUESTIONS_VO_KEY);
-        removeFromStorage(ANSWER_VO_KEY);
-        removeFromStorage(UUID_KEY);
-        removeFromStorage(IMAGE_MAP_KEY);
-        removeFromStorage(APP_STARTING_TIME_KEY);
-        removeFromStorage(GALLERY_LIST_KEY);
-        removeFromStorage(HOST_NAME_KEY);
-        removeFromStorage(CURRENT_QUESTION);
-        removeFromStorage(CURRENT_PAGER_POSITION);
+//        removeFromStorage(RECOLOR_NAVIGATION_LIST);
+//        removeFromStorage(QUESTIONS_VO_KEY);
+//        removeFromStorage(ANSWER_VO_KEY);
+//        removeFromStorage(UUID_KEY);
+//        removeFromStorage(IMAGE_MAP_KEY);
+//        removeFromStorage(APP_STARTING_TIME_KEY);
+//        removeFromStorage(GALLERY_LIST_KEY);
+//        removeFromStorage(HOST_NAME_KEY);
+//        removeFromStorage(CURRENT_QUESTION);
+//        removeFromStorage(CURRENT_PAGER_POSITION);
     }
 
     /**
@@ -507,7 +508,7 @@ public class DataHolder {
                 && getQuestionsVO().getMultipleChoiceQuestionVOs() != null
                 && getQuestionsVO().getStudyPaths() != null
                 && getCommentaryImageMap() != null
-                &&uuid != null
+                && uuid != null
                 && getAppStart() != null
                 && getHostName() != null
                 && getAnswersVO() != null

@@ -90,4 +90,7 @@ dependencies {
     apt daggerCompiler
     testApt daggerCompiler
     androidTestApt daggerCompiler
+
+    //testing
+    testCompile "org.robolectric:robolectric:3.1.2"
 }

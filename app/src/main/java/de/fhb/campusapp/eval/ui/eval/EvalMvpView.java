@@ -15,11 +15,16 @@ import de.fhb.campusapp.eval.ui.base.MvpView;
 public interface EvalMvpView extends MvpView {
     void showProgressOverlay();
     void hideProgressOverlay();
-    void showCameraExplanation(PermissionRequest request);
-    void showStorageExplanation(PermissionRequest request);
-    void showInternetExplanation(PermissionRequest request);
+    void showCameraExplanationDialog(PermissionRequest request);
+    void showStorageExplanationDialog(PermissionRequest request);
+    void showInternetExplanationDialog(PermissionRequest request);
     void showDebugMessage();
-    void callSaveFinish();
+    void showNetworkErrorDialog(String title, String message);
+    void showSuccessDialog();
+    void showRequestErrorRestartDialog(String title, String message);
+    void showRequestErrorRetryDialog(String title, String message);
+    void callSaveTerminateTask();
     File zipPictureFiles(List<File> imageFileList);
+    void restartApp();
 
 }

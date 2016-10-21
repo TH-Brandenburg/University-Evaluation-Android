@@ -2,7 +2,9 @@ package de.fhb.campusapp.eval.ui.scan;
 
 import android.Manifest;
 import android.app.Dialog;
+import android.content.Intent;
 import android.content.res.Resources;
+import android.support.v4.util.Pair;
 import android.view.View;
 
 import com.github.buchandersenn.android_permission_manager.PermissionManager;
@@ -17,6 +19,8 @@ import de.fhb.ca.dto.RequestDTO;
 import de.fhb.campusapp.eval.data.local.RetrofitHelper;
 import de.fhb.campusapp.eval.interfaces.RetroRequestService;
 import de.fhb.campusapp.eval.ui.base.BasePresenter;
+import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
+import de.fhb.campusapp.eval.utility.ClassMapper;
 import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.DialogFactory;
 import de.fhb.campusapp.eval.utility.EventBus;
@@ -24,6 +28,7 @@ import de.fhb.campusapp.eval.utility.Events.NetworkErrorEvent;
 import de.fhb.campusapp.eval.utility.Events.RequestErrorEvent;
 import de.fhb.campusapp.eval.utility.Events.RequestSuccessEvent;
 import de.fhb.campusapp.eval.utility.Utility;
+import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
 import fhb.de.campusappevaluationexp.R;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -67,13 +72,13 @@ public class ScanPresenter extends BasePresenter<ScanMvpView> {
      */
     public boolean performQuestionRequest() {
 
-        Retrofit retrofit = createOrGetRetrofit();
+        createOrGetRetrofit();
 
         getMvpView().changeToolbarTitle(mResources.getString(R.string.scan_send));
         getMvpView().showProgressOverlay();
 
         RequestDTO requestDTO = new RequestDTO(DataHolder.getAnswersVO().getVoteToken(), DataHolder.getUuid());
-        RetroRequestService requestService = retrofit.create(RetroRequestService.class);
+        RetroRequestService requestService = mRetrofit.create(RetroRequestService.class);
         Call<QuestionsDTO> response = requestService.requestQuestions(requestDTO);
         response.enqueue(new RetrofitCallback());
         return true;
@@ -82,9 +87,20 @@ public class ScanPresenter extends BasePresenter<ScanMvpView> {
     public void requestInternetPermissionAndConnectServer(PermissionManager manager){
         manager.with(Manifest.permission.INTERNET)
                 .onPermissionGranted(() -> performQuestionRequest())
-                .onPermissionDenied(() -> getMvpView().callSaveFinish())
+                .onPermissionDenied(() -> getMvpView().callSaveTerminateTask())
                 .onPermissionShowRationale(request -> getMvpView().showInternetExplanation(request))
                 .request();
+    }
+
+    @Subscribe
+    @SuppressWarnings("unused")
+    public void onRequestSuccess(RequestSuccessEvent<QuestionsDTO> event){
+
+        QuestionsVO vo = ClassMapper.questionsDTOToQuestionsVOMapper(event.getRequestedObject());
+        DataHolder.setQuestionsVO(vo);
+        // Hide progress overlay (with animation):
+        getMvpView().hideProgressOverlay();
+        getMvpView().startEvaluationActivity();
     }
 
     @Subscribe
@@ -100,13 +116,27 @@ public class ScanPresenter extends BasePresenter<ScanMvpView> {
         getMvpView().hideProgressOverlay();
     }
 
+
+
+    @Subscribe
+    @SuppressWarnings("unused")
+    public void onNetworkError(NetworkErrorEvent event){
+        getMvpView().setRequestRunning(false);
+        Throwable t = event.getRetrofitError();
+        Pair<String, String> errorText = mRetrofitHelper.processNetworkError(t, mResources);
+
+        getMvpView().showNetworkErrorDialog(errorText.first, errorText.second);
+        getMvpView().changeToolbarTitle(R.string.scan_search);
+        getMvpView().hideProgressOverlay();
+
+    }
+
     private class RetrofitCallback implements Callback<QuestionsDTO> {
 
         @Override
         public void onResponse(Call<QuestionsDTO> call, Response<QuestionsDTO> response) {
             getMvpView().changeToolbarTitle(mResources.getString(R.string.scan_search));
             getMvpView().setRequestRunning(false);
-            int statusCode = response.code();
 
             if(response.isSuccessful()){
                 EventBus.get().post(new RequestSuccessEvent<>(response.body(), response));

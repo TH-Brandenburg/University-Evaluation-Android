@@ -38,25 +38,16 @@ public class RetrofitHelper {
 
             if (t.getClass() == ConnectException.class) {
                 result = Pair.create(resources.getString(R.string.no_network_title), resources.getString(R.string.no_network_message));
-
-//                MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.no_network_title), mResources.getString(R.string.no_network_message), false, MessageFragment.Option.RetryCommunication);
-//                fragment.show(getSupportFragmentManager(), "NoInternet");
             } else if(t.getClass() == SocketTimeoutException.class || t.getClass() == SocketException.class){
                 result = Pair.create(resources.getString(R.string.socket_timeout_title), resources.getString(R.string.socket_timeout_message));
-
-//                MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.socket_timeout_title), mResources.getString(R.string.socket_timeout_message), true, MessageFragment.Option.RetryCommunication);
-//                fragment.show(getSupportFragmentManager(), "ServerNotResponding");
             } else {
                 result = Pair.create(resources.getString(R.string.some_network_error_title), resources.getString(R.string.some_network_error_message));
-
-//                MessageFragment fragment = MessageFragment.newInstance(mResources.getString(R.string.some_network_error_title), mResources.getString(R.string.some_network_error_message), true, MessageFragment.Option.RetryCommunication);
-//                fragment.show(getSupportFragmentManager(), "SomeError");
             }
         }
         return result;
     }
 
-    public Triple<String, String, String> processRequestError(Response<QuestionsDTO> response, Resources resources, Retrofit retrofit) {
+    public Triple<String, String, String> processRequestError(Response<?> response, Resources resources, Retrofit retrofit) {
         int statusCode = response.code();
         Triple<String, String, String> result = null;
         ResponseDTO dto = null;
@@ -67,7 +58,6 @@ public class RetrofitHelper {
         } catch (IOException | IllegalArgumentException e ) {
             e.printStackTrace();
         }
-
 
             if (dto != null && dto.getType() == ErrorType.INVALID_TOKEN) {
                 result = Triple.of(resources.getString(R.string.invalid_token_title), resources.getString(R.string.invalid_token_message), "RETRY_SCAN");

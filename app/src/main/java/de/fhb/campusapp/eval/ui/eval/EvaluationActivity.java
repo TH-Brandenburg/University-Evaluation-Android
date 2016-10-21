@@ -21,15 +21,14 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListPopupWindow;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.buchandersenn.android_permission_manager.PermissionManager;
 import com.github.buchandersenn.android_permission_manager.PermissionRequest;
 import com.squareup.otto.Produce;
 import com.squareup.otto.Subscribe;
 
+import org.apache.commons.lang3.tuple.Triple;
+
 import java.io.File;
-import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +37,6 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import de.fhb.ca.dto.AnswersDTO;
 import de.fhb.ca.dto.ResponseDTO;
 import de.fhb.campusapp.eval.custom.CustomFragmentStatePagerAdapter;
 import de.fhb.campusapp.eval.custom.CustomScroller;
@@ -48,19 +46,14 @@ import de.fhb.campusapp.eval.data.local.RetrofitHelper;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
 import de.fhb.campusapp.eval.interfaces.ProgressCommunicator;
 import de.fhb.campusapp.eval.interfaces.RequestCommunicator;
-import de.fhb.campusapp.eval.interfaces.RetroRespondService;
-import de.fhb.campusapp.eval.ui.EvaluationApplication;
 import de.fhb.campusapp.eval.ui.base.BaseActivity;
-import de.fhb.campusapp.eval.ui.scan.ScanPresenter;
+import de.fhb.campusapp.eval.ui.scan.ScanActivity;
 import de.fhb.campusapp.eval.ui.sendfragment.SendFragment;
 import de.fhb.campusapp.eval.ui.textfragment.TextFragment;
 import de.fhb.campusapp.eval.utility.ActivityUtil;
-import de.fhb.campusapp.eval.utility.ClassMapper;
 import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.DialogFactory;
 import de.fhb.campusapp.eval.utility.EventBus;
-import de.fhb.campusapp.eval.utility.Events.DisplayProgressOverlayEvent;
-import de.fhb.campusapp.eval.utility.Events.HideProgressOverlayEvent;
 import de.fhb.campusapp.eval.utility.Events.NetworkErrorEvent;
 import de.fhb.campusapp.eval.utility.Events.PhotoTakenEvent;
 import de.fhb.campusapp.eval.utility.Events.PreServerCommunicationEvent;
@@ -70,21 +63,11 @@ import de.fhb.campusapp.eval.utility.Events.StartServerCommunicationEvent;
 import de.fhb.campusapp.eval.utility.FeatureSwitch;
 import de.fhb.campusapp.eval.utility.Observer.CreateUploadImageObservable;
 import de.fhb.campusapp.eval.utility.Utility;
-import de.fhb.campusapp.eval.utility.vos.ChoiceVO;
 import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
-import de.fhb.campusapp.eval.utility.vos.MultipleChoiceAnswerVO;
-import de.fhb.campusapp.eval.utility.vos.MultipleChoiceQuestionVO;
 import de.fhb.campusapp.eval.utility.vos.TextAnswerVO;
 import de.fhb.campusapp.eval.utility.vos.TextQuestionVO;
 import fhb.de.campusappevaluationexp.R;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 import rx.android.schedulers.AndroidSchedulers;
 
 public class EvaluationActivity extends BaseActivity implements ProgressCommunicator, PagerAdapterSetPrimary, ViewPager.PageTransformer,
@@ -154,7 +137,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     private String mCurrentImageName;
 
     //    private Retrofit mRetrofit;
-    private Retrofit mRetrofitRest;
+    private Retrofit mRetrofit;
 
     /**
      * Used to create a toggle effect when clicking the ActionBar icon.
@@ -308,6 +291,9 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         // Android might clear variable in DataHolder while App is in background leading to shit.
         DataHolder.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         DataHolder.storeAllData();
+
+        mEvalPresenter.registerToEventBus();
+
         super.onResume();
 
     }
@@ -391,7 +377,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     }
 
     @Override
-    public void showCameraExplanation(PermissionRequest request) {
+    public void showCameraExplanationDialog(PermissionRequest request) {
         Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
                 , R.string.camera_permission_explanation_title
                 , R.string.camera_permission_explanation_message
@@ -402,7 +388,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     }
 
     @Override
-    public void showStorageExplanation(PermissionRequest request) {
+    public void showStorageExplanationDialog(PermissionRequest request) {
         Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
                 , R.string.storage_permission_explanation_title
                 , R.string.storage_permission_explanation_message
@@ -413,7 +399,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     }
 
     @Override
-    public void showInternetExplanation(PermissionRequest request) {
+    public void showInternetExplanationDialog(PermissionRequest request) {
         Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
                 , R.string.internet_explanation_title
                 , R.string.internet_explanation_message
@@ -427,12 +413,68 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     public void showDebugMessage() {
             DialogFactory.createSimpleOkErrorDialog(this,
                     "Abort Debug", "Host not set and debug mode active. Aborting"
-                    , null, null, true).show();
+                    , (dialogInterface, i) -> restartApp()
+                    , dialogInterface1 -> restartApp()
+                    , true).show();
     }
 
     @Override
-    public void callSaveFinish() {
-        ActivityUtil.saveFinish(this);
+    public void showNetworkErrorDialog(String title, String message) {
+        Dialog dialog  = DialogFactory.createAcceptDenyDialog(this
+                , title
+                , message
+                , getString(R.string.retry_button)
+                , getString(R.string.abort_button)
+                , true
+                , (dialogInterface, i) -> onStartServerCommunication()
+                , null
+                , null);
+        dialog.show();
+    }
+
+    @Override
+    public void showSuccessDialog(){
+        Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
+                , R.string.answers_transmission_success_title
+                , R.string.answers_transmission_success_message
+                , (dialogInterface, i) -> restartApp()
+                , null
+                , false);
+        dialog.show();
+    }
+
+    @Override
+    public void showRequestErrorRestartDialog(String title, String message) {
+        Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
+                , title
+                , message
+                , (dialogInterface, i) -> restartApp()
+                , dialogInterface -> restartApp()
+                , true);
+        dialog.show();
+    }
+
+    @Override
+    public void showRequestErrorRetryDialog(String title, String message) {
+        Dialog dialog  = DialogFactory.createAcceptDenyDialog(this
+                , title
+                , title
+                , getString(R.string.retry_button)
+                , getString(R.string.abort_button)
+                , true
+                , (dialogInterface, i) -> {
+                    onStartServerCommunication();
+                    showProgressOverlay();
+                }
+                , null
+                , null);
+        dialog.show();
+    }
+
+
+    @Override
+    public void callSaveTerminateTask() {
+        ActivityUtil.saveTerminateTask(this);
     }
 
     @Override
@@ -440,214 +482,13 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         return Utility.zipFiles(this,(ArrayList<File>) imageFileList);
     }
 
-
-    //    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        if (requestCode == REQUEST_CAPTURE_IMAGE && resultCode == RESULT_OK) {
-//
-//            // array containing properties we want to know about the images on this system.
-//            String[] projection = { MediaStore.Images.ImageColumns.SIZE,
-//                                    MediaStore.Images.ImageColumns.DISPLAY_NAME,// the path to the image including name
-//                                    MediaStore.Images.ImageColumns.DATA,
-//                                    MediaStore.Images.ImageColumns._ID};
-//
-//            Cursor cursor = null;
-//            Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-//
-//            // 3 possibilities:
-//            // - Some devices use it completely and skip the gallery.
-//            // - Some devices ignore it completely and ONLY use the gallery.
-//            // - Some devices really suck and save a full sized image to the gallery,
-//            //   and save a thumbnail only to the location specified.
-//            // All must be addressed and dealt with.
-//            // Poss 1: Best case -> we dont need to do anything
-//            // Poss 2: Copy the Gallery pick to the intended location.
-//            // Poss 3: Delete the thumbnail and copy the full sized picture to specified location.
-//
-//            // test for poss 2
-//            if(mCurrentIntentImage.exists() && mCurrentIntentImage.length() > 0){
-//                // test passed -> the intent stored SOMETHING into the intended file
-//
-//                // test for poss 3 -> search for image in gallery
-//                if (uri != null)
-//                {
-//                    cursor = getContentResolver().query(uri, projection, null, null, null);
-//                }
-//
-//                if(cursor != null && cursor.moveToFirst()) {
-//                    cursor = findNewImageInDatabase(cursor);
-//                    if(pair.second != null && !pair.second.isEmpty()) {
-//
-//                    }
-//                    // if this is false -> we found the new Image!
-//                    File file = new File(cursor.getString(2));
-//                    // if our image is smaller than the gallery one ours is only a thumbnail
-//                    // delete and copy
-//                    if (file.exists() && mCurrentIntentImage.length() < cursor.getLong(0) && file.delete()) {
-//                        try{
-//                            mCurrentIntentImage.createNewFile();
-//                            FileChannel source = null;
-//                            FileChannel destination = null;
-//                            try {
-//                                source = new FileInputStream(file).getChannel();
-//                                destination = new FileOutputStream(mCurrentIntentImage).getChannel();
-//                                destination.transferFrom(source, 0, source.size());
-//                            } finally {
-//                                if (source != null) {
-//                                    source.close();
-//                                }
-//                                if (destination != null) {
-//                                    destination.close();
-//                                }
-//                            }
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-//                        getContentResolver().delete(
-//                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, BaseColumns._ID + "=" + cursor.getString(3), null);
-//                        break;
-//                    }
-//                }
-//
-//
-//                }
-//            } else {
-//                // the intent stored nothing inside the file
-//            }
-//
-//
-//
-//            if(mCurrentIntentImage != null){
-//                if (uri != null && mCurrentIntentImage.length() > 0)
-//                {
-//                    cursor = getContentResolver().query(uri, projection, null, null, null);
-//                }
-//
-//                if(cursor != null && cursor.moveToFirst()){
-//                    do{
-//                        boolean imageFound = false;
-//                        if(DataHolder.getGalleryList().contains(cursor.getString(1))){
-//                            imageFound = true;
-//                        }
-//
-//                        if(!imageFound){
-//                            // if this is false -> we found the new Image!
-//                            File file = new File(cursor.getString(2));
-//
-//                            // Delete it and remove its entry from the MediaStore Database.
-//                            // Congrats. You have removed the offending duplicate.
-//                            if(file.exists() && file.delete()){
-//                                getContentResolver().delete(
-//                                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI, BaseColumns._ID + "=" + cursor.getString(3), null);
-//                                break;
-//                            } else {
-//                                Log.e("FILE_DELETE_FAILED", "Image could not be deleted!");
-//                                throw new IllegalStateException("Could not delete file. Either it does not exist or its locked.");
-//                            }
-//                        }
-//                    } while (cursor.moveToNext());
-//                }
-//                if(cursor != null){
-//                    cursor.close();
-//                }
-//            }
-//            TextFragment fragment = ((TextFragment) mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem()));
-//            fragment.onPhotoTaken(mCurrentQuestionText, mCurrentIntentImage.getAbsolutePath());
-//        }
-//    }
-//
-//    private Cursor findNewImageInDatabase(Cursor cursor){
-//        do {
-//            if (!DataHolder.getGalleryList().contains(cursor.getString(1))) {
-//                pathToImage = Pair.create(cursor,cursor.getString(1));
-//            }
-//        }while (cursor.moveToNext());
-//
-//        return pathToImage;
-//    }
-
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        // based on the result we either set the preview or show a quick toast splash.
-//        if (resultCode != RESULT_OK) {
-//            return;
-//        }
-//
-//        // This is ##### ridiculous.  Some versions of Android save
-//        // to the MediaStore as well.  Not sure why!  We don't know what
-//        // name Android will give either, so we get to search for this
-//        // manually and remove it.
-//        String[] projection = {MediaStore.Images.ImageColumns.SIZE,
-//                MediaStore.Images.ImageColumns.DISPLAY_NAME,
-//                MediaStore.Images.ImageColumns.DATA,
-//                BaseColumns._ID,};
-//        //
-//        // intialize the Uri and the Cursor, and the current expected size.
-//        Cursor cursor = null;
-//        Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-//        //
-//        if (mCurrentIntentImage != null) {
-//            // Query the Uri to get the data path.  Only if the Uri is valid,
-//            // and we had a valid size to be searching for.
-//            if ((uri != null) && (mCurrentIntentImage.length() > 0)) {
-//                cursor = getContentResolver().query(uri, projection, null, null, null);
-//            }
-//            //
-//            // If we found the cursor and found a record in it (we also have the size).
-//            if ((cursor != null) && (cursor.moveToFirst())) {
-//                do {
-//                    // Check each area in the gallary we built before.
-//                    boolean imageFound = false;
-//                    if (DataHolder.getGalleryList().contains(cursor.getString(1))) {
-//                        imageFound = true;
-//                    }
-//                    //
-//                    // To here we looped the full gallery.
-//                    if (!imageFound) {
-//                        // This is the NEW image.  If the size is bigger, copy it.
-//                        // Then delete it!
-//                        File file = new File(cursor.getString(2));
-//
-//                        // Ensure it's there, check size, and delete!
-//                        if ((file.exists()) && (mCurrentIntentImage.length() < cursor.getLong(0)) && (mCurrentIntentImage.delete())) {
-//                            // Finally we can stop the copy.
-//                            try {
-//                                mCurrentIntentImage.createNewFile();
-//                                FileChannel source = null;
-//                                FileChannel destination = null;
-//                                try {
-//                                    source = new FileInputStream(file).getChannel();
-//                                    destination = new FileOutputStream(mCurrentIntentImage).getChannel();
-//                                    destination.transferFrom(source, 0, source.size());
-//                                } finally {
-//                                    if (source != null) {
-//                                        source.close();
-//                                    }
-//                                    if (destination != null) {
-//                                        destination.close();
-//                                    }
-//                                }
-//                            } catch (IOException e) {
-//                                e.printStackTrace();
-//                            }
-//                        }
-//                        //
-//                        ContentResolver cr = getContentResolver();
-//                        cr.delete(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-//                                BaseColumns._ID + "=" + cursor.getString(3), null);
-//                        break;
-//                    }
-//                }
-//                while (cursor.moveToNext());
-//                cursor.close();
-//
-//            }
-//            TextFragment fragment = ((TextFragment) mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem()));
-//            fragment.onPhotoTaken(mCurrentQuestionText, mCurrentIntentImage.getAbsolutePath());
-//        }
-//    }
-
-
+    @Override
+    public void restartApp() {
+        Intent intent = new Intent(this, ScanActivity.class);
+        intent.putExtra("GO_TO_SCAN", true);
+        startActivity(intent);
+        finish();
+    }
 
     @Override
     protected void onPause() {
@@ -657,6 +498,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
             mListPopupReopen = true;
         }
         mRestoreToolbar = true;
+        mEvalPresenter.unregisterFromEventBus();
     }
 
     @Override
@@ -703,9 +545,6 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         mViewPager.setCurrentItem(mViewPager.getCurrentItem() - 1);
     }
 
-    /*
-
-             */
     @Override
     public void onBackPressed() {
         if (mListPopupWindow.isShowing()) {
@@ -736,13 +575,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
                     needed = true;
                 }
             }
-//            else if (fragment == null) {
-//                Log.e("IsKeyboardNeededError", "Fragment was null");
-//            }
         }
-//        else {
-//            Log.e("IsKeyboardNeededError", "Adapter is: " + mCollectionPagerAdapter + " and Pager is: " + mViewPager);
-//        }
         return needed;
     }
 
@@ -831,14 +664,6 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         mListPopupReopen = false;
     }
 
-//    @Override
-//    public boolean onKeyDown(int keyCode, KeyEvent event) {
-//        if (keyCode == KeyEvent.FLAG_EDITOR_ACTION || keyCode == KeyEvent.KEYCODE_ENTER) {
-//            setPrimaryFragment(mViewPager.getCurrentItem() + 1);
-//        }
-//        return super.onKeyDown(keyCode, event);
-//    }
-
     /*
     *
     * Custom transition animation for ViewPager
@@ -871,59 +696,6 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
             view.setAlpha(0);
         }
     }
-
-//  /*
-//  * Executes request retrieving questions and choices from REST server
-//  * */
-//    @Override
-//    public void performAnswerRequest() {
-//
-//        if(FeatureSwitch.DEBUG_ACTIVE && DataHolder.getHostName() == null){
-//            Utility.animateView(mProgressOverlay, View.GONE, 0.8f, 100);
-//
-//            DialogFactory.createSimpleOkErrorDialog(this,
-//                    "Abort Debug", "Host not set and debug mode active. Aborting"
-//                    , null, null, true).show();
-//            return;
-//        }
-//
-//        if(mRetrofitRest == null){
-//            mRetrofitRest = new Retrofit.Builder()
-//                    .baseUrl(DataHolder.getHostName() + '/')
-//                    .addConverterFactory(JacksonConverterFactory.create())
-//                    .build();
-//        }
-//
-//        //zip commentary pictures if there are any
-//        ArrayList<File> imageFileList = new ArrayList<>();
-//        for(ImageDataVO pathObj : DataHolder.getCommentaryImageMap().values()){
-//            if(pathObj.getmUploadFilePath() != null){
-//                imageFileList.add(new File(pathObj.getmUploadFilePath()));
-//            }
-//        }
-//        File zippedImages = Utility.zipFiles(this, imageFileList);
-//
-////      manuel mapping to Json since I do not trust retrofit to do that
-//        ObjectMapper mapper = new ObjectMapper();
-//        String jsonAnswers = null;
-//
-//        try {
-//            AnswersDTO dto = ClassMapper.answersVOToAnswerDTOMapper(DataHolder.getAnswersVO());
-//            jsonAnswers = mapper.writeValueAsString(dto);
-//        } catch (JsonProcessingException e) {
-//            e.printStackTrace();
-//        }
-//
-//        RequestBody fileBody = RequestBody.create(MediaType.parse("multipart/form-data"), zippedImages);
-//        RequestBody answerBody = RequestBody.create(MediaType.parse("multipart/form-data"), jsonAnswers);
-//
-//        MultipartBody.Part filePart = MultipartBody.Part.createFormData("images", zippedImages.getName(), fileBody);
-//
-//        RetroRespondService respondService = mRetrofitRest.create(RetroRespondService.class);
-//        Call<ResponseDTO> response = respondService.sendAnswersWithPictures(answerBody, filePart);
-//
-//        response.enqueue(new RetrofitCallback());
-//    }
 
     /**********************************************************
      * START MIXED IMPLEMENTATION SECTION
@@ -989,161 +761,33 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 //    }
 
     private void onPreServerCommunicationEvent(PreServerCommunicationEvent event){
-        Utility.animateView(mProgressOverlay, View.VISIBLE, 0.8f, 100);
+        showProgressOverlay();
 
         CreateUploadImageObservable observable = new CreateUploadImageObservable();
         observable.prepareImageUploadInBackground(this).observeOn(AndroidSchedulers.mainThread())
                 .subscribe(pair -> DataHolder.getCommentaryImageMap().get(pair.first).setmUploadFilePath(pair.second)
-                        , e -> e.printStackTrace()
-                        , () -> onStartServerCommunication(new StartServerCommunicationEvent()));
-        setUnasweredQuestions();
+                        , Throwable::printStackTrace
+                        , this::onStartServerCommunication);
+        mEvalPresenter.setUnasweredQuestions();
     }
 
-    private void onStartServerCommunication(StartServerCommunicationEvent event) {
+    private void onStartServerCommunication() {
         mEvalPresenter.requestInternetPermissionAndConnectServer(mPermissionManager);
     }
 
     @Override
     public void hideProgressOverlay(){
-        Utility.animateView(mProgressOverlay, View.VISIBLE, 0.8f, 100);    }
-
-    @Override
-    public void showProgressOverlay(){
         Utility.animateView(mProgressOverlay, View.GONE, 0.8f, 100);
     }
 
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void onRequestSuccess(RequestSuccessEvent event){
-        // delete obsolete data
-//        File picDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-//        File dcimDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-//
-//        Utility.fileDelete(picDir, 1500, 0);
-//        Utility.fileDelete(dcimDir, 1500, 0);
-        Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
-                , R.string.answers_transmission_success_title
-                , R.string.answers_transmission_success_message
-                , (dialogInterface, i) -> ActivityUtil.saveFinish(this)
-                , dialogInterface -> ActivityUtil.saveFinish(this)
-                , true);
-        dialog.show();
-
-//        Resources resources = getResources();
-//        MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.answers_transmission_success_title), resources.getString(R.string.answers_transmission_success_message), false, MessageFragment.Option.CloseApp);
-//        fragment.show(getSupportFragmentManager(), "Success");
-        Utility.animateView(mProgressOverlay, View.GONE, 0, 100);
+    @Override
+    public void showProgressOverlay(){
+        Utility.animateView(mProgressOverlay, View.VISIBLE, 0.8f, 100);
     }
 
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void onNetworkError(NetworkErrorEvent event){
-        Resources resources = getResources();
-        Throwable t = event.getRetrofitError();
-        boolean dialogsCanceable = true;
-        int statusCode = 0;
-        ResponseDTO dto = null;
-
-        Pair<String, String> errorText = mRetrofitHelper.processNetworkError(t, mResources);
-        Dialog dialog  = DialogFactory.createSimpleOkErrorDialog(this
-                , errorText.first
-                , errorText.second
-                , (dialogInterface, i) -> onStartServerCommunication()
-                , dialogInterface -> onStartServerCommunication()
-                , true);
-        dialog.show();
-
-//      if(event.getClass() != null){
-//            t.printStackTrace();
-//            if (t.getClass() == ConnectException.class) {
-//                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.no_network_title), resources.getString(R.string.no_network_message), false, MessageFragment.Option.RetryCommunication);
-//                fragment.show(getSupportFragmentManager(), "NoInternet");
-//            } else if (t.getClass() == SocketTimeoutException.class || t.getClass() == SocketException.class) {
-//                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.socket_timeout_title), resources.getString(R.string.socket_timeout_message), true, MessageFragment.Option.RetryCommunication);
-//                fragment.show(getSupportFragmentManager(), "ServerNotResponding");
-//            } else {
-//                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.some_network_error_title), resources.getString(R.string.some_network_error_message), true, MessageFragment.Option.RetryCommunication);
-//                fragment.show(getSupportFragmentManager(), "SomeError");
-//            }
-//        }
-        Utility.animateView(mProgressOverlay, View.GONE, 0, 100);
-    }
-
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void onNetworkError(RequestErrorEvent<ResponseDTO> event){
-//        ErrorResponseHandling(event.getResposne());
-        Utility.animateView(mProgressOverlay, View.GONE, 0, 100);
-    }
-
-    /**
-     * Gives every question a representation in AnswersDTO which never got one assigned by the user.
-     */
-    private void setUnasweredQuestions(){
-        //server expects all questions to have an entry in answers dto. Add all the user did not set
-        for(TextAnswerVO answerVO : DataHolder.getAnswersVO().getTextAnswers()){
-            if(DataHolder.isTextQuestionAnswered(answerVO.getQuestionText()) == null){
-                DataHolder.getAnswersVO().getTextAnswers().add(new TextAnswerVO(answerVO.getQuestionID(), answerVO.getQuestionText(), ""));
-            }
-        }
-
-        //loop through all mcQuestions
-        for(MultipleChoiceQuestionVO questionVO : DataHolder.getQuestionsVO().getMultipleChoiceQuestionVOs()){
-            //test if any wasnt answered by the user
-            if(DataHolder.isMcQuestionAnswered(questionVO.getQuestion()) == null){
-                ChoiceVO noCommentChoice = DataHolder.retrieveChoiceByGrade(questionVO.getQuestion(), 0);
-                DataHolder.getAnswersVO().getMcAnswers().add(new MultipleChoiceAnswerVO(questionVO.getQuestion(), noCommentChoice));
-            }
-        }
-    }
-
-//    private void ErrorResponseHandling(Response<ResponseDTO> response) {
-//        int statusCode = response.code();
-//        Resources resources = getResources();
-//        try {
-//            ResponseBody body = response.errorBody();
-//            // anootatoin array needed in order to prevent nullPointer
-//            ResponseDTO dto = (ResponseDTO) mRetrofitRest.responseBodyConverter(ResponseDTO.class, new Annotation[1]).convert(body);
-//
-//            if (dto != null && dto.getType() == ErrorType.INVALID_TOKEN) {
-//                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.invalid_token_title), resources.getString(R.string.invalid_token_message), true, MessageFragment.Option.RetryScan);
-//                fragment.show(getSupportFragmentManager(), "InvalidToken");
-//            } else if (dto != null && dto.getType() == ErrorType.TOKEN_ALLREADY_USED) {
-//                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.token_already_used_title), resources.getString(R.string.token_already_used_message), true, MessageFragment.Option.RetryScan);
-//                fragment.show(getSupportFragmentManager(), "TokenAlreadyUsed");
-//            } else if (dto != null && dto.getType() == ErrorType.EVALUATION_CLOSED) {
-//                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.evaluation_closed_title), resources.getString(R.string.evaluation_closed_message), true, MessageFragment.Option.RetryScan);
-//                fragment.show(getSupportFragmentManager(), "EvaluationClosed");
-//            } else if (dto != null && dto.getType() == ErrorType.UNKNOWN_ERROR) {
-//                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.unknown_error_title), resources.getString(R.string.unknown_error_message), true, MessageFragment.Option.RetryScan);
-//                fragment.show(getSupportFragmentManager(), "UnknownError");
-//            } else if (dto != null && dto.getType() == ErrorType.MALFORMED_REQUEST) {
-//                MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.unknown_error_title), resources.getString(R.string.unknown_error_message), true, MessageFragment.Option.RetryScan);
-//                fragment.show(getSupportFragmentManager(), "MalformedRequest");
-//            } else {
-//                // Check of status codes and display information to user
-//                if (statusCode == HttpURLConnection.HTTP_BAD_GATEWAY || statusCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
-//                    MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.error_500_502_title), resources.getString(R.string.no_network_message), true, MessageFragment.Option.RetryCommunication);
-//                    fragment.show(getSupportFragmentManager(), "500|502");
-//                } else if (statusCode == HttpURLConnection.HTTP_UNAVAILABLE) {
-//                    MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.error_503_title), resources.getString(R.string.error_503_message), true, MessageFragment.Option.RetryCommunication);
-//                    fragment.show(getSupportFragmentManager(), "503");
-//                } else if (statusCode == HttpURLConnection.HTTP_FORBIDDEN || statusCode == HttpURLConnection.HTTP_NOT_FOUND) {
-//                    MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.error_404_403_title), resources.getString(R.string.error_404_403_message), true, MessageFragment.Option.RetryCommunication);
-//                    fragment.show(getSupportFragmentManager(), "404|403");
-//                } else if (statusCode == HttpURLConnection.HTTP_BAD_REQUEST) {
-//                    MessageFragment fragment = MessageFragment.newInstance(resources.getString(R.string.unknown_error_title), resources.getString(R.string.unknown_error_message), true, MessageFragment.Option.RetryCommunication);
-//                    fragment.show(getSupportFragmentManager(), "400");
-//                }
-//            }
-//        } catch (IOException | IllegalArgumentException e) {
-//            e.printStackTrace();
-//        }
+//    public void onStartServerCommunication() {
+//        EventBus.get().post(new StartServerCommunicationEvent());
 //    }
-
-    public void onStartServerCommunication() {
-        EventBus.get().post(new StartServerCommunicationEvent());
-    }
 
     @Override
     public void performAnswerRequest() {
