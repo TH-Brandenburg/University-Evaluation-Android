@@ -12,6 +12,8 @@ import com.squareup.otto.Subscribe;
 
 import org.apache.commons.lang3.tuple.Triple;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.inject.Inject;
 
 import de.fhb.ca.dto.QuestionsDTO;
@@ -30,6 +32,7 @@ import de.fhb.campusapp.eval.utility.Events.RequestSuccessEvent;
 import de.fhb.campusapp.eval.utility.Utility;
 import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
 import fhb.de.campusappevaluationexp.R;
+import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -55,11 +58,21 @@ public class ScanPresenter extends BasePresenter<ScanMvpView> {
         this.mResources = mResources;
     }
 
+    private OkHttpClient createOkHttpClient(){
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .readTimeout(3, TimeUnit.SECONDS)
+                .connectTimeout(3, TimeUnit.SECONDS)
+                .build();
+
+        return okHttpClient;
+    }
+
     public Retrofit createOrGetRetrofit(){
         // create retrofit instance after receiving host address
         if(mRetrofit == null){
             mRetrofit = new Retrofit.Builder()
                     .baseUrl(DataHolder.getHostName() + "/")
+                    .client(createOkHttpClient())
                     .addConverterFactory(JacksonConverterFactory.create())
                     .build();
         }
@@ -107,13 +120,13 @@ public class ScanPresenter extends BasePresenter<ScanMvpView> {
     @SuppressWarnings("unused")
     public void onRequestError(RequestErrorEvent event){
         Triple<String, String, String> errorText = mRetrofitHelper.processRequestError(event.getResposne(), mResources, mRetrofit);
+        getMvpView().hideProgressOverlay();
 
         if(errorText.getRight().equals("RETRY_SCAN")){
             getMvpView().showRetryScanDialog(errorText.getLeft(), errorText.getMiddle());
         } else if(errorText.getRight().equals("RETRY_COMMUNICATION")){
             getMvpView().showRetryServerCommunicationDialog(errorText.getLeft(), errorText.getMiddle());
         }
-        getMvpView().hideProgressOverlay();
     }
 
 

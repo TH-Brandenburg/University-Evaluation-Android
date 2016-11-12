@@ -13,11 +13,7 @@ import retrofit2.http.POST;
  */
 public interface RetroRequestService {
 
-    //retrofit 1.9
     @POST("v1/questions")
     public Call<QuestionsDTO> requestQuestions(@Body RequestDTO dto);
 
-    //retrofit 2.0 Beta2
-//    @POST("/v1/questions")
-//    public Call<QuestionsDTO> requestQuestions(@Body RequestDTO dto);
 }

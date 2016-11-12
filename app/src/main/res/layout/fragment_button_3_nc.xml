@@ -34,7 +34,7 @@
         android:layout_alignParentEnd="true"
         android:layout_marginRight="@dimen/button_margin_left_right"
         android:layout_marginEnd="@dimen/button_margin_left_right"
-        android:layout_alignBottom="@+id/upper_button"
+        android:layout_alignBottom="@+id/bottom_button"
         android:layout_alignTop="@+id/top_button" />
 
     <Button
@@ -64,7 +64,7 @@
         android:minWidth="120dp"
         android:background="@drawable/neutral_btn_state_list"
         android:textColor="@color/campusapptheme_color_grey_font"
-        android:layout_above="@+id/upper_button"
+        android:layout_above="@+id/bottom_button"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_marginLeft="@dimen/button_margin_left_right"
@@ -78,7 +78,7 @@
         android:layout_height="wrap_content"
         android:textAllCaps="false"
         android:text=""
-        android:id="@+id/upper_button"
+        android:id="@+id/bottom_button"
         android:minWidth="120dp"
         android:background="@drawable/very_negative_btn_state_list"
         android:textColor="@color/campusapptheme_color_bright_font"

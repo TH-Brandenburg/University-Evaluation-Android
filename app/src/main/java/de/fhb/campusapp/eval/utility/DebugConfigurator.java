@@ -18,7 +18,7 @@ public class DebugConfigurator {
     public static List<TextQuestionVO> getDemoTextQuestions() {
         return new ArrayList<TextQuestionVO>() {{
             add(new TextQuestionVO(1, "This shows the interface for a question which can be answered by text or with a photo.", false, 100));
-            add(new TextQuestionVO(1, "This show a question where only numbers are allowed and whose input capacity is limited to 4", true, 4));
+            add(new TextQuestionVO(1, "This shows a question where only numbers are allowed and whose input capacity is limited to 4", true, 4));
         }};
     }
 

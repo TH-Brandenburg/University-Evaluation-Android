@@ -8,6 +8,7 @@ import com.squareup.otto.Subscribe;
 
 import de.fhb.campusapp.eval.utility.EventBus;
 import de.fhb.campusapp.eval.utility.Events.ClickedChoiceButtonEvent;
+import de.fhb.campusapp.eval.utility.FeatureSwitch;
 
 /**
  * Created by Sebastian Müller on 01.07.2016.
@@ -45,10 +46,14 @@ public class CustomScroller extends Scroller {
 
     @Override
     public void startScroll(int startX, int startY, int dx, int dy, int duration) {
-        // Ignore received duration, use fixed one instead
-        if(buttonClicked){
-            super.startScroll(startX, startY, dx, dy, mDuration);
-            buttonClicked = false;
+        if(!FeatureSwitch.AUTOMATED_TESTING){
+            // Ignore received duration, use fixed one instead
+            if(buttonClicked){
+                super.startScroll(startX, startY, dx, dy, mDuration);
+                buttonClicked = false;
+            } else {
+                super.startScroll(startX, startY, dx, dy, duration);
+            }
         } else {
             super.startScroll(startX, startY, dx, dy, duration);
         }
@@ -56,10 +61,14 @@ public class CustomScroller extends Scroller {
 
     @Override
     public void startScroll(int startX, int startY, int dx, int dy) {
-        // Ignore received duration, use fixed one instead
-        if(buttonClicked){
-            super.startScroll(startX, startY, dx, dy, mDuration);
-            buttonClicked = false;
+        if(!FeatureSwitch.AUTOMATED_TESTING){
+            // Ignore received duration, use fixed one instead
+            if(buttonClicked){
+                super.startScroll(startX, startY, dx, dy, mDuration);
+                buttonClicked = false;
+            } else {
+                super.startScroll(startX, startY, dx, dy);
+            }
         } else {
             super.startScroll(startX, startY, dx, dy);
         }

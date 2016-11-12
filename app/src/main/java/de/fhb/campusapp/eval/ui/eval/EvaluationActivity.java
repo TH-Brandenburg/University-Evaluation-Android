@@ -449,8 +449,8 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
                 , title
                 , message
                 , (dialogInterface, i) -> restartApp()
-                , dialogInterface -> restartApp()
-                , true);
+                , null /* dialogInterface -> restartApp()*/
+                , false);
         dialog.show();
     }
 
@@ -458,7 +458,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     public void showRequestErrorRetryDialog(String title, String message) {
         Dialog dialog  = DialogFactory.createAcceptDenyDialog(this
                 , title
-                , title
+                , message
                 , getString(R.string.retry_button)
                 , getString(R.string.abort_button)
                 , true
@@ -738,13 +738,13 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     /**********************************
      * START PRODUCER SECTION
      **********************************/
-    @Produce
-    public PhotoTakenEvent produceLastPhotoTakenEvent(){
-        if(mCurrentIntentImage != null){
-            return new PhotoTakenEvent(mCurrentIntentImage.getPath(), mCurrentQuestionText);
-        }
-        return null;
-    }
+//    @Produce
+//    public PhotoTakenEvent produceLastPhotoTakenEvent(){
+//        if(mCurrentIntentImage != null){
+//            return new PhotoTakenEvent(mCurrentIntentImage.getPath(), mCurrentQuestionText);
+//        }
+//        return null;
+//    }
 
     /**********************************
      * END PRODUCER SECTION

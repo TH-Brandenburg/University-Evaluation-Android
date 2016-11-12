@@ -1,18 +1,18 @@
-package de.fhb.campusapp.eval.utility;
+package de.fhb.campusapp.eval.utility.vos;
 
 /**
  * Created by Basti on 30.06.2015.
  */
-public class QrPojo {
+public class QrDataVo {
     private String voteToken;
     private String host;
 
-    public QrPojo(String voteToken, String host, String deviceID) {
+    public QrDataVo(String voteToken, String host, String deviceID) {
         this.voteToken = voteToken;
         this.host = host;
     }
 
-    public QrPojo() {
+    public QrDataVo() {
     }
 
     public String getVoteToken() {

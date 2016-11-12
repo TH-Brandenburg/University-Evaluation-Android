@@ -1,14 +1,12 @@
 package de.fhb.campusapp.eval.ui.scan;
 
 import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
-import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -39,23 +37,19 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import de.fhb.ca.dto.QuestionsDTO;
 import de.fhb.campusapp.eval.data.local.RetrofitHelper;
 import de.fhb.campusapp.eval.services.CleanUpService;
 import de.fhb.campusapp.eval.ui.base.BaseActivity;
 import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
 import de.fhb.campusapp.eval.utility.ActivityUtil;
-import de.fhb.campusapp.eval.utility.ClassMapper;
 import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.DebugConfigurator;
 import de.fhb.campusapp.eval.utility.DialogFactory;
 import de.fhb.campusapp.eval.utility.EventBus;
-import de.fhb.campusapp.eval.utility.Events.NetworkErrorEvent;
-import de.fhb.campusapp.eval.utility.Events.RequestSuccessEvent;
 import de.fhb.campusapp.eval.utility.Events.RestartQRScanningEvent;
 import de.fhb.campusapp.eval.utility.FeatureSwitch;
-import de.fhb.campusapp.eval.utility.QrPojo;
 import de.fhb.campusapp.eval.utility.Utility;
+import de.fhb.campusapp.eval.utility.vos.QrDataVo;
 import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
 import fhb.de.campusappevaluationexp.R;
 
@@ -71,16 +65,16 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
 //    private String DEVICE_ID = "";
 
     @Inject
-    Resources mResources;
+    public Resources mResources;
 
     @Inject
-    RetrofitHelper mRetrofitHelper = new RetrofitHelper();
+    public RetrofitHelper mRetrofitHelper = new RetrofitHelper();
 
     @Inject
-    ScanPresenter mScanPresenter;
+    public ScanPresenter mScanPresenter;
 
     @Inject
-    PermissionManager mPermissionManager;
+    public PermissionManager mPermissionManager;
 
     private BarcodeFragment mBarcodeFragment;
     private CameraManager mCameraManager;
@@ -89,7 +83,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
     /*
     * The QrPojo object that was created from the last scanned QR code.
     * */
-    private QrPojo mLastPojo;
+    private QrDataVo mLastPojo;
     private boolean mActivateScanning;
     private boolean mCleanupServiceStarted = false;
     private boolean mRequestRunning = false;
@@ -216,7 +210,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         if(FeatureSwitch.DEBUG_ACTIVE){
-            getMenuInflater().inflate(R.menu.action_bar_navigator_only, menu);
+            getMenuInflater().inflate(R.menu.action_bar_mock_menu, menu);
         }
         return super.onCreateOptionsMenu(menu);
     }
@@ -228,7 +222,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        if (id == R.id.question_search) {
+        if (id == R.id.mock_questionnaire) {
             DataHolder.setQuestionsVO(new QuestionsVO(
                     DebugConfigurator.getDemoStudyPaths(),
                     DebugConfigurator.getDemoTextQuestions(),
@@ -241,7 +235,10 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
 
             Intent intent = new Intent(ScanActivity.this, EvaluationActivity.class);
             startActivity(intent);
+        } else if(id == R.id.mock_qr_code_reading){
+            mScanPresenter.performQuestionRequest();
         }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -249,7 +246,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
     public void scanResult(ScanResult result) {
         try {
             ObjectMapper mapper = new ObjectMapper();
-            mLastPojo = mapper.readValue(result.getRawResult().getText(), QrPojo.class);
+            mLastPojo = mapper.readValue(result.getRawResult().getText(), QrDataVo.class);
             // store vote token within answerDTO
             if (mLastPojo != null && mLastPojo.getHost() != null && !mLastPojo.getHost().equals("") && mLastPojo.getVoteToken() != null && !mLastPojo.getVoteToken().equals("")) {
                 DataHolder.getAnswersVO().setVoteToken(mLastPojo.getVoteToken());

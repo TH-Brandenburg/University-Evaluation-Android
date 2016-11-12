@@ -95,6 +95,14 @@ public class DataHolder {
     }
 
     /**
+     *
+     */
+    public static void setAnswersDTOToNull(){
+        answersVO = null;
+        removeFromStorage(ANSWER_VO_KEY);
+    }
+
+    /**
      * Weather a question was answered before.
      * Loops through the list of answered text questions stored in AnswersDTO
      * @param question text of the question whose answer should be searched for
@@ -227,19 +235,18 @@ public class DataHolder {
 
     /**
      *
-     */
-    public static void setAnswersDTOToNull(){
-        answersVO = null;
-        removeFromStorage(ANSWER_VO_KEY);
-    }
-
-    /**
-     *
      * @return
      */
     public static QuestionsVO getQuestionsVO() {
         if(questionsVO == null){
            questionsVO = retrieveFromStorage(QUESTIONS_VO_KEY, QuestionsVO.class);
+        }
+        if(questionsVO == null){
+            questionsVO = new QuestionsVO(new ArrayList<String>()
+                    , new ArrayList<TextQuestionVO>()
+                    , new ArrayList<MultipleChoiceQuestionVO>()
+                    , false);
+            storeToStorage(QUESTIONS_VO_KEY, questionsVO);
         }
         return questionsVO;
     }
@@ -249,12 +256,21 @@ public class DataHolder {
      * @param questionsVO
      */
     public static void setQuestionsVO(QuestionsVO questionsVO) {
-        DataHolder.questionsVO = questionsVO;
-        if(questionsVO != null){
+        if(questionsVO == null){
+            DataHolder.questionsVO = new QuestionsVO(new ArrayList<String>()
+                    , new ArrayList<TextQuestionVO>()
+                    , new ArrayList<MultipleChoiceQuestionVO>()
+                    , false);
             storeToStorage(QUESTIONS_VO_KEY, questionsVO);
         } else {
-            removeFromStorage(QUESTIONS_VO_KEY);
+            DataHolder.questionsVO = questionsVO;
         }
+//        DataHolder.questionsVO = questionsVO;
+//        if(questionsVO != null){
+//            storeToStorage(QUESTIONS_VO_KEY, questionsVO);
+//        } else {
+//            removeFromStorage(QUESTIONS_VO_KEY);
+//        }
     }
 
     /**
@@ -459,7 +475,8 @@ public class DataHolder {
      */
     public static void deleteAllData(){
         preferences.edit().clear().commit();
-        questionsVO = null;
+        setQuestionsVO(null);
+        setAnswersDTOToNull();
         answersVO = null;
         uuid = null;
         hostName = null;
