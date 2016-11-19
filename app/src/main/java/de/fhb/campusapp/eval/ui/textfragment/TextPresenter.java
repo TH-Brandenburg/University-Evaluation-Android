@@ -1,13 +1,7 @@
 package de.fhb.campusapp.eval.ui.textfragment;
 
 import android.Manifest;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.support.v4.content.ContextCompat;
 
-import com.commonsware.cwac.cam2.CameraActivity;
-import com.commonsware.cwac.cam2.Facing;
 import com.github.buchandersenn.android_permission_manager.PermissionManager;
 
 import org.apache.commons.lang3.StringUtils;
@@ -15,13 +9,10 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.File;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import de.fhb.campusapp.eval.custom.CustomEditText;
-import de.fhb.campusapp.eval.injection.ApplicationContext;
 import de.fhb.campusapp.eval.ui.base.BasePresenter;
-import de.fhb.campusapp.eval.utility.DataHolder;
-import de.fhb.campusapp.eval.utility.Utility;
+import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.vos.TextAnswerVO;
 
 /**
@@ -43,9 +34,9 @@ public class TextPresenter extends BasePresenter<TextMvpView> {
         StringUtils.replace(answer, "\n", "");
 
         //store the answer in answerDTO or refresh it if already present
-        TextAnswerVO answerDTO = DataHolder.isTextQuestionAnswered(question);
+        TextAnswerVO answerDTO = DataManager.isTextQuestionAnswered(question);
         if(answerDTO == null){
-            DataHolder.getAnswersVO().getTextAnswers().add(new TextAnswerVO(questionId, question, answer));
+            DataManager.getAnswersVO().getTextAnswers().add(new TextAnswerVO(questionId, question, answer));
         } else {
             answerDTO.setAnswerText(answer);
         }

@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import de.fhb.campusapp.eval.ui.scan.ScanActivity;
-import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.data.DataManager;
 import fhb.de.campusappevaluationexp.R;
 
 import okhttp3.HttpUrl;
@@ -76,7 +76,7 @@ public class ScanActivityTest {
         server.start(0);
 
         HttpUrl baseUrl = server.url("v1/questions");
-        DataHolder.setHostName("http://" + baseUrl.host() + ":" + baseUrl.port());
+        DataManager.setHostName("http://" + baseUrl.host() + ":" + baseUrl.port());
     }
 
       @Test

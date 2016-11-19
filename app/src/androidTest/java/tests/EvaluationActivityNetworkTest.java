@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.support.annotation.IdRes;
 import android.support.annotation.StringRes;
-import android.support.test.espresso.Root;
 import android.support.test.espresso.ViewInteraction;
 import android.support.test.espresso.intent.matcher.IntentMatchers;
 import android.support.test.espresso.intent.rule.IntentsTestRule;
@@ -17,14 +16,13 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.MethodRule;
 import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
-import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.DebugConfigurator;
 import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
 import fhb.de.campusappevaluationexp.R;
@@ -39,13 +37,11 @@ import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.pressBack;
-import static android.support.test.espresso.action.ViewActions.swipeLeft;
 import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.intent.Intents.intended;
 import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
-import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
@@ -68,8 +64,8 @@ public class EvaluationActivityNetworkTest {
         @Override
         protected void beforeActivityLaunched() {
             //prepare app
-            DataHolder.deleteAllData();
-            DataHolder.setQuestionsVO(new QuestionsVO(
+            DataManager.deleteAllData();
+            DataManager.setmQuestionsVO(new QuestionsVO(
                     DebugConfigurator.getDemoStudyPaths(),
                     DebugConfigurator.getDemoTextQuestions(),
                     DebugConfigurator.getDemoMultipleChoiceQuestionDTOs(),
@@ -91,7 +87,7 @@ public class EvaluationActivityNetworkTest {
         server.start(0);
 
         HttpUrl baseUrl = server.url("v1/answers");
-        DataHolder.setHostName("http://" + baseUrl.host() + ":" + baseUrl.port());
+        DataManager.setHostName("http://" + baseUrl.host() + ":" + baseUrl.port());
 
         onData(allOf(is(instanceOf(String.class)), is("Informatik"))).perform(click());
         navigateToEnd();

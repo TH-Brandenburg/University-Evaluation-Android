@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
+import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -27,6 +28,7 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.android.camera.CameraManager;
 import com.squareup.otto.Subscribe;
 
+import org.apache.commons.lang3.tuple.Triple;
 import org.joda.time.Instant;
 
 import java.io.IOException;
@@ -42,16 +44,18 @@ import de.fhb.campusapp.eval.services.CleanUpService;
 import de.fhb.campusapp.eval.ui.base.BaseActivity;
 import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
 import de.fhb.campusapp.eval.utility.ActivityUtil;
-import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.DebugConfigurator;
 import de.fhb.campusapp.eval.utility.DialogFactory;
 import de.fhb.campusapp.eval.utility.EventBus;
 import de.fhb.campusapp.eval.utility.Events.RestartQRScanningEvent;
 import de.fhb.campusapp.eval.utility.FeatureSwitch;
 import de.fhb.campusapp.eval.utility.Utility;
+import de.fhb.campusapp.eval.utility.eventpipelines.NetworkEventPipelines;
 import de.fhb.campusapp.eval.utility.vos.QrDataVo;
 import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
 import fhb.de.campusappevaluationexp.R;
+import rx.android.schedulers.AndroidSchedulers;
 
 public class ScanActivity extends BaseActivity implements IScanResultHandler, ICameraManagerListener, ScanMvpView{
 
@@ -68,13 +72,13 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
     public Resources mResources;
 
     @Inject
-    public RetrofitHelper mRetrofitHelper = new RetrofitHelper();
-
-    @Inject
     public ScanPresenter mScanPresenter;
 
     @Inject
     public PermissionManager mPermissionManager;
+
+    @Inject
+    public NetworkEventPipelines mNetworkEventPipelines;
 
     private BarcodeFragment mBarcodeFragment;
     private CameraManager mCameraManager;
@@ -104,18 +108,9 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
 
         super.fixOrientationToPortrait();
 
-        // DataHolder gets ability to freely serialize/deserialize its variables
-        DataHolder.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
-
-        if(DataHolder.getAppStart() == null){
-            DataHolder.setAppStart(new Instant());
+        if(mScanPresenter.getStartTime() == null){
+            mScanPresenter.setStartTime(new Instant());
         }
-
-        //if data in shared preferences is still usable open evaluationactivity instead
-//        if(DataHolder.validateAllData()){
-//            Intent evalIntent = new Intent(this, EvaluationActivity.class);
-//            startActivity(evalIntent);
-//        }
 
         //start the app
         Window window = getWindow();
@@ -146,16 +141,32 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
         //close the application
         if (getIntent().getBooleanExtra("CLOSE", false)) {
             // delete all data and close application (as best as android lets you)
-            DataHolder.deleteAllData();
+            mScanPresenter.removeAllData();
             ActivityUtil.saveTerminateTask(this);
         }
 
         if (getIntent().getBooleanExtra("GO_TO_SCAN", false)) {
-            DataHolder.deleteAllData();
+            mScanPresenter.removeAllData();
         }
 
         //sets the uuid for this session
-        DataHolder.setUuid(UUID.randomUUID().toString());
+        mScanPresenter.setUuid(UUID.randomUUID().toString());
+
+        mNetworkEventPipelines.receiveNetworkError()
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(this::onNetworkError);
+
+        mNetworkEventPipelines.receiveRequestError()
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(this::onRequestError);
+
+        mNetworkEventPipelines.receiveQuestionsVO()
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(this::onRequestSuccess);
+
 
         initBarcodeFragment();
 
@@ -185,10 +196,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
     protected void onResume() {
         // DataHolder gets ability to freely serialize/deserialize its variables
         // Android might clear variable in DataHolder while App is in background leading to shit.
-        DataHolder.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
-        DataHolder.storeAllData();
-
-        mScanPresenter.registerToEventBus();
+        mScanPresenter.saveAllData();
 
         if(!mRequestRunning){
             mToolBar.setTitle(mResources.getText(R.string.scan_search));
@@ -223,16 +231,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
         int id = item.getItemId();
 
         if (id == R.id.mock_questionnaire) {
-            DataHolder.setQuestionsVO(new QuestionsVO(
-                    DebugConfigurator.getDemoStudyPaths(),
-                    DebugConfigurator.getDemoTextQuestions(),
-                    DebugConfigurator.getDemoMultipleChoiceQuestionDTOs(),
-                    false
-            ));
-
-            DataHolder.getAnswersVO().setVoteToken(DebugConfigurator.genericVoteToken);
-            DataHolder.getAnswersVO().setDeviceID(DebugConfigurator.genericID);
-
+            mScanPresenter.debugConfiguration();
             Intent intent = new Intent(ScanActivity.this, EvaluationActivity.class);
             startActivity(intent);
         } else if(id == R.id.mock_qr_code_reading){
@@ -248,16 +247,13 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
             ObjectMapper mapper = new ObjectMapper();
             mLastPojo = mapper.readValue(result.getRawResult().getText(), QrDataVo.class);
             // store vote token within answerDTO
-            if (mLastPojo != null && mLastPojo.getHost() != null && !mLastPojo.getHost().equals("") && mLastPojo.getVoteToken() != null && !mLastPojo.getVoteToken().equals("")) {
-                DataHolder.getAnswersVO().setVoteToken(mLastPojo.getVoteToken());
+            if (mLastPojo != null && mLastPojo.getHost() != null && !mLastPojo.getHost().equals("")
+                    && mLastPojo.getVoteToken() != null && !mLastPojo.getVoteToken().equals("")) {
+                mScanPresenter.initAnswersVO(mLastPojo.getVoteToken(), mLastPojo.getHost());
             } else {
                 throw new IOException("QRPojo was not initialized correctly");
             }
 
-            DataHolder.getAnswersVO().setDeviceID(DataHolder.getUuid());
-
-            // share host name between activities
-            DataHolder.setHostName(mLastPojo.getHost());
             mScanPresenter.requestInternetPermissionAndConnectServer(mPermissionManager);
             mCameraManager.stopPreview();
         } catch (IOException e) {
@@ -269,6 +265,8 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
             Log.e("ScanActivity.scanResult", e.getMessage());
         }
     }
+
+
 
     @Override
     public void setCameraManager(CameraManager manager) {
@@ -295,7 +293,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
 
     @Override
     protected void onStop() {
-        DataHolder.storeAllData();
+        mScanPresenter.saveAllData();
         super.onStop();
     }
 
@@ -304,9 +302,28 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
         mPermissionManager.handlePermissionResult(requestCode, grantResults);
     }
 
-    /***********************************************
-     * START MESSAGE_FRAGMENT_COMMUNICATOR SECTION
-     ************************************************/
+    public void onRequestSuccess(QuestionsVO vo){
+        hideProgressOverlay();
+        startEvaluationActivity();
+    }
+
+    public void onRequestError(Triple<String, String, String> errorText){
+        hideProgressOverlay();
+
+        if(errorText.getRight().equals("RETRY_SCAN")){
+            showRetryScanDialog(errorText.getLeft(), errorText.getMiddle());
+        } else if(errorText.getRight().equals("RETRY_COMMUNICATION")){
+            showRetryServerCommunicationDialog(errorText.getLeft(), errorText.getMiddle());
+        }
+    }
+
+    public void onNetworkError(Pair<String, String> errorText){
+        setRequestRunning(false);
+
+        showNetworkErrorDialog(errorText.first, errorText.second);
+        changeToolbarTitle(R.string.scan_search);
+        hideProgressOverlay();
+    }
 
     public void onRestartQRScanning() {
         EventBus.get().post(new RestartQRScanningEvent());
@@ -325,18 +342,18 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
     public void onStartServerCommunication() {
         mScanPresenter.requestInternetPermissionAndConnectServer(mPermissionManager);
     }
-    /***********************************************
-     * END MESSAGE_FRAGMENT_COMMUNICATOR SECTION
-     ************************************************/
-    /******************************
-     * EVENT LISTENER SECTION START
-     ******************************/
 
+    /**
+     * Hide progress overlay with short animation
+     */
     @Override
     public void hideProgressOverlay() {
         Utility.animateView(mProgressOverlay, View.GONE, 0, 100);
     }
 
+    /**
+     * display progress overlay with short animation
+     */
     @Override
     public void showProgressOverlay() {
         Utility.animateView(mProgressOverlay, View.VISIBLE, 0.8f, 100);

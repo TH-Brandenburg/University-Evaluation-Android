@@ -4,8 +4,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -18,7 +16,7 @@ import javax.inject.Inject;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import de.fhb.campusapp.eval.ui.base.BaseActivity;
-import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.Utility;
 import fhb.de.campusappevaluationexp.R;
 
@@ -48,7 +46,7 @@ public class EnlargeImageActivity extends BaseActivity implements EnlargeMvpView
         final String imageFilePath;
 
         //just in case it became null thanks to android
-        DataHolder.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
+        DataManager.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
 
         Bundle extras = getIntent().getExtras();
         if(extras != null){
@@ -90,7 +88,7 @@ public class EnlargeImageActivity extends BaseActivity implements EnlargeMvpView
     protected void onResume() {
         // DataHolder gets ability to freely serialize/deserialize its variables
         // Android might clear variable in DataHolder while App is in background leading to shit.
-        DataHolder.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
+        DataManager.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         super.onResume();
     }
 

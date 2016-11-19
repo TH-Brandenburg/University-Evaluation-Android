@@ -2,6 +2,9 @@ package de.fhb.campusapp.eval.injection.module;
 
 import android.app.Activity;
 import android.content.Context;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AppCompatActivity;
 
 import com.github.buchandersenn.android_permission_manager.PermissionManager;
 
@@ -9,6 +12,8 @@ import javax.inject.Named;
 
 import dagger.Module;
 import dagger.Provides;
+import de.fhb.campusapp.eval.custom.CustomFragmentStatePagerAdapter;
+import de.fhb.campusapp.eval.data.IDataManager;
 import de.fhb.campusapp.eval.injection.ActivityContext;
 import de.fhb.campusapp.eval.injection.ApplicationContext;
 
@@ -18,9 +23,9 @@ import de.fhb.campusapp.eval.injection.ApplicationContext;
 @Module
 public class ActivityModule {
 
-    private Activity mActivity;
+    private AppCompatActivity mActivity;
 
-    public ActivityModule(Activity activity) {
+    public ActivityModule(AppCompatActivity activity) {
         mActivity = activity;
     }
 
@@ -36,4 +41,16 @@ public class ActivityModule {
 
     @Provides
     PermissionManager providePermissionManager(){ return PermissionManager.create(mActivity); }
+
+    @Provides
+    FragmentManager provideFragmentManager() {
+        return mActivity.getSupportFragmentManager();
+    }
+
+    @Provides
+    CustomFragmentStatePagerAdapter provideCustomFragmentStatePagerAdapter(FragmentManager manager
+            , @ActivityContext Context context
+            , IDataManager dataManager){
+        return new CustomFragmentStatePagerAdapter(manager, context, dataManager);
+    }
 }

@@ -11,12 +11,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import de.fhb.campusapp.eval.data.IDataManager;
 import de.fhb.campusapp.eval.fragments.ButtonFragment;
 import de.fhb.campusapp.eval.fragments.InnerSectionFragment;
+import de.fhb.campusapp.eval.injection.ActivityContext;
 import de.fhb.campusapp.eval.ui.sendfragment.SendFragment;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterPageEvent;
 import de.fhb.campusapp.eval.ui.textfragment.TextFragment;
-import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.vos.ChoiceVO;
 import de.fhb.campusapp.eval.utility.vos.MultipleChoiceQuestionVO;
 import de.fhb.campusapp.eval.utility.vos.TextQuestionVO;
@@ -39,17 +43,20 @@ public class CustomFragmentStatePagerAdapter extends FragmentStatePagerAdapter{
     * MUST be initialised with -1
     * */
     private int mOldPosition = -1;
-    private Context mContext;
+    private final Context mContext;
+    private final IDataManager mDataManager;
 
-    public CustomFragmentStatePagerAdapter(FragmentManager fm, Context context) {
+    @Inject
+    public CustomFragmentStatePagerAdapter(FragmentManager fm, @ActivityContext Context context, IDataManager dataManager) {
         super(fm);
         this.mContext = context;
+        this.mDataManager = dataManager;
 
     }
 
     @Override
     public Fragment getItem(int i) {
-        if(DataHolder.getQuestionsVO().getTextQuestionsFirst()){
+        if(mDataManager.getmQuestionsVO().getTextQuestionsFirst()){
             return placeTextQuestionsFirst(i);
         } else {
             return placeMCQuestionsFirst(i);
@@ -65,8 +72,8 @@ public class CustomFragmentStatePagerAdapter extends FragmentStatePagerAdapter{
     @Override
     public int getCount() {
         //create as many pages as there are questions + 1 for the send button and +1 for choosing subject
-        if(DataHolder.getMCQuestionTexts() != null || DataHolder.getQuestionTexts() != null){
-            return DataHolder.getMCQuestionTexts().size() + DataHolder.getQuestionTexts().size() + 2;
+        if(mDataManager.getMCQuestionTexts() != null || mDataManager.getTextQuestionTexts() != null){
+            return mDataManager.getMCQuestionTexts().size() + mDataManager.getTextQuestionTexts().size() + 2;
         } else {
             return 1;
         }
@@ -105,21 +112,21 @@ public class CustomFragmentStatePagerAdapter extends FragmentStatePagerAdapter{
 
     private Fragment placeTextQuestionsFirst(int i){
         Fragment fragment;
-        List<MultipleChoiceQuestionVO> multipleChoiceQuestions = DataHolder.getMCQuestionTexts();
-        List<TextQuestionVO> textQuestions = DataHolder.getQuestionTexts();
+        List<MultipleChoiceQuestionVO> multipleChoiceQuestions = mDataManager.getMCQuestionTexts();
+        List<TextQuestionVO> textQuestions = mDataManager.getTextQuestionTexts();
         // this +1/-1 stuff all hails from the inclusion of the innerSectionFragment
         if (i == 0){
             fragment = InnerSectionFragment.newInstance(i);
             mPageReferenceMap.put(i, fragment);
-        } else if(i < textQuestions.size() + DataHolder.getPositionOffset()){
-            TextQuestionVO dto = textQuestions.get(i - DataHolder.getPositionOffset());
+        } else if(i < textQuestions.size() + mDataManager.getPositionOffset()){
+            TextQuestionVO dto = textQuestions.get(i - mDataManager.getPositionOffset());
             fragment = TextFragment.newInstance(dto.getQuestionText(), i, dto.getQuestionID());
 //            mFragmentsEditable.put(i, true);
             mPageReferenceMap.put(i, fragment);
 //            mFragmentsEditable.put(i, false);
-        } else if(i < (multipleChoiceQuestions.size() + textQuestions.size()) + DataHolder.getPositionOffset()){
-            String question = multipleChoiceQuestions.get((i - DataHolder.getPositionOffset()) - textQuestions.size()).getQuestion();
-            ArrayList<ChoiceVO> choices = (ArrayList<ChoiceVO>) multipleChoiceQuestions.get((i - DataHolder.getPositionOffset()) - textQuestions.size()).getChoices();
+        } else if(i < (multipleChoiceQuestions.size() + textQuestions.size()) + mDataManager.getPositionOffset()){
+            String question = multipleChoiceQuestions.get((i - mDataManager.getPositionOffset()) - textQuestions.size()).getQuestion();
+            ArrayList<ChoiceVO> choices = (ArrayList<ChoiceVO>) multipleChoiceQuestions.get((i - mDataManager.getPositionOffset()) - textQuestions.size()).getChoices();
             fragment = ButtonFragment.newInstance(question, choices, i);
             mPageReferenceMap.put(i, fragment);
         } else {
@@ -132,20 +139,20 @@ public class CustomFragmentStatePagerAdapter extends FragmentStatePagerAdapter{
 
     private Fragment placeMCQuestionsFirst(int i){
         Fragment fragment;
-        List<MultipleChoiceQuestionVO> multipleChoiceQuestions = DataHolder.getMCQuestionTexts();
-        List<TextQuestionVO> textQuestions = DataHolder.getQuestionTexts();
+        List<MultipleChoiceQuestionVO> multipleChoiceQuestions = mDataManager.getMCQuestionTexts();
+        List<TextQuestionVO> textQuestions = mDataManager.getTextQuestionTexts();
         // this +1/-1stuff all hails from the inclusion of the innerSectionFragment
         if (i == 0) {
             fragment = InnerSectionFragment.newInstance(i);
             mPageReferenceMap.put(i, fragment);
-        } else if(i < multipleChoiceQuestions.size() + DataHolder.getPositionOffset()){
-            String question = multipleChoiceQuestions.get(i - DataHolder.getPositionOffset()).getQuestion();
-            ArrayList<ChoiceVO> choices = (ArrayList<ChoiceVO>) multipleChoiceQuestions.get(i - DataHolder.getPositionOffset()).getChoices();
+        } else if(i < multipleChoiceQuestions.size() + mDataManager.getPositionOffset()){
+            String question = multipleChoiceQuestions.get(i - mDataManager.getPositionOffset()).getQuestion();
+            ArrayList<ChoiceVO> choices = (ArrayList<ChoiceVO>) multipleChoiceQuestions.get(i - mDataManager.getPositionOffset()).getChoices();
             fragment = ButtonFragment.newInstance(question, choices, i);
             mPageReferenceMap.put(i, fragment);
 //            mFragmentsEditable.put(i, false);
-        } else if(i < (multipleChoiceQuestions.size() + textQuestions.size()) + DataHolder.getPositionOffset()){
-            TextQuestionVO vo = textQuestions.get((i - DataHolder.getPositionOffset()) - multipleChoiceQuestions.size());
+        } else if(i < (multipleChoiceQuestions.size() + textQuestions.size()) + mDataManager.getPositionOffset()){
+            TextQuestionVO vo = textQuestions.get((i - mDataManager.getPositionOffset()) - multipleChoiceQuestions.size());
             fragment = TextFragment.newInstance(vo.getQuestionText(), i, vo.getQuestionID());
 //            mFragmentsEditable.put(i, true);
             mPageReferenceMap.put(i, fragment);

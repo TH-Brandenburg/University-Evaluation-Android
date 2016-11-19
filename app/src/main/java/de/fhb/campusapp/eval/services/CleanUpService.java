@@ -6,7 +6,7 @@ import android.os.IBinder;
 
 import java.io.File;
 
-import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.Utility;
 
 /**
@@ -38,7 +38,7 @@ public class CleanUpService extends Service{
     public void onTaskRemoved(Intent rootIntent) {
 
         int fileNr = Utility.getImageDirectory(this).listFiles().length;
-        DataHolder.deleteAllData();
+        DataManager.deleteAllData();
 
         for(int i = 0; i < fileNr && Utility.getImageDirectory(this).listFiles().length > 0; i++){
             Utility.getImageDirectory(this).listFiles()[0].delete();

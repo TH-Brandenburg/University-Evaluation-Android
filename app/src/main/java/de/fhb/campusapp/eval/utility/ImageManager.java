@@ -293,7 +293,7 @@
 //
 //        if(cursor != null && cursor.moveToFirst()){
 //            do {
-//                if (!DataHolder.getGalleryList().contains(cursor.getString(1))) {
+//                if (!DataHolder.getGallerySet().contains(cursor.getString(1))) {
 //                    imageInfo.setUnknownImageExisting(true);
 //                    break;
 //                }
@@ -310,7 +310,7 @@
 //     */
 //    private void fillPhotoList(ContentResolver contentResolver) {
 //        DataHolder.setGalleryList(null);
-//        DataHolder.getGalleryList().clear();
+//        DataHolder.getGallerySet().clear();
 //        String[] projection = {MediaStore.Images.ImageColumns.DISPLAY_NAME};
 //        Cursor cursor = null;
 //        Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
@@ -321,7 +321,7 @@
 //
 //        if (cursor != null && cursor.moveToFirst()) {
 //            do {
-//                DataHolder.getGalleryList().add(cursor.getString(0));
+//                DataHolder.getGallerySet().add(cursor.getString(0));
 //            } while (cursor.moveToNext());
 //            cursor.close();
 //        }

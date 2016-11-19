@@ -1,16 +1,14 @@
 package de.fhb.campusapp.eval.ui.scan;
 
 import android.Manifest;
-import android.app.Dialog;
-import android.content.Intent;
 import android.content.res.Resources;
 import android.support.v4.util.Pair;
-import android.view.View;
 
 import com.github.buchandersenn.android_permission_manager.PermissionManager;
 import com.squareup.otto.Subscribe;
 
 import org.apache.commons.lang3.tuple.Triple;
+import org.joda.time.Instant;
 
 import java.util.concurrent.TimeUnit;
 
@@ -18,18 +16,17 @@ import javax.inject.Inject;
 
 import de.fhb.ca.dto.QuestionsDTO;
 import de.fhb.ca.dto.RequestDTO;
-import de.fhb.campusapp.eval.data.local.RetrofitHelper;
+import de.fhb.campusapp.eval.data.IDataManager;
 import de.fhb.campusapp.eval.interfaces.RetroRequestService;
 import de.fhb.campusapp.eval.ui.base.BasePresenter;
-import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
 import de.fhb.campusapp.eval.utility.ClassMapper;
-import de.fhb.campusapp.eval.utility.DataHolder;
-import de.fhb.campusapp.eval.utility.DialogFactory;
+import de.fhb.campusapp.eval.data.DataManager;
+import de.fhb.campusapp.eval.utility.DebugConfigurator;
 import de.fhb.campusapp.eval.utility.EventBus;
 import de.fhb.campusapp.eval.utility.Events.NetworkErrorEvent;
 import de.fhb.campusapp.eval.utility.Events.RequestErrorEvent;
 import de.fhb.campusapp.eval.utility.Events.RequestSuccessEvent;
-import de.fhb.campusapp.eval.utility.Utility;
+import de.fhb.campusapp.eval.utility.vos.AnswersVO;
 import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
 import fhb.de.campusappevaluationexp.R;
 import okhttp3.OkHttpClient;
@@ -44,57 +41,26 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
  */
 public class ScanPresenter extends BasePresenter<ScanMvpView> {
 
-    @Inject
-    Resources mResources;
+    final Resources mResources;
+
+    final IDataManager mDataManager;
 
     @Inject
-    RetrofitHelper mRetrofitHelper;
-
-    Retrofit mRetrofit;
-
-    @Inject
-    public ScanPresenter(Resources mResources) {
+    public ScanPresenter(Resources mResources, IDataManager mDataManager) {
         super();
         this.mResources = mResources;
-    }
-
-    private OkHttpClient createOkHttpClient(){
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .readTimeout(3, TimeUnit.SECONDS)
-                .connectTimeout(3, TimeUnit.SECONDS)
-                .build();
-
-        return okHttpClient;
-    }
-
-    public Retrofit createOrGetRetrofit(){
-        // create retrofit instance after receiving host address
-        if(mRetrofit == null){
-            mRetrofit = new Retrofit.Builder()
-                    .baseUrl(DataHolder.getHostName() + "/")
-                    .client(createOkHttpClient())
-                    .addConverterFactory(JacksonConverterFactory.create())
-                    .build();
-        }
-
-        return mRetrofit;
+        this.mDataManager = mDataManager;
     }
 
     /**
      * Executes request retrieving questions and choices from REST server
      */
-    public boolean performQuestionRequest() {
-
-        createOrGetRetrofit();
-
+    public void performQuestionRequest() {
         getMvpView().changeToolbarTitle(mResources.getString(R.string.scan_send));
         getMvpView().showProgressOverlay();
 
-        RequestDTO requestDTO = new RequestDTO(DataHolder.getAnswersVO().getVoteToken(), DataHolder.getUuid());
-        RetroRequestService requestService = mRetrofit.create(RetroRequestService.class);
-        Call<QuestionsDTO> response = requestService.requestQuestions(requestDTO);
-        response.enqueue(new RetrofitCallback());
-        return true;
+        //TODO call datamanager
+
     }
 
     public void requestInternetPermissionAndConnectServer(PermissionManager manager){
@@ -105,62 +71,41 @@ public class ScanPresenter extends BasePresenter<ScanMvpView> {
                 .request();
     }
 
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void onRequestSuccess(RequestSuccessEvent<QuestionsDTO> event){
+    public void debugConfiguration() {
+        mDataManager.setmQuestionsVO(new QuestionsVO(
+                DebugConfigurator.getDemoStudyPaths(),
+                DebugConfigurator.getDemoTextQuestions(),
+                DebugConfigurator.getDemoMultipleChoiceQuestionDTOs(),
+                false
+        ));
 
-        QuestionsVO vo = ClassMapper.questionsDTOToQuestionsVOMapper(event.getRequestedObject());
-        DataHolder.setQuestionsVO(vo);
-        // Hide progress overlay (with animation):
-        getMvpView().hideProgressOverlay();
-        getMvpView().startEvaluationActivity();
+        mDataManager.getmAnswersVO().setVoteToken(DebugConfigurator.genericVoteToken);
+        mDataManager.getmAnswersVO().setDeviceID(DebugConfigurator.genericID);
     }
 
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void onRequestError(RequestErrorEvent event){
-        Triple<String, String, String> errorText = mRetrofitHelper.processRequestError(event.getResposne(), mResources, mRetrofit);
-        getMvpView().hideProgressOverlay();
-
-        if(errorText.getRight().equals("RETRY_SCAN")){
-            getMvpView().showRetryScanDialog(errorText.getLeft(), errorText.getMiddle());
-        } else if(errorText.getRight().equals("RETRY_COMMUNICATION")){
-            getMvpView().showRetryServerCommunicationDialog(errorText.getLeft(), errorText.getMiddle());
-        }
+    public void initAnswersVO(String voteToken, String hostName) {
+        mDataManager.getmAnswersVO().setVoteToken(voteToken);
+        mDataManager.getmAnswersVO().setDeviceID(mDataManager.getmUuid());
+        mDataManager.setmHostName(hostName);
     }
 
-
-
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void onNetworkError(NetworkErrorEvent event){
-        getMvpView().setRequestRunning(false);
-        Throwable t = event.getRetrofitError();
-        Pair<String, String> errorText = mRetrofitHelper.processNetworkError(t, mResources);
-
-        getMvpView().showNetworkErrorDialog(errorText.first, errorText.second);
-        getMvpView().changeToolbarTitle(R.string.scan_search);
-        getMvpView().hideProgressOverlay();
-
+    public void saveAllData(){
+        mDataManager.saveAllData();
     }
 
-    private class RetrofitCallback implements Callback<QuestionsDTO> {
+    public void removeAllData(){
+        mDataManager.removeAllData();
+    }
 
-        @Override
-        public void onResponse(Call<QuestionsDTO> call, Response<QuestionsDTO> response) {
-            getMvpView().changeToolbarTitle(mResources.getString(R.string.scan_search));
-            getMvpView().setRequestRunning(false);
+    public void setUuid(String uuid){
+        mDataManager.setmUuid(uuid);
+    }
 
-            if(response.isSuccessful()){
-                EventBus.get().post(new RequestSuccessEvent<>(response.body(), response));
-            } else {
-                EventBus.get().post(new RequestErrorEvent<>(response));
-            }
-        }
+    public void setStartTime(Instant now){
+        mDataManager.setmAppStartTime(now);
+    }
 
-        @Override
-        public void onFailure(Call<QuestionsDTO> call, Throwable t) {
-            EventBus.get().post(new NetworkErrorEvent(t));
-        }
+    public Instant getStartTime(){
+        return mDataManager.getmAppStartTime();
     }
 }

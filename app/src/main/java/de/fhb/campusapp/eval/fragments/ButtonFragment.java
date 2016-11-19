@@ -27,7 +27,7 @@ import butterknife.ButterKnife;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterPageEvent;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
 import de.fhb.campusapp.eval.ui.base.BaseFragment;
-import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.EventBus;
 import de.fhb.campusapp.eval.utility.Events.ClickedChoiceButtonEvent;
 import de.fhb.campusapp.eval.utility.Utility;
@@ -290,7 +290,7 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
 //                }
                 button.setOnClickListener(new InnerOnClickListener());
                 // always select the button which was previously clicked on this question
-                for (MultipleChoiceAnswerVO dto : DataHolder.getAnswersVO().getMcAnswers()){
+                for (MultipleChoiceAnswerVO dto : DataManager.getAnswersVO().getMcAnswers()){
                     if(dto.getQuestionText().equals(mQuestion) && button.getText().equals(dto.getChoice().getChoiceText())){
                         toggleSelectedButton(button);
                     }
@@ -352,8 +352,8 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
 
     @Override
     public void onGettingPrimary(int oldPosition) {
-        DataHolder.setCurrentPagerPosition(mPosition);
-        DataHolder.setCurrentQuestion(mQuestion);
+        DataManager.setmCurrentPagerPosition(mPosition);
+        DataManager.setCurrentQuestion(mQuestion);
     }
 
     @Override
@@ -367,17 +367,17 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
         public void onClick(View view) {
             toggleSelectedButton((Button) view);
             // add answer to list of answers in AnswersDTO after button has been clicked.
-            MultipleChoiceAnswerVO dto = DataHolder.isMcQuestionAnswered(mQuestion);
+            MultipleChoiceAnswerVO dto = DataManager.isMcQuestionAnswered(mQuestion);
 
           /*  // remove \n commands from "no comment" button
            String choiceText = ((Button) view).getText().toString().replaceAll("\\n", "");*/
             String choiceText = ((Button) view).getText().toString();
 
             if(dto == null){
-                ChoiceVO choiceVO = DataHolder.retrieveChoiceVO(mQuestion, choiceText);
-                DataHolder.getAnswersVO().getMcAnswers().add(new MultipleChoiceAnswerVO(mQuestion, choiceVO));
+                ChoiceVO choiceVO = DataManager.retrieveChoiceVOByQuestionText(mQuestion, choiceText);
+                DataManager.getAnswersVO().getMcAnswers().add(new MultipleChoiceAnswerVO(mQuestion, choiceVO));
             } else {
-                ChoiceVO choiceVO = DataHolder.retrieveChoiceVO(mQuestion, choiceText);
+                ChoiceVO choiceVO = DataManager.retrieveChoiceVOByQuestionText(mQuestion, choiceText);
                 dto.setChoice(choiceVO);
             }
             EventBus.get().post(new ClickedChoiceButtonEvent());

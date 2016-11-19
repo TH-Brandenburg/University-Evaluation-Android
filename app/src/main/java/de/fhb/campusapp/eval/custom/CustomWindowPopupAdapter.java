@@ -10,8 +10,12 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
+
+import de.fhb.campusapp.eval.data.IDataManager;
+import de.fhb.campusapp.eval.injection.ActivityContext;
 import de.fhb.campusapp.eval.interfaces.ProgressCommunicator;
-import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.FeatureSwitch;
 import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
 import fhb.de.campusappevaluationexp.R;
@@ -23,13 +27,17 @@ public class CustomWindowPopupAdapter extends ArrayAdapter<String> {
 
     private ProgressCommunicator progressCommunicator;
 
+    private final IDataManager mDataManager;
+
     /**
      * All items that must be placed in the navigation menu.
      */
     private  List<String> navListEntries ;
 
-    public CustomWindowPopupAdapter(Context context, int resource) {
+    @Inject
+    public CustomWindowPopupAdapter(@ActivityContext Context context, IDataManager dataManager, int resource) {
         super(context, resource);
+        this.mDataManager = dataManager;
         this.navListEntries = this.constructNavList();
         super.addAll(navListEntries);
     }
@@ -44,14 +52,14 @@ public class CustomWindowPopupAdapter extends ArrayAdapter<String> {
 
         // choosing the subject comes always first
         navList.add(getContext().getResources().getString(R.string.tab_view_button_choose));
-        navList.addAll(DataHolder.retrieveAllQuestionTexts());
+        navList.addAll(mDataManager.retrieveAllQuestionTexts());
         navList.add(getContext().getResources().getString(R.string.send_button));
         return navList;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        QuestionsVO dto = DataHolder.getQuestionsVO();
+        QuestionsVO dto = mDataManager.getmQuestionsVO();
         ListView listView = (ListView) parent;
         listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
         listView.setDrawSelectorOnTop(true);
@@ -92,7 +100,7 @@ public class CustomWindowPopupAdapter extends ArrayAdapter<String> {
             }
         }
 
-        if(DataHolder.isRecolorNavigationList() || FeatureSwitch.NAVIGATION_ALWAYS_MARK_UNASWERED){
+        if(mDataManager.ismRecolorNavigation() || FeatureSwitch.NAVIGATION_ALWAYS_MARK_UNASWERED){
             recolorNavigationList(position, holder);
         }
         return convertView;
@@ -106,7 +114,7 @@ public class CustomWindowPopupAdapter extends ArrayAdapter<String> {
     private void recolorNavigationList(int position, ViewHolder holder) {
         //the +1s (plural) because of the InnerSectionFragment at the beginning
         if(position < navListEntries.size()){
-                boolean answered = DataHolder.isQuestionAnswered(navListEntries.get(position));
+                boolean answered = mDataManager.isQuestionAnswered(navListEntries.get(position));
 
                 if(position != 0 && position != navListEntries.size() - 1
                         && !answered && position != progressCommunicator.getProgress()){ //mark unanswered questions

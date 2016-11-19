@@ -8,7 +8,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.Utility;
 import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
 import de.fhb.campusapp.eval.utility.vos.TextQuestionVO;
@@ -30,9 +30,9 @@ public class CreateUploadImageObservable{
                 //loop through all text questions and test if their is an entry in
                 //the commentaryImageMap. If a match is found use the path to the original image
                 //to compress it and store the path to the other image paths
-                for(TextQuestionVO textQuestionVO : DataHolder.getQuestionsVO().getTextQuestions()){
-                    if(DataHolder.getCommentaryImageMap().containsKey(textQuestionVO.getQuestionText())){
-                        ImageDataVO pathsObj = DataHolder.getCommentaryImageMap().get(textQuestionVO.getQuestionText());
+                for(TextQuestionVO textQuestionVO : DataManager.getmQuestionsVO().getTextQuestions()){
+                    if(DataManager.getCommentaryImageMap().containsKey(textQuestionVO.getQuestionText())){
+                        ImageDataVO pathsObj = DataManager.getCommentaryImageMap().get(textQuestionVO.getQuestionText());
                         try {
                             File uploadFile = Utility.createImageFile(Utility.removeSpecialCharacters(textQuestionVO.getQuestionText()), context);
                             Bitmap resizedImage = Utility.resizeImage(pathsObj.getmLargeImageFilePath(), 800, 768);

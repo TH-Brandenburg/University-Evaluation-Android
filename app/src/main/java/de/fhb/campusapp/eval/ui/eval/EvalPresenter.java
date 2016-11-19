@@ -1,7 +1,6 @@
 package de.fhb.campusapp.eval.ui.eval;
 
 import android.Manifest;
-import android.app.Dialog;
 import android.content.res.Resources;
 import android.support.v4.util.Pair;
 
@@ -23,8 +22,7 @@ import de.fhb.campusapp.eval.data.local.RetrofitHelper;
 import de.fhb.campusapp.eval.interfaces.RetroRespondService;
 import de.fhb.campusapp.eval.ui.base.BasePresenter;
 import de.fhb.campusapp.eval.utility.ClassMapper;
-import de.fhb.campusapp.eval.utility.DataHolder;
-import de.fhb.campusapp.eval.utility.DialogFactory;
+import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.EventBus;
 import de.fhb.campusapp.eval.utility.Events.NetworkErrorEvent;
 import de.fhb.campusapp.eval.utility.Events.RequestErrorEvent;
@@ -35,7 +33,6 @@ import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
 import de.fhb.campusapp.eval.utility.vos.MultipleChoiceAnswerVO;
 import de.fhb.campusapp.eval.utility.vos.MultipleChoiceQuestionVO;
 import de.fhb.campusapp.eval.utility.vos.TextAnswerVO;
-import fhb.de.campusappevaluationexp.R;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -70,20 +67,20 @@ public class EvalPresenter extends BasePresenter<EvalMvpView>{
 
     private void performAnswerRequest() {
 
-        if(FeatureSwitch.DEBUG_ACTIVE && DataHolder.getHostName() == null){
+        if(FeatureSwitch.DEBUG_ACTIVE && DataManager.getHostName() == null){
             getMvpView().hideProgressOverlay();
             getMvpView().showDebugMessage();
             return;
         }
 
         mRetrofit = new Retrofit.Builder()
-                .baseUrl(DataHolder.getHostName() + '/')
+                .baseUrl(DataManager.getHostName() + '/')
                 .addConverterFactory(JacksonConverterFactory.create())
                 .build();
 
         //zip commentary pictures if there are any
         ArrayList<File> imageFileList = new ArrayList<>();
-        for(ImageDataVO pathObj : DataHolder.getCommentaryImageMap().values()){
+        for(ImageDataVO pathObj : DataManager.getCommentaryImageMap().values()){
             if(pathObj.getmUploadFilePath() != null){
                 imageFileList.add(new File(pathObj.getmUploadFilePath()));
             }
@@ -95,7 +92,7 @@ public class EvalPresenter extends BasePresenter<EvalMvpView>{
         String jsonAnswers = null;
 
         try {
-            AnswersDTO dto = ClassMapper.answersVOToAnswerDTOMapper(DataHolder.getAnswersVO());
+            AnswersDTO dto = ClassMapper.answersVOToAnswerDTOMapper(DataManager.getAnswersVO());
             jsonAnswers = mapper.writeValueAsString(dto);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
@@ -126,18 +123,18 @@ public class EvalPresenter extends BasePresenter<EvalMvpView>{
      */
     public void setUnasweredQuestions(){
         //server expects all questions to have an entry in answers dto. Add all the user did not set
-        for(TextAnswerVO answerVO : DataHolder.getAnswersVO().getTextAnswers()){
-            if(DataHolder.isTextQuestionAnswered(answerVO.getQuestionText()) == null){
-                DataHolder.getAnswersVO().getTextAnswers().add(new TextAnswerVO(answerVO.getQuestionID(), answerVO.getQuestionText(), ""));
+        for(TextAnswerVO answerVO : DataManager.getAnswersVO().getTextAnswers()){
+            if(DataManager.isTextQuestionAnswered(answerVO.getQuestionText()) == null){
+                DataManager.getAnswersVO().getTextAnswers().add(new TextAnswerVO(answerVO.getQuestionID(), answerVO.getQuestionText(), ""));
             }
         }
 
         //loop through all mcQuestions
-        for(MultipleChoiceQuestionVO questionVO : DataHolder.getQuestionsVO().getMultipleChoiceQuestionVOs()){
+        for(MultipleChoiceQuestionVO questionVO : DataManager.getmQuestionsVO().getMultipleChoiceQuestionVOs()){
             //test if any wasnt answered by the user
-            if(DataHolder.isMcQuestionAnswered(questionVO.getQuestion()) == null){
-                ChoiceVO noCommentChoice = DataHolder.retrieveChoiceByGrade(questionVO.getQuestion(), 0);
-                DataHolder.getAnswersVO().getMcAnswers().add(new MultipleChoiceAnswerVO(questionVO.getQuestion(), noCommentChoice));
+            if(DataManager.isMcQuestionAnswered(questionVO.getQuestion()) == null){
+                ChoiceVO noCommentChoice = DataManager.retrieveChoiceByGrade(questionVO.getQuestion(), 0);
+                DataManager.getAnswersVO().getMcAnswers().add(new MultipleChoiceAnswerVO(questionVO.getQuestion(), noCommentChoice));
             }
         }
     }

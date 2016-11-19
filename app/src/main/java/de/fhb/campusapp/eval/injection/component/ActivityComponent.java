@@ -1,7 +1,10 @@
 package de.fhb.campusapp.eval.injection.component;
 
+import android.support.v4.app.FragmentManager;
+
 import dagger.Component;
 import dagger.Subcomponent;
+import de.fhb.campusapp.eval.custom.CustomFragmentStatePagerAdapter;
 import de.fhb.campusapp.eval.fragments.ButtonFragment;
 import de.fhb.campusapp.eval.fragments.InnerSectionFragment;
 import de.fhb.campusapp.eval.injection.module.ActivityModule;
@@ -27,5 +30,9 @@ public interface ActivityComponent {
     void bind(InnerSectionFragment innerSectionFragment);
     void bind(SendFragment sendFragment);
     void bind(TextFragment textFragment);
+    void bind(CustomFragmentStatePagerAdapter statePagerAdapter);
+
+    FragmentManager fragmentManager();
+    CustomFragmentStatePagerAdapter statePagerAdapter();
 
 }

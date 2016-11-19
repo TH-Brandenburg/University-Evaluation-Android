@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.support.v4.util.Pair;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
@@ -23,10 +22,6 @@ import android.widget.ListPopupWindow;
 
 import com.github.buchandersenn.android_permission_manager.PermissionManager;
 import com.github.buchandersenn.android_permission_manager.PermissionRequest;
-import com.squareup.otto.Produce;
-import com.squareup.otto.Subscribe;
-
-import org.apache.commons.lang3.tuple.Triple;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -37,7 +32,6 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import de.fhb.ca.dto.ResponseDTO;
 import de.fhb.campusapp.eval.custom.CustomFragmentStatePagerAdapter;
 import de.fhb.campusapp.eval.custom.CustomScroller;
 import de.fhb.campusapp.eval.custom.CustomViewPager;
@@ -51,15 +45,9 @@ import de.fhb.campusapp.eval.ui.scan.ScanActivity;
 import de.fhb.campusapp.eval.ui.sendfragment.SendFragment;
 import de.fhb.campusapp.eval.ui.textfragment.TextFragment;
 import de.fhb.campusapp.eval.utility.ActivityUtil;
-import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.DialogFactory;
-import de.fhb.campusapp.eval.utility.EventBus;
-import de.fhb.campusapp.eval.utility.Events.NetworkErrorEvent;
-import de.fhb.campusapp.eval.utility.Events.PhotoTakenEvent;
 import de.fhb.campusapp.eval.utility.Events.PreServerCommunicationEvent;
-import de.fhb.campusapp.eval.utility.Events.RequestErrorEvent;
-import de.fhb.campusapp.eval.utility.Events.RequestSuccessEvent;
-import de.fhb.campusapp.eval.utility.Events.StartServerCommunicationEvent;
 import de.fhb.campusapp.eval.utility.FeatureSwitch;
 import de.fhb.campusapp.eval.utility.Observer.CreateUploadImageObservable;
 import de.fhb.campusapp.eval.utility.Utility;
@@ -207,7 +195,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         setSupportActionBar(mToolbar);
 
         //just in case it became null thanks to android
-        DataHolder.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
+        DataManager.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
 
         mCollectionPagerAdapter = new CustomFragmentStatePagerAdapter(getSupportFragmentManager(), this);
         mViewPager.setAdapter(mCollectionPagerAdapter);
@@ -289,8 +277,8 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     protected void onResume() {
         // DataHolder gets ability to freely serialize/deserialize its variables
         // Android might clear variable in DataHolder while App is in background leading to shit.
-        DataHolder.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
-        DataHolder.storeAllData();
+        DataManager.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
+        DataManager.saveAllData();
 
         mEvalPresenter.registerToEventBus();
 
@@ -503,7 +491,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 
     @Override
     protected void onStop() {
-        DataHolder.storeAllData();
+        DataManager.saveAllData();
         super.onStop();
     }
 
@@ -569,8 +557,8 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
             if (fragment != null && fragment.getClass() == TextFragment.class ) {
                 // only show keyboard if textView was not written in before and no picture was previously taken
                 TextFragment textFragment = (TextFragment) fragment;
-                TextAnswerVO textAnswerVO =  DataHolder.isTextQuestionAnswered(textFragment.getmQuestion());
-                ImageDataVO pathObj = DataHolder.getCommentaryImageMap().get(textFragment.getmQuestion());
+                TextAnswerVO textAnswerVO =  DataManager.isTextQuestionAnswered(textFragment.getmQuestion());
+                ImageDataVO pathObj = DataManager.getCommentaryImageMap().get(textFragment.getmQuestion());
                 if((textAnswerVO == null || textAnswerVO.getAnswerText().equals("")) && pathObj == null){
                     needed = true;
                 }
@@ -588,7 +576,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 
             if (fragment != null && fragment.getClass() == TextFragment.class ) {
                 TextFragment textFragment = (TextFragment) fragment;
-                TextQuestionVO dto = DataHolder.retrieveTextQuestionVO(textFragment.getmQuestion());
+                TextQuestionVO dto = DataManager.retrieveTextQuestionVO(textFragment.getmQuestion());
                 // numerical answers mustnt be answered with a photo. That would be dumb.
                 if(!dto.getOnlyNumbers()){
                     needed = true;
@@ -708,7 +696,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 
     @Override
     public void onRecolorUnansweredQuestions() {
-       DataHolder.setRecolorNavigationList(true);
+       DataManager.setRecolorNavigationList(true);
     }
 
     /**********************************************************
@@ -765,7 +753,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 
         CreateUploadImageObservable observable = new CreateUploadImageObservable();
         observable.prepareImageUploadInBackground(this).observeOn(AndroidSchedulers.mainThread())
-                .subscribe(pair -> DataHolder.getCommentaryImageMap().get(pair.first).setmUploadFilePath(pair.second)
+                .subscribe(pair -> DataManager.getCommentaryImageMap().get(pair.first).setmUploadFilePath(pair.second)
                         , Throwable::printStackTrace
                         , this::onStartServerCommunication);
         mEvalPresenter.setUnasweredQuestions();

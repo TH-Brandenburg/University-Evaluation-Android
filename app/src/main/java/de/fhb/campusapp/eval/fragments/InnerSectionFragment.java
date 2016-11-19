@@ -17,7 +17,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
 import de.fhb.campusapp.eval.ui.base.BaseFragment;
-import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.EventBus;
 import de.fhb.campusapp.eval.utility.Events.ClickedChoiceButtonEvent;
 import fhb.de.campusappevaluationexp.R;
@@ -70,7 +70,7 @@ public class InnerSectionFragment extends BaseFragment implements ListView.OnIte
 
         // Inflate the layout for this fragment
         ArrayList<String> intermediateList = new ArrayList<>(Arrays.asList("Flappy", "Bird"));
-        ArrayList<String> realList = (ArrayList<String>) DataHolder.getQuestionsVO().getStudyPaths();
+        ArrayList<String> realList = (ArrayList<String>) DataManager.getmQuestionsVO().getStudyPaths();
         mListView.setAdapter(new ArrayAdapter<>(getActivity(), R.layout.nav_list, realList == null ? intermediateList : realList));
         mListView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
         mListView.setOnItemClickListener(this);
@@ -93,7 +93,7 @@ public class InnerSectionFragment extends BaseFragment implements ListView.OnIte
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
         TextView textView = (TextView) view;
         mListView.setItemChecked(mListView.getPositionForView(view), true);
-        DataHolder.getAnswersVO().setStudyPath(textView.getText().toString());
+        DataManager.getAnswersVO().setStudyPath(textView.getText().toString());
         EventBus.get().post(new ClickedChoiceButtonEvent());
 
         //notify navigationList that a new answer was given

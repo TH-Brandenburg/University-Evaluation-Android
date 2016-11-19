@@ -389,7 +389,7 @@ public class Utility {
 //                fileDelete(file, thresholdMillis, recDepthCounter+1);
 //            } else {
 //                // if yes, loop through all images in the subdir and delete them if applicable
-//                DataHolder.getAppStart();
+//                DataHolder.getmAppStartTime();
 //                String extension = FilenameUtils.getExtension(file.getAbsolutePath());
 //
 //                if(!(extension.equals("PNG") || extension.equals("png")
@@ -402,7 +402,7 @@ public class Utility {
 //
 //                Instant modified = new Instant(file.lastModified());
 //                // picture was modified after app was started (first test)
-//                if(modified.isAfter(DataHolder.getAppStart())){
+//                if(modified.isAfter(DataHolder.getmAppStartTime())){
 //                    // second test
 //                    for(ImageDataVO imageData : DataHolder.getCommentaryImageMap().values()){
 //                        Duration creationDifference = new Duration(modified, imageData.getmCreationTime());

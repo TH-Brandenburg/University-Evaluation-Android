@@ -9,7 +9,6 @@ import android.support.test.runner.AndroidJUnit4;
 
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
-import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.DebugConfigurator;
 import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
 import de.fhb.campusapp.eval.utility.vos.MultipleChoiceAnswerVO;
@@ -58,8 +57,8 @@ public class EvaluationActivityTest {
 
     @Before
     public void setup(){
-        DataHolder.deleteAllData();
-        DataHolder.setQuestionsVO(new QuestionsVO(
+        DataManager.deleteAllData();
+        DataManager.setmQuestionsVO(new QuestionsVO(
                 DebugConfigurator.getDemoStudyPaths(),
                 DebugConfigurator.getDemoTextQuestions(),
                 DebugConfigurator.getDemoMultipleChoiceQuestionDTOs(),
@@ -211,7 +210,7 @@ public class EvaluationActivityTest {
         onData(allOf(is(instanceOf(String.class)), is("Informatik"))).perform(click());
 
         //check for correct data in DataHolder
-        assertThat(DataHolder.getAnswersVO().getStudyPath(), is("Informatik"));
+        assertThat(DataManager.getAnswersVO().getStudyPath(), is("Informatik"));
     }
 
     @Test
@@ -251,10 +250,10 @@ public class EvaluationActivityTest {
         interaction4.check(matches(withText("No comment")));
 
         //check for correct data in DataHolder
-        MultipleChoiceAnswerVO secondSlide = DataHolder.isMcQuestionAnswered("Interface for question with 2 + 1 possible answers.");
+        MultipleChoiceAnswerVO secondSlide = DataManager.isMcQuestionAnswered("Interface for question with 2 + 1 possible answers.");
         assertThat(secondSlide.getChoice().getChoiceText(), is("Positive answer"));
 
-        MultipleChoiceAnswerVO firstSlide = DataHolder.isMcQuestionAnswered("Interface for question with 3 + 1 possible answers.");
+        MultipleChoiceAnswerVO firstSlide = DataManager.isMcQuestionAnswered("Interface for question with 3 + 1 possible answers.");
         assertThat(firstSlide.getChoice().getChoiceText(), is("Neutral answer"));
     }
 
@@ -374,7 +373,7 @@ public class EvaluationActivityTest {
         Thread.sleep(4000L);
 
         //then
-        ImageDataVO image = DataHolder.getCommentaryImageMap().get("This shows a question where only numbers are allowed and whose input capacity is limited to 4");
+        ImageDataVO image = DataManager.getCommentaryImageMap().get("This shows a question where only numbers are allowed and whose input capacity is limited to 4");
         assertThat(image, is(notNullValue()));
         assertThat(image.getmLargeImageFilePath(), allOf(is(notNullValue()), is(not(""))));
 

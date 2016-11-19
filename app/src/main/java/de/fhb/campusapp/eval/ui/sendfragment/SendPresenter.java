@@ -3,7 +3,7 @@ package de.fhb.campusapp.eval.ui.sendfragment;
 import javax.inject.Inject;
 
 import de.fhb.campusapp.eval.ui.base.BasePresenter;
-import de.fhb.campusapp.eval.utility.DataHolder;
+import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.vos.AnswersVO;
 import de.fhb.campusapp.eval.utility.vos.TextAnswerVO;
 
@@ -19,11 +19,11 @@ public class SendPresenter extends BasePresenter<SendMvpView> {
 
 
     public void sendButtonPressed(){
-        int total = DataHolder.getQuestionsVO().getMultipleChoiceQuestionVOs().size() + DataHolder.getQuestionsVO().getTextQuestions().size();
+        int total = DataManager.getmQuestionsVO().getMultipleChoiceQuestionVOs().size() + DataManager.getmQuestionsVO().getTextQuestions().size();
         int answered = 0;
-        String subject = DataHolder.getAnswersVO().getStudyPath();
+        String subject = DataManager.getAnswersVO().getStudyPath();
         boolean subjectChoosen = !(subject == null || subject.isEmpty());
-        AnswersVO answersVO = DataHolder.getAnswersVO();
+        AnswersVO answersVO = DataManager.getAnswersVO();
 
         // insist that a subject is chosen
         if(!subjectChoosen){
@@ -32,7 +32,7 @@ public class SendPresenter extends BasePresenter<SendMvpView> {
             //count only non empty texts and photos as answered
             for(TextAnswerVO answer : answersVO.getTextAnswers()){
                 if((answer.getAnswerText() != null && !answer.getAnswerText().equals(""))
-                        || DataHolder.getCommentaryImageMap().containsKey(answer.getQuestionText())){
+                        || DataManager.getCommentaryImageMap().containsKey(answer.getQuestionText())){
                     answered++;
                 }
             }
