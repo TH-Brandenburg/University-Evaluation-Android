@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">CampusAppEvaluationExp</string>
+    <string name="app_name">THB Evaluation</string>
     <string name="close_button">Close</string>
     <string name="edit_text_click_hint_photo">Enter an answer here or make a photo below.</string>
     <string name="error_404_403_message">No data received from server</string>
@@ -57,4 +57,18 @@
     <string name="tab_view_button_choose">Choose your subject</string>
     <string name="subject_not_chosen_title">Subject not yet chosen </string>
     <string name="subject_not_chosen_message">You need to choose your subject at the start of the questionnaire in order to proceed.</string>
+    <string name="camera_permission_explanation_message">Main Features of this App need the camera. Without this permission the App cannot function.</string>
+    <string name="camera_permission_explanation_title">Camera permission needed</string>
+    <string name="camera_permission_not_granted_message">App will be terminated. Central features need the camera. Without it the app cannot function.</string>
+    <string name="camera_permission_not_granted_title">Camera permission needed</string>
+    <string name="generic_error_title">Sorry</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="internet_explanation_message">The app needs internet to retrieve the questionnaire as well as to send your answers.</string>
+    <string name="internet_explanation_title">Internet permission needed</string>
+    <string name="send_anyway_button">Send regardless</string>
+    <string name="storage_camera_explanation_title">Camera and Storage permission needed</string>
+    <string name="storage_permission_explanation_title">Storage permission needed</string>
+    <string name="storage_camera_explanation_message">Its possible to send pictures as answers. The app needs to make, and to store them. Requested permissions are needed.</string>
+    <string name="storage_permission_explanation_message">Taken pictures need to be stored on your phone until you send your answers. Permission is needed to do exactly that.</string>
 </resources>

@@ -59,21 +59,20 @@ public class SendFragment extends BaseFragment implements SendMvpView{
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
+        ((BaseActivity)getActivity()).mActicityComponent.bind(this);
+        mSendPresenter.attachView(this);
+
         mActivityCommunicator = (SendFragmentCommunicator) activity;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ((BaseActivity)getActivity()).mActicityComponent.bind(this);
 
         if(this.getArguments() != null){
             Bundle args = this.getArguments();
             mPosition = args.getInt(POSITION);
         }
-
-//        mSendPresenter = new SendPresenter();
-        mSendPresenter.attachView(this);
     }
 
     @Override

@@ -1,6 +1,6 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" tools:context="de.fhb.campusapp.eval.fragments.ButtonFragment"
+    android:layout_height="match_parent" tools:context="de.fhb.campusapp.eval.ui.button.ButtonFragment"
     android:id="@+id/button_fragment_layout">
 
 

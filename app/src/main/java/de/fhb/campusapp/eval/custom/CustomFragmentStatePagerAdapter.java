@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import de.fhb.campusapp.eval.fragments.ButtonFragment;
-import de.fhb.campusapp.eval.fragments.InnerSectionFragment;
+import de.fhb.campusapp.eval.ui.button.ButtonFragment;
+import de.fhb.campusapp.eval.ui.path.PathFragment;
 import de.fhb.campusapp.eval.ui.sendfragment.SendFragment;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterPageEvent;
 import de.fhb.campusapp.eval.ui.textfragment.TextFragment;
@@ -109,7 +109,7 @@ public class CustomFragmentStatePagerAdapter extends FragmentStatePagerAdapter{
         List<TextQuestionVO> textQuestions = DataHolder.getQuestionTexts();
         // this +1/-1 stuff all hails from the inclusion of the innerSectionFragment
         if (i == 0){
-            fragment = InnerSectionFragment.newInstance(i);
+            fragment = PathFragment.newInstance(i);
             mPageReferenceMap.put(i, fragment);
         } else if(i < textQuestions.size() + DataHolder.getPositionOffset()){
             TextQuestionVO dto = textQuestions.get(i - DataHolder.getPositionOffset());
@@ -136,7 +136,7 @@ public class CustomFragmentStatePagerAdapter extends FragmentStatePagerAdapter{
         List<TextQuestionVO> textQuestions = DataHolder.getQuestionTexts();
         // this +1/-1stuff all hails from the inclusion of the innerSectionFragment
         if (i == 0) {
-            fragment = InnerSectionFragment.newInstance(i);
+            fragment = PathFragment.newInstance(i);
             mPageReferenceMap.put(i, fragment);
         } else if(i < multipleChoiceQuestions.size() + DataHolder.getPositionOffset()){
             String question = multipleChoiceQuestions.get(i - DataHolder.getPositionOffset()).getQuestion();

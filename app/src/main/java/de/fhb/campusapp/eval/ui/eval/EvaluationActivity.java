@@ -112,7 +112,6 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     @Inject
     PermissionManager mPermissionManager;
 
-
     /**
      * Overlay ListView used to navigate within the app. Placed in ActionBar
      */
@@ -342,14 +341,6 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
             mListPopupToggle = false;
             mListPopupReopen = false;
         }
-
-//        if (id == R.id.camera_activation) {
-//            mEvalPresenter.requestCameraPermission(mPermissionManager);
-//            mEvalPresenter.requestStoragePermission(mPermissionManager);
-//
-//            mCurrentIntentImage = mEvalPresenter.startCameraIntent(mCurrentImageName);
-
-//        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -357,19 +348,6 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     public void setIntentImage(File intentImage) {
         mCurrentIntentImage = intentImage;
     }
-
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//
-//        if (requestCode == REQUEST_CAPTURE_IMAGE && resultCode == RESULT_OK) {
-////            ImageManager manager = new ImageManager();
-////            manager.testForPossibility(getContentResolver(), mCurrentIntentImage);
-//
-//            TextFragment fragment = ((TextFragment) mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem()));
-//            fragment.onPhotoTaken(DataHolder.getCurrentQuestion(), mCurrentIntentImage.getAbsolutePath());
-//        }
-//    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
@@ -426,7 +404,10 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
                 , getString(R.string.retry_button)
                 , getString(R.string.abort_button)
                 , true
-                , (dialogInterface, i) -> onStartServerCommunication()
+                , (dialogInterface, i) -> {
+                    onStartServerCommunication();
+                    showProgressOverlay();
+                }
                 , null
                 , null);
         dialog.show();
@@ -777,7 +758,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 
     @Override
     public void hideProgressOverlay(){
-        Utility.animateView(mProgressOverlay, View.GONE, 0.8f, 100);
+        Utility.animateView(mProgressOverlay, View.GONE, 0, 100);
     }
 
     @Override

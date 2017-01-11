@@ -9,9 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.CollectionLikeType;
 import com.fasterxml.jackson.databind.type.MapLikeType;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.google.common.collect.Iterables;
 
-import org.joda.time.Instant;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -63,10 +61,6 @@ public class DataHolder {
     private static String currentQuestion;
     private static int currentPagerPosition = -1;
 
-
-    private static Instant appStart;
-
-
     private static ObjectMapper mapper;
     private static SharedPreferences preferences;
 
@@ -109,8 +103,12 @@ public class DataHolder {
      * @return The AnswerDTO that stored the given question or null if none was found.
      */
     public static TextAnswerVO isTextQuestionAnswered(String question){
-        return Iterables.tryFind(DataHolder.getAnswersVO().getTextAnswers(),
-                textAnswer -> textAnswer.getQuestionText().equals(question)).orNull();
+        for(TextAnswerVO textAnswer : DataHolder.getAnswersVO().getTextAnswers()){
+            if(textAnswer.getQuestionText().equals(question)){
+                return textAnswer;
+            }
+        }
+        return null;
     }
 
     /**
@@ -120,8 +118,12 @@ public class DataHolder {
      * @return the MultipleChoiceAnswerDTO that stored the given question or null if none was found.
      */
     public static MultipleChoiceAnswerVO isMcQuestionAnswered(String question){
-        return Iterables.tryFind(DataHolder.getAnswersVO().getMcAnswers(),
-                mcAnswer -> mcAnswer.getQuestionText().equals(question)).orNull();
+        for(MultipleChoiceAnswerVO mcAnswer : DataHolder.getAnswersVO().getMcAnswers()){
+            if(mcAnswer.getQuestionText().equals(question)){
+                return mcAnswer;
+            }
+        }
+        return null;
     }
 
     /**
@@ -148,12 +150,25 @@ public class DataHolder {
      * @return
      */
     public static ChoiceVO retrieveChoiceVO(String question, String choiceText){
-        //find mcChoiceQuestionDTO that matches with given question
-        MultipleChoiceQuestionVO matchingVO =
-                Iterables.tryFind(DataHolder.getQuestionsVO().getMultipleChoiceQuestionVOs(), mcQuestion -> mcQuestion.getQuestion().equals(question)).orNull();
+        MultipleChoiceQuestionVO matchingVO = null;
+        ChoiceVO matchingChoice = null;
 
-        //retrieve the choiceDTO matching the given grade, null if none was found
-        return Iterables.tryFind(matchingVO.getChoices(), choice -> choice.getChoiceText().equals(choiceText)).orNull();
+        //find mcChoiceQuestionDTO that matches with given question
+        for(MultipleChoiceQuestionVO mcQuestion : DataHolder.getQuestionsVO().getMultipleChoiceQuestionVOs()){
+            if(mcQuestion.getQuestion().equals(question)){
+                matchingVO = mcQuestion;
+            }
+        }
+
+        if(matchingVO != null){
+            for(ChoiceVO choice : matchingVO.getChoices()){
+                if(choice.getChoiceText().equals(choiceText)){
+                    matchingChoice = choice;
+                }
+            }
+        }
+
+        return matchingChoice;
     }
 
     /**
@@ -164,12 +179,25 @@ public class DataHolder {
      * @return
      */
     public static ChoiceVO retrieveChoiceByGrade(String question, int grade){
-        //find mcChoiceQuestionDTO that matches with given question
-        MultipleChoiceQuestionVO matchingVO =
-                Iterables.tryFind(DataHolder.getQuestionsVO().getMultipleChoiceQuestionVOs(), mcQuestion -> mcQuestion.getQuestion().equals(question)).orNull();
+        MultipleChoiceQuestionVO matchingVO = null;
+        ChoiceVO matchingChoice = null;
 
-        //retrieve the choiceDTO matching the given grade, null if none was found
-        return Iterables.tryFind(matchingVO.getChoices(), choice -> choice.getGrade() == grade).orNull();
+        //find mcChoiceQuestionVO that matches with given question
+        for(MultipleChoiceQuestionVO mcQuestion : DataHolder.getQuestionsVO().getMultipleChoiceQuestionVOs()){
+            if(mcQuestion.getQuestion().equals(question)){
+                matchingVO = mcQuestion;
+            }
+        }
+
+        if(matchingVO != null){
+            for(ChoiceVO choice : matchingVO.getChoices()){
+                if(choice.getGrade() == grade){
+                    matchingChoice = choice;
+                }
+            }
+        }
+
+        return matchingChoice;
     }
 
     /**
@@ -178,8 +206,13 @@ public class DataHolder {
      * @return
      */
     public static TextQuestionVO retrieveTextQuestionVO(String question){
-        return Iterables.tryFind(DataHolder.getQuestionsVO().getTextQuestions(),
-                textQuestion -> textQuestion.getQuestionText().equals(question)).orNull();
+        for(TextQuestionVO textQuestion : DataHolder.getQuestionsVO().getTextQuestions()){
+            if(textQuestion.getQuestionText().equals(question)){
+                return textQuestion;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -402,22 +435,6 @@ public class DataHolder {
         DataHolder.commentaryImageMap = commentaryImageMap;
     }
 
-    public static Instant getAppStart() {
-        if(appStart == null){
-            DataHolder.appStart = DataHolder.retrieveFromStorage(APP_STARTING_TIME_KEY, Instant.class);
-        }
-        return appStart;
-    }
-
-    public static void setAppStart(Instant appStart) {
-        if(appStart != null){
-            storeToStorage(APP_STARTING_TIME_KEY, appStart);
-        } else {
-            removeFromStorage(APP_STARTING_TIME_KEY);
-        }
-        DataHolder.appStart = appStart;
-    }
-
     public static HashSet<String> getGalleryList() {
         if(galleryList == null) {
 //            galleryList = retrieveFromStorage(GALLERY_LIST_KEY, HashSet.class);
@@ -482,7 +499,6 @@ public class DataHolder {
         hostName = null;
         commentaryImageMap = null;
         recolorNavigationList = false;
-        appStart = null;
         galleryList = null;
         currentQuestion = null;
         currentPagerPosition = -1;
@@ -507,7 +523,6 @@ public class DataHolder {
         storeToStorage(ANSWER_VO_KEY, answersVO);
         storeToStorage(UUID_KEY, uuid);
         storeToStorage(IMAGE_MAP_KEY, commentaryImageMap);
-        storeToStorage(APP_STARTING_TIME_KEY, appStart);
         storeToStorage(GALLERY_LIST_KEY, galleryList);
         storeToStorage(HOST_NAME_KEY, hostName);
         storeToStorage(CURRENT_PAGER_POSITION, currentPagerPosition);
@@ -526,7 +541,6 @@ public class DataHolder {
                 && getQuestionsVO().getStudyPaths() != null
                 && getCommentaryImageMap() != null
                 && uuid != null
-                && getAppStart() != null
                 && getHostName() != null
                 && getAnswersVO() != null
                 && getAnswersVO().getDeviceID() != null

@@ -12,8 +12,10 @@ import de.fhb.campusapp.eval.data.local.RetrofitHelper;
 import de.fhb.campusapp.eval.injection.ApplicationContext;
 import de.fhb.campusapp.eval.injection.module.ActivityModule;
 import de.fhb.campusapp.eval.injection.module.ApplicationModule;
+import de.fhb.campusapp.eval.ui.button.ButtonPresenter;
 import de.fhb.campusapp.eval.ui.eval.EvalPresenter;
 import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
+import de.fhb.campusapp.eval.ui.path.PathPresenter;
 import de.fhb.campusapp.eval.ui.sendfragment.SendFragment;
 import de.fhb.campusapp.eval.ui.sendfragment.SendPresenter;
 import de.fhb.campusapp.eval.ui.splash.SplashActivity;
@@ -31,6 +33,9 @@ public interface ApplicationComponent {
     void bind(SplashPresenter splashPresenter);
     void bind(EvalPresenter evalPresenter);
     void bind(SendPresenter sendPresenter);
+
+    void bind(ButtonPresenter buttonPresenter);
+    void bind(PathPresenter pathPresenter);
 
     @ApplicationContext Context context();
     Application application();

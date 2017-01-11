@@ -9,7 +9,6 @@ import android.support.test.runner.AndroidJUnit4;
 
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -44,7 +43,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
-import static tests.matchers.BackgroundcolorMatcher.withBackgroundColor;
+import static tests.matchers.BackgroundColorMatcher.withBackgroundColor;
 
 /**
  * Created by Sebastian Müller on 23.10.2016.

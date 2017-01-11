@@ -1,4 +1,4 @@
-package de.fhb.campusapp.eval.fragments;
+package de.fhb.campusapp.eval.ui.path;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -13,35 +13,45 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
+import de.fhb.campusapp.eval.ui.base.BaseActivity;
 import de.fhb.campusapp.eval.ui.base.BaseFragment;
+import de.fhb.campusapp.eval.ui.sendfragment.SendFragment;
 import de.fhb.campusapp.eval.utility.DataHolder;
 import de.fhb.campusapp.eval.utility.EventBus;
 import de.fhb.campusapp.eval.utility.Events.ClickedChoiceButtonEvent;
 import fhb.de.campusappevaluationexp.R;
 
-public class InnerSectionFragment extends BaseFragment implements ListView.OnItemClickListener {
+public class PathFragment extends BaseFragment implements ListView.OnItemClickListener, PathMvpView {
     private static final String POSITION = "POSITION";
 
 
     @BindView(R.id.inner_section_list_view)
     ListView mListView;
 
+    @Inject
+    PathPresenter mPathPresenter;
+
     private int mPosition;
 
 
-    public static InnerSectionFragment newInstance(int position) {
-        InnerSectionFragment fragment = new InnerSectionFragment();
+    public static PathFragment newInstance(int position) {
+        PathFragment fragment = new PathFragment();
         Bundle args = new Bundle();
         args.putInt(POSITION, position);
         fragment.setArguments(args);
         return fragment;
     }
 
-    public InnerSectionFragment() {
-        // Required empty public constructor
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        ((BaseActivity)getActivity()).mActicityComponent.bind(this);
+        mPathPresenter.attachView(this);
     }
 
     @Override
@@ -76,11 +86,6 @@ public class InnerSectionFragment extends BaseFragment implements ListView.OnIte
         mListView.setOnItemClickListener(this);
     }
 
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-
-    }
 
     @Override
     public void onDetach() {
@@ -88,6 +93,11 @@ public class InnerSectionFragment extends BaseFragment implements ListView.OnIte
 
     }
 
+    @Override
+    public void onDestroy() {
+        mPathPresenter.detachView();
+        super.onDestroy();
+    }
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {

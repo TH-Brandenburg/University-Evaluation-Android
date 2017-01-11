@@ -120,6 +120,7 @@ public class Utility {
      */
     public static void animateView(final View view, final int toVisibility, float toAlpha, int duration) {
         boolean show = toVisibility == View.VISIBLE;
+
         if (show && Float.compare(view.getAlpha(), toAlpha) != 0) {
             view.setAlpha(0);
         }

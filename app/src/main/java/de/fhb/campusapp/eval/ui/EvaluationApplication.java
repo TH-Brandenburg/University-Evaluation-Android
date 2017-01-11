@@ -1,11 +1,9 @@
 package de.fhb.campusapp.eval.ui;
 
-import android.app.Application;
 import android.content.Context;
 import android.support.multidex.MultiDex;
 import android.support.multidex.MultiDexApplication;
 
-import net.danlew.android.joda.JodaTimeAndroid;
 
 import de.fhb.campusapp.eval.injection.component.ApplicationComponent;
 import de.fhb.campusapp.eval.injection.component.DaggerApplicationComponent;
@@ -29,8 +27,6 @@ public class EvaluationApplication extends MultiDexApplication {
         applicationComponent = DaggerApplicationComponent.builder()
                 .applicationModule(new ApplicationModule(this))
                 .build();
-
-        JodaTimeAndroid.init(this);
     }
 
     @Override

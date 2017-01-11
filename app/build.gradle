@@ -5,23 +5,22 @@ apply plugin: 'me.tatarka.retrolambda'
 apply plugin: 'com.getkeepsafe.dexcount'
 
 android {
+
     compileSdkVersion 24
-    buildToolsVersion '24.0.1'
+    buildToolsVersion '25.0.1'
     defaultConfig {
         applicationId 'de.fhb.campusappevaluationexp'
         minSdkVersion 18
         targetSdkVersion 24
-        versionCode 4
-        versionName "1.11"
+        versionCode 5
+        versionName "1.15"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-
     buildTypes {
         release {
             minifyEnabled false
@@ -42,7 +41,6 @@ android {
     }
     productFlavors {
     }
-
     dexcount {
         format = "list"
         includeClasses = false
@@ -81,74 +79,66 @@ dependencies {
     final ROBOLECTRIC_VERSION = '3.1.2'
     final MULTIDEX_VERSION = '1.0.1'
     final MOCKSERVER_VERSION = '3.2.0'
-
     def daggerCompiler = "com.google.dagger:dagger-compiler:$DAGGER_VERSION"
-
-    compile "com.google.guava:guava:$GUAVA_VERSION"
+//    compile "com.google.guava:guava:$GUAVA_VERSION"
     compile "com.jakewharton:butterknife:$BUTTERKNIFE_VERSION"
     apt "com.jakewharton:butterknife-compiler:$BUTTERKNIFE_VERSION"
     compile "com.github.buchandersenn:android-permission-manager:$ANDROID_PERMISSION_MANAGER_VERSION"
     compile "com.commonsware.cwac:cam2:$CWAC_CAM2_VERSION"
-
     compile "com.android.support:appcompat-v7:$SUPPORT_LIBRARY_VERSION"
     compile 'com.google.zxing:core:3.2.0'
     compile 'de.fhb.BarcodeFragmentLibrary:app:1.3'
     compile 'de.fhb.ca.dto:CADtos:1.13'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.5.2'
-    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
-    compile group: 'commons-io', name: 'commons-io', version: '2.5'
-
+    compile 'org.apache.commons:commons-lang3:3.4'
+    compile 'commons-io:commons-io:2.5'
     compile 'io.reactivex:rxjava:1.0.16'
     compile 'io.reactivex:rxandroid:1.0.1'
     compile 'com.squareup.retrofit2:retrofit:2.0.2'
     compile 'com.squareup.retrofit2:converter-jackson:2.0.2'
     compile 'com.squareup:otto:1.3.8'
     compile 'com.squareup.picasso:picasso:2.5.2'
-
     // time
-    compile 'net.danlew:android.joda:2.9.3.1'
-
+//    compile 'net.danlew:android.joda:2.9.3.1'
     //dagger
     compile "com.google.dagger:dagger:$DAGGER_VERSION"
-    provided 'org.glassfish:javax.annotation:10.0-b28' //Required by Dagger2
+    provided 'org.glassfish:javax.annotation:10.0-b28'
+    //Required by Dagger2
     apt daggerCompiler
     testApt daggerCompiler
     androidTestApt daggerCompiler
-
     //64k limit
     compile "com.android.support:multidex:$MULTIDEX_VERSION"
-
-
     //testing
     androidTestCompile "com.android.support:appcompat-v7:$SUPPORT_LIBRARY_VERSION"
-//    androidTestCompile "junit:junit:$JUNIT_VERSION"
-//    androidTestCompile "com.android.support:support-annotations:$SUPPORT_LIBRARY_VERSION"
-//    androidTestCompile("com.android.support.test.espresso:espresso-contrib:$ESPRESSO_VERSION") {
-//        exclude group: 'com.android.support', module: 'appcompat'
-//        exclude group: 'com.android.support', module: 'support-v4'
-//        exclude group: 'com.android.support', module: 'recyclerview-v7'
-//    }
-    androidTestCompile ("com.android.support.test.espresso:espresso-core:$ESPRESSO_VERSION"){
+    //    androidTestCompile "junit:junit:$JUNIT_VERSION"
+    //    androidTestCompile "com.android.support:support-annotations:$SUPPORT_LIBRARY_VERSION"
+    //    androidTestCompile("com.android.support.test.espresso:espresso-contrib:$ESPRESSO_VERSION") {
+    //        exclude group: 'com.android.support', module: 'appcompat'
+    //        exclude group: 'com.android.support', module: 'support-v4'
+    //        exclude group: 'com.android.support', module: 'recyclerview-v7'
+    //    }
+    androidTestCompile("com.android.support.test.espresso:espresso-core:$ESPRESSO_VERSION") {
         exclude group: 'com.google.guava'
     }
     androidTestCompile "com.android.support.test.espresso:espresso-intents:$ESPRESSO_VERSION"
     androidTestCompile "com.android.support.test.uiautomator:uiautomator-v18:$UI_AUTOMATOR_VERSION"
     androidTestCompile "com.android.support.test:runner:$RUNNER_VERSION"
     androidTestCompile "com.android.support.test:rules:$RUNNER_VERSION"
-//    androidTestCompile "org.mockito:mockito-core:$MOCKITO_VERSION"
-//    androidTestCompile "com.crittercism.dexmaker:dexmaker:$DEXMAKER_VERSION"
-//    androidTestCompile "com.crittercism.dexmaker:dexmaker-dx:$DEXMAKER_VERSION"
-//    androidTestCompile "com.crittercism.dexmaker:dexmaker-mockito:$DEXMAKER_VERSION"
-//
-//    androidTestApt "com.google.dagger:dagger-compiler:$DAGGER_VERSION"
-//
-//    testCompile "junit:junit:$JUNIT_VERSION"
+    //    androidTestCompile "org.mockito:mockito-core:$MOCKITO_VERSION"
+    //    androidTestCompile "com.crittercism.dexmaker:dexmaker:$DEXMAKER_VERSION"
+    //    androidTestCompile "com.crittercism.dexmaker:dexmaker-dx:$DEXMAKER_VERSION"
+    //    androidTestCompile "com.crittercism.dexmaker:dexmaker-mockito:$DEXMAKER_VERSION"
+    //
+    //    androidTestApt "com.google.dagger:dagger-compiler:$DAGGER_VERSION"
+    //
+    //    testCompile "junit:junit:$JUNIT_VERSION"
     testCompile "org.hamcrest:hamcrest-core:$HAMCREST_VERSION"
     testCompile "org.hamcrest:hamcrest-library:$HAMCREST_VERSION"
     testCompile "org.hamcrest:hamcrest-integration:$HAMCREST_VERSION"
-//    testCompile "org.mockito:mockito-core:$MOCKITO_VERSION"
+    //    testCompile "org.mockito:mockito-core:$MOCKITO_VERSION"
     testCompile "org.robolectric:robolectric:$ROBOLECTRIC_VERSION"
     androidTestCompile "com.squareup.okhttp3:mockwebserver:$MOCKSERVER_VERSION"
-//
-//    testApt "com.google.dagger:dagger-compiler:$DAGGER_VERSION"
+    //
+    //    testApt "com.google.dagger:dagger-compiler:$DAGGER_VERSION"
 }

@@ -52,6 +52,8 @@ public class ScanPresenter extends BasePresenter<ScanMvpView> {
 
     Retrofit mRetrofit;
 
+    boolean displayedExplanation = false;
+
     @Inject
     public ScanPresenter(Resources mResources) {
         super();
@@ -100,8 +102,17 @@ public class ScanPresenter extends BasePresenter<ScanMvpView> {
     public void requestInternetPermissionAndConnectServer(PermissionManager manager){
         manager.with(Manifest.permission.INTERNET)
                 .onPermissionGranted(() -> performQuestionRequest())
-                .onPermissionDenied(() -> getMvpView().callSaveTerminateTask())
-                .onPermissionShowRationale(request -> getMvpView().showInternetExplanation(request))
+                .onPermissionDenied(() -> {
+                    if(displayedExplanation){
+                        getMvpView().callSaveTerminateTask();
+                    } else {
+                        requestInternetPermissionAndConnectServer(manager);
+                    }
+                })
+                .onPermissionShowRationale(request -> {
+                    displayedExplanation = true;
+                    getMvpView().showInternetExplanation(request);
+                })
                 .request();
     }
 

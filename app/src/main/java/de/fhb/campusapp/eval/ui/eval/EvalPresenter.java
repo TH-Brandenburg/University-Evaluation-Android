@@ -58,6 +58,8 @@ public class EvalPresenter extends BasePresenter<EvalMvpView>{
 
     Retrofit mRetrofit;
 
+    private boolean displayedInternetExplanation = false;
+
     @Inject
     public EvalPresenter(Resources resources) {
         super();
@@ -115,9 +117,18 @@ public class EvalPresenter extends BasePresenter<EvalMvpView>{
 
     public void requestInternetPermissionAndConnectServer(PermissionManager manager){
         manager.with(Manifest.permission.INTERNET)
-                .onPermissionGranted(() -> performAnswerRequest())
-                .onPermissionDenied(() -> getMvpView().callSaveTerminateTask())
-                .onPermissionShowRationale(request -> getMvpView().showInternetExplanationDialog(request))
+                .onPermissionGranted(this::performAnswerRequest)
+                .onPermissionDenied(() -> {
+                    if(displayedInternetExplanation){
+                        getMvpView().callSaveTerminateTask();
+                    } else {
+                        requestInternetPermissionAndConnectServer(manager);
+                    }
+                })
+                .onPermissionShowRationale(request -> {
+                    displayedInternetExplanation = true;
+                    getMvpView().showInternetExplanationDialog(request);
+                })
                 .request();
     }
 

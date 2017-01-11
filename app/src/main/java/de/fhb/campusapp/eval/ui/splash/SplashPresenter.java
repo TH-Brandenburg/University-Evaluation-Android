@@ -18,6 +18,8 @@ public class SplashPresenter extends BasePresenter<SplashMvpView>{
 
     private final Context mActivityContext;
 
+    private boolean displayedExplanation = false;
+
     @Inject
     public SplashPresenter(@ActivityContext Context context) {
         super();
@@ -27,8 +29,17 @@ public class SplashPresenter extends BasePresenter<SplashMvpView>{
     public void requestCameraPermission(PermissionManager manager){
         manager.with(Manifest.permission.CAMERA)
                 .onPermissionGranted(() -> getMvpView().startScanActivity())
-                .onPermissionDenied(() -> getMvpView().callSaveFinish())
-                .onPermissionShowRationale(request -> getMvpView().showCameraExplanation(request))
+                .onPermissionDenied(() -> {
+                    if(displayedExplanation){
+                        getMvpView().callSaveFinish();
+                    } else {
+                        requestCameraPermission(manager);
+                    }
+                })
+                .onPermissionShowRationale(request -> {
+                    displayedExplanation = true;
+                    getMvpView().showCameraExplanation(request);
+                })
                 .request();
 
     }

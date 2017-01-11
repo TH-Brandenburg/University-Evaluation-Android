@@ -2,6 +2,7 @@ package de.fhb.campusapp.eval.injection.module;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.DisplayMetrics;
 
 import com.github.buchandersenn.android_permission_manager.PermissionManager;
 
@@ -36,4 +37,9 @@ public class ActivityModule {
 
     @Provides
     PermissionManager providePermissionManager(){ return PermissionManager.create(mActivity); }
+
+    @Provides
+    DisplayMetrics provideDisplayMetrics(){
+        return mActivity.getResources().getDisplayMetrics();
+    }
 }

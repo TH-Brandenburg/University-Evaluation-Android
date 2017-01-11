@@ -12,7 +12,7 @@ import org.hamcrest.Matcher;
 /**
  * Created by Sebastian Müller on 25.10.2016.
  */
-public class BackgroundcolorMatcher {
+public class BackgroundColorMatcher {
 
     public static Matcher<View> withBackgroundColor(@ColorRes final int color){
         return new BoundedMatcher<View, TextView>(TextView.class) {

@@ -1,9 +1,8 @@
 package de.fhb.campusapp.eval.injection.component;
 
-import dagger.Component;
 import dagger.Subcomponent;
-import de.fhb.campusapp.eval.fragments.ButtonFragment;
-import de.fhb.campusapp.eval.fragments.InnerSectionFragment;
+import de.fhb.campusapp.eval.ui.button.ButtonFragment;
+import de.fhb.campusapp.eval.ui.path.PathFragment;
 import de.fhb.campusapp.eval.injection.module.ActivityModule;
 import de.fhb.campusapp.eval.injection.scopes.PerActivity;
 import de.fhb.campusapp.eval.ui.enlarge.EnlargeImageActivity;
@@ -24,7 +23,7 @@ public interface ActivityComponent {
     void bind(EnlargeImageActivity enlargeImageActivity);
     void bind(ScanActivity scanActivity);
     void bind(ButtonFragment buttonFragment);
-    void bind(InnerSectionFragment innerSectionFragment);
+    void bind(PathFragment pathFragment);
     void bind(SendFragment sendFragment);
     void bind(TextFragment textFragment);
 

@@ -27,8 +27,6 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.android.camera.CameraManager;
 import com.squareup.otto.Subscribe;
 
-import org.joda.time.Instant;
-
 import java.io.IOException;
 import java.util.EnumSet;
 import java.util.UUID;
@@ -106,10 +104,6 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
 
         // DataHolder gets ability to freely serialize/deserialize its variables
         DataHolder.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
-
-        if(DataHolder.getAppStart() == null){
-            DataHolder.setAppStart(new Instant());
-        }
 
         //if data in shared preferences is still usable open evaluationactivity instead
 //        if(DataHolder.validateAllData()){
@@ -235,6 +229,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
 
             Intent intent = new Intent(ScanActivity.this, EvaluationActivity.class);
             startActivity(intent);
+            this.finish();
         } else if(id == R.id.mock_qr_code_reading){
             mScanPresenter.performQuestionRequest();
         }
@@ -414,5 +409,6 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
     public void startEvaluationActivity() {
         Intent intent = new Intent(this, EvaluationActivity.class);
         startActivity(intent);
+        finish();
     }
 }
