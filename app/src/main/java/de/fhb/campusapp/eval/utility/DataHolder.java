@@ -589,7 +589,9 @@ public class DataHolder {
             String value = preferences.getString(key, null);
             if(value != null && type != String.class){
                 obj = mapper.readValue(value, type);
-
+            } else if(value != null && type == String.class){
+                value = value.substring(1, value.length()-1); // remove quotation marks
+                obj = (T) value;
             }
         } catch (IOException e) {
             e.printStackTrace();
