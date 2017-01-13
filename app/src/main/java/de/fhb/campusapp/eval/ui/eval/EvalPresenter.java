@@ -147,8 +147,11 @@ public class EvalPresenter extends BasePresenter<EvalMvpView>{
         for(MultipleChoiceQuestionVO questionVO : DataHolder.getQuestionsVO().getMultipleChoiceQuestionVOs()){
             //test if any wasnt answered by the user
             if(DataHolder.isMcQuestionAnswered(questionVO.getQuestion()) == null){
-                ChoiceVO noCommentChoice = DataHolder.retrieveChoiceByGrade(questionVO.getQuestion(), 0);
-                DataHolder.getAnswersVO().getMcAnswers().add(new MultipleChoiceAnswerVO(questionVO.getQuestion(), noCommentChoice));
+                ChoiceVO choice = DataHolder.retrieveChoiceByGrade(questionVO.getQuestion(), 0);
+                if(choice == null) { // test needed for questions without noComment option
+                    choice = new ChoiceVO("No comment",(short) 0);
+                }
+                DataHolder.getAnswersVO().getMcAnswers().add(new MultipleChoiceAnswerVO(questionVO.getQuestion(), choice));
             }
         }
     }

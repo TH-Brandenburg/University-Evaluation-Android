@@ -202,7 +202,7 @@ public class ButtonFragment extends BaseFragment implements ButtonMvpView, Pager
     private View NoCommentlessLayoutChooser(LayoutInflater inflater, ViewGroup container) {
         View view = null;
         if((mChoices.size()) % 2 == 1 && mChoices.get((int)Math.floor(mChoices.size() / 2)).getGrade() == 1){
-            switch(mChoices.size()-1){
+            switch(mChoices.size()){
                 case 3:
                     view = inflater.inflate(R.layout.fragment_button_3_positive_middle, container, false);
                     break;
@@ -215,7 +215,7 @@ public class ButtonFragment extends BaseFragment implements ButtonMvpView, Pager
             }
             // choose a layout where top button is very positive answer if above does not apply
         } else {
-            switch(mChoices.size()-1){
+            switch(mChoices.size()){
                 case 2:
                     view = inflater.inflate(R.layout.fragment_button_2, container, false);
                     break;

@@ -574,11 +574,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
                 if(!dto.getOnlyNumbers()){
                     needed = true;
                 }
-            } else if (fragment == null) {
-                Log.e("IsKeyboardNeededError", "Fragment was null");
             }
-        } else {
-            Log.e("IsKeyboardNeededError", "Adapter is: " + mCollectionPagerAdapter + " and Pager is: " + mViewPager);
         }
         return needed;
     }

@@ -50,7 +50,6 @@ public static final org.codehaus.jackson.annotate.JsonAutoDetect$Visibility *; }
 ##################### Misc ############################
 -dontwarn lombok.**
 -dontwarn javax.**
--dontwarn lombok.**
 -dontwarn com.sun.**
 -dontwarn com.squareup.picasso.**
 -dontwarn okio.**

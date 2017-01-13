@@ -41,7 +41,7 @@ public class DebugConfigurator {
             add(new ChoiceVO("No comment", (short) 0));
             add(new ChoiceVO("Negative answer", (short) 3));
             add(new ChoiceVO("Positive answer", (short) 1));
-            add(new ChoiceVO("Negative answer", (short) 3));
+            add(new ChoiceVO("Negative answer", (short) -3));
         }}));
 
         out.add(new MultipleChoiceQuestionVO("Interface for question with 4 + 1 possible answers.", new ArrayList<ChoiceVO>() {{
@@ -66,8 +66,8 @@ public class DebugConfigurator {
             add(new ChoiceVO("Negative answer", (short) 5));
             add(new ChoiceVO("Slightly negative answer", (short) 3));
             add(new ChoiceVO("positive answer", (short) 1));
-            add(new ChoiceVO("Slightly negative answer", (short) 3));
-            add(new ChoiceVO("Negative answer", (short) 5));
+            add(new ChoiceVO("Slightly negative answer", (short) -3));
+            add(new ChoiceVO("Negative answer", (short) -5));
         }}));
 
         out.add(new MultipleChoiceQuestionVO("Interface for question with 6 + 1 possible answers.", new ArrayList<ChoiceVO>() {{
@@ -92,15 +92,15 @@ public class DebugConfigurator {
         }}));
 
 
-        out.add(new MultipleChoiceQuestionVO("Interface for question with 6 + 1 possible answers. The best answer placed in the middle.", new ArrayList<ChoiceVO>() {{
+        out.add(new MultipleChoiceQuestionVO("Interface for question with 7 + 1 possible answers. The best answer placed in the middle.", new ArrayList<ChoiceVO>() {{
             add(new ChoiceVO("No comment", (short) 0));
             add(new ChoiceVO("Very Negative answer", (short) 7));
             add(new ChoiceVO("Negative answer", (short) 5));
             add(new ChoiceVO("Slightly negative answer", (short) 3));
             add(new ChoiceVO("positive answer", (short) 1));
-            add(new ChoiceVO("Slightly negative answer", (short) 3));
-            add(new ChoiceVO("Negative answer", (short) 5));
-            add(new ChoiceVO("Very Negative answer", (short) 7));
+            add(new ChoiceVO("Slightly negative answer", (short) -3));
+            add(new ChoiceVO("Negative answer", (short) -5));
+            add(new ChoiceVO("Very Negative answer", (short) -7));
         }}));
         return out;
     }
