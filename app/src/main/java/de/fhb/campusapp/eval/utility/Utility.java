@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Camera;
 import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.media.ExifInterface;
@@ -240,11 +241,10 @@ public class Utility {
     public static File createImageFile(String imageName, Context context) {
         File image = null;
         File storageDir = null;
-
         try {
             // choose external storage if available
             storageDir = getImageDirectory(context);
-            image = File.createTempFile(imageName, ".png", storageDir);
+            image = File.createTempFile(imageName, ".jpg", storageDir);
         } catch (IOException e) {
             e.printStackTrace();
         }

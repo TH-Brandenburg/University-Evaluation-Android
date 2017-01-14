@@ -24,9 +24,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAllCaps="false"
-        android:text=""
+        android:text="K. A."
         android:id="@+id/no_comment_button"
-        android:minWidth="50dp"
+        android:paddingTop="10dp"
         android:background="@drawable/no_comment_state_list"
         android:textColor="@color/campusapptheme_color_dark_grey_font"
         android:layout_alignParentRight="true"
@@ -48,7 +48,9 @@
         android:layout_marginLeft="@dimen/button_margin_left_right"
         android:layout_above="@+id/bottom_button"
         android:layout_alignParentStart="true"
-        android:layout_toStartOf="@+id/no_comment_button" />
+        android:layout_toStartOf="@+id/no_comment_button"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@+id/no_comment_button" />
 
     <Button
         android:layout_width="wrap_content"
@@ -65,6 +67,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true"
-        android:layout_alignEnd="@+id/top_button" />
+        android:layout_alignEnd="@+id/top_button"
+        android:layout_alignRight="@+id/top_button" />
 
 </RelativeLayout>
