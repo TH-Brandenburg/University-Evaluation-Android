@@ -26,11 +26,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/scrollView"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@id/question_text_view"
-        android:layout_marginTop="8dp"
+        android:fillViewport="true"
         android:layout_alignParentBottom="true"
-        android:fillViewport="true">
+        android:layout_alignParentStart="true">
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -52,6 +50,21 @@
                 android:layout_marginLeft="@dimen/button_margin_left_right"
                 android:layout_marginStart="@dimen/button_margin_left_right"
                 android:layout_marginBottom="@dimen/button_margin_top_bottom"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAllCaps="false"
+                android:text=""
+                android:id="@+id/upper_button"
+                android:background="@drawable/positive_btn_state_list"
+                android:textColor="@color/campusapptheme_color_bright_font"
+                android:minWidth="120dp"
+                android:layout_above="@+id/upper_middle_button"
+                android:layout_alignLeft="@+id/top_button"
+                android:layout_alignStart="@+id/top_button"
                 android:layout_alignParentRight="true"
                 android:layout_alignParentEnd="true" />
 
@@ -145,25 +158,8 @@
                 android:layout_alignParentRight="true"
                 android:layout_alignParentEnd="true" />
 
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAllCaps="false"
-                android:text=""
-                android:id="@+id/upper_button"
-                android:background="@drawable/positive_btn_state_list"
-                android:textColor="@color/campusapptheme_color_bright_font"
-                android:minWidth="120dp"
-                android:layout_above="@+id/upper_middle_button"
-                android:layout_alignLeft="@+id/top_button"
-                android:layout_alignStart="@+id/top_button"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="true" />
-
         </RelativeLayout>
     </ScrollView>
-
-
 
 
 </RelativeLayout>
