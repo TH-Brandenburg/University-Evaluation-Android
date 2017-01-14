@@ -13,12 +13,16 @@ import android.support.v4.content.ContextCompat;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
+import android.util.DisplayMetrics;
+import android.view.Display;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
@@ -191,16 +195,32 @@ public class TextFragment extends BaseFragment implements PagerAdapterPageEvent,
                 mImageView.setMaxHeight((mRootLayout.getHeight() - mTextView.getHeight())/2);
                 mImageView.setMaxWidth(mRootLayout.getWidth());
 
-                if(FeatureSwitch.IMAGEVIEW_OPENS_CAMERA_INTENT && !DataHolder.getCommentaryImageMap().containsKey(mQuestion)){
+                TextQuestionVO dto = DataHolder.retrieveTextQuestionVO(mQuestion);
+
+                if(FeatureSwitch.IMAGEVIEW_OPENS_CAMERA_INTENT
+                        && !DataHolder.getCommentaryImageMap().containsKey(mQuestion)
+                        && !dto.getOnlyNumbers()){
                     configureImageViewAsButton();
                 } else {
-//                    Utility.animateView(mProgressBar, View.VISIBLE, 1.0f, 100);
+                    Utility.animateView(mImageView, View.GONE, 0, 100);
+                    Utility.animateView(mCameraButton, View.GONE, 0, 100);
+
+                    int margin = (int) getResources().getDimension(R.dimen.eight_dp);
+
+                    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT
+                    );
+                    DisplayMetrics metrics = getResources().getDisplayMetrics();
+                    int screenHeight = Utility.convertPixelsToDp(metrics.heightPixels, metrics.densityDpi);
+                    params.setMargins(margin, (screenHeight / 2), margin, margin);
+
+                    mEditText.setLayoutParams(params);
                 }
 
                 mEditText.setHeight((mRootLayout.getHeight() - mTextView.getHeight()) / 2);
                 mEditText.setMovementMethod(new ScrollingMovementMethod());
 
-                TextQuestionVO dto = DataHolder.retrieveTextQuestionVO(mQuestion);
 
                 // define EditTextView as number field
                 if(dto.getOnlyNumbers()){

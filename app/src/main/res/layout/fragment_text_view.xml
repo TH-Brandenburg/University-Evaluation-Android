@@ -51,6 +51,7 @@
                 android:focusable="true"
                 android:imeOptions="actionNext|flagNoEnterAction"
                  />
+
             <RelativeLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

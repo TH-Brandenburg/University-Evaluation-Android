@@ -1,7 +1,7 @@
 package de.fhb.campusapp.eval.utility.vos;
 
 /**
- * Created by Admin on 15.05.2016.
+ * Created by Sebastian Müller on 15.05.2016.
  */
 public class TextQuestionVO {
     private int questionID;

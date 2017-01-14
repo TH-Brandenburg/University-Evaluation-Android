@@ -176,6 +176,18 @@ public class Utility {
         return (int)dp;
     }
 
+    /**
+     * This method converts device specific pixels to density independent pixels.
+     *
+     * @param px A value in px (pixels) unit. Which we need to convert into db
+     * @return A float value to represent dp equivalent to px value
+     */
+    public static int convertPixelsToDp(float px, int densityDpi){
+        float dp = px / (densityDpi / 160f);
+        return (int)dp;
+    }
+
+
     /*
     * This method zips file
     */
