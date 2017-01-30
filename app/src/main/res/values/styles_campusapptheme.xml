@@ -31,4 +31,10 @@
         <item name="android:textColorPrimary">@color/campusapptheme_color_white_background</item>
     </style>
 
+    <style name="AlertDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:textColor">@color/campusapptheme_color_black</item>
+        <item name="buttonBarButtonStyle">@style/ButtonCampusAppTheme</item>
+        <item name="colorAccent">@color/campusapptheme_color_red</item>
+    </style>
+
 </resources>

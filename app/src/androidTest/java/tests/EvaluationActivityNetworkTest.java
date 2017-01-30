@@ -2,6 +2,9 @@ package tests;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.preference.Preference;
 import android.support.annotation.IdRes;
 import android.support.annotation.StringRes;
 import android.support.test.espresso.Root;
@@ -22,6 +25,7 @@ import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import java.util.prefs.Preferences;
 
 import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
 import de.fhb.campusapp.eval.utility.DataHolder;
@@ -39,16 +43,21 @@ import static android.support.test.espresso.Espresso.onData;
 import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.action.ViewActions.click;
 import static android.support.test.espresso.action.ViewActions.pressBack;
+import static android.support.test.espresso.action.ViewActions.swipeDown;
 import static android.support.test.espresso.action.ViewActions.swipeLeft;
+import static android.support.test.espresso.action.ViewActions.swipeUp;
 import static android.support.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.intent.Intents.intended;
 import static android.support.test.espresso.matcher.ViewMatchers.assertThat;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static android.support.test.espresso.matcher.ViewMatchers.withChild;
 import static android.support.test.espresso.matcher.ViewMatchers.withClassName;
+import static android.support.test.espresso.matcher.ViewMatchers.withContentDescription;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 
@@ -56,31 +65,13 @@ import static org.hamcrest.Matchers.is;
  * Created by Sebastian Müller on 27.10.2016.
  */
 @RunWith(AndroidJUnit4.class)
+
 @LargeTest
 public class EvaluationActivityNetworkTest {
 
-    private class CustomIntentsTestRule<T extends Activity> extends IntentsTestRule<T>{
-
-        public CustomIntentsTestRule(Class<T> activityClass) {
-            super(activityClass);
-        }
-
-        @Override
-        protected void beforeActivityLaunched() {
-            //prepare app
-            DataHolder.deleteAllData();
-            DataHolder.setQuestionsVO(new QuestionsVO(
-                    DebugConfigurator.getDemoStudyPaths(),
-                    DebugConfigurator.getDemoTextQuestions(),
-                    DebugConfigurator.getDemoMultipleChoiceQuestionDTOs(),
-                    false
-            ));
-            super.beforeActivityLaunched();
-        }
-    }
-
     @Rule
-    public CustomIntentsTestRule<EvaluationActivity> main = new CustomIntentsTestRule<>(EvaluationActivity.class);;
+    public final IntentsTestRule<EvaluationActivity> main = new IntentsTestRule<>(EvaluationActivity.class);
+
     MockWebServer server = null;
 
     @Before
@@ -89,6 +80,17 @@ public class EvaluationActivityNetworkTest {
         //prepare server
         server = new MockWebServer ();
         server.start(0);
+
+        EvaluationActivity activity = main.getActivity();
+        //prepare app
+        DataHolder.setPreferences(activity.getApplication().getSharedPreferences("default", Context.MODE_PRIVATE));
+        DataHolder.deleteAllData();
+        DataHolder.setQuestionsVO(new QuestionsVO(
+                DebugConfigurator.getDemoStudyPaths(),
+                DebugConfigurator.getDemoTextQuestions(),
+                DebugConfigurator.getDemoMultipleChoiceQuestionDTOs(),
+                false
+        ));
 
         HttpUrl baseUrl = server.url("v1/answers");
         DataHolder.setHostName("http://" + baseUrl.host() + ":" + baseUrl.port());
@@ -544,14 +546,20 @@ public class EvaluationActivityNetworkTest {
 
     private void navigateToEnd(){
         onView(withId(R.id.question_search)).perform(click());
-        onView(withText("Send"))
+        onView(withChild(withId(R.id.nav_list_text_view)))
+                .inRoot(RootMatchers.isPlatformPopup())
+                .perform(swipeDown());
+        onView(withText(R.string.send_button))
                 .inRoot(RootMatchers.isPlatformPopup())
                 .perform(click());
     }
 
     private void navigateToStart(){
         onView(withId(R.id.question_search)).perform(click());
-        onView(withText("Choose your subject"))
+        onView(withId(R.id.nav_list_text_view))
+                .inRoot(RootMatchers.isPlatformPopup())
+                .perform(swipeUp());
+        onView(withText(R.string.chose_subject))
                 .inRoot(RootMatchers.isPlatformPopup())
                 .perform(click());
     }

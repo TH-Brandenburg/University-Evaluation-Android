@@ -111,7 +111,7 @@ dependencies {
     compile "com.android.support:multidex:$MULTIDEX_VERSION"
     //testing
     androidTestCompile "com.android.support:appcompat-v7:$SUPPORT_LIBRARY_VERSION"
-    //    androidTestCompile "junit:junit:$JUNIT_VERSION"
+    androidTestCompile "junit:junit:$JUNIT_VERSION"
     //    androidTestCompile "com.android.support:support-annotations:$SUPPORT_LIBRARY_VERSION"
     //    androidTestCompile("com.android.support.test.espresso:espresso-contrib:$ESPRESSO_VERSION") {
     //        exclude group: 'com.android.support', module: 'appcompat'
@@ -132,7 +132,7 @@ dependencies {
     //
     //    androidTestApt "com.google.dagger:dagger-compiler:$DAGGER_VERSION"
     //
-    //    testCompile "junit:junit:$JUNIT_VERSION"
+    testCompile "junit:junit:$JUNIT_VERSION"
     testCompile "org.hamcrest:hamcrest-core:$HAMCREST_VERSION"
     testCompile "org.hamcrest:hamcrest-library:$HAMCREST_VERSION"
     testCompile "org.hamcrest:hamcrest-integration:$HAMCREST_VERSION"

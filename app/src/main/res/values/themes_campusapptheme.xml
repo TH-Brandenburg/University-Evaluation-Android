@@ -20,9 +20,7 @@
     <!--<item name="colorPrimary">@color/campusapptheme_color_red</item>-->
     <!--<item name="colorPrimaryDark">@color/campusapptheme_color_red</item>-->
     <!--<item name="android:textColorPrimary">@color/campusapptheme_color_white</item>-->
-
-
-
+    <item name="alertDialogStyle">@style/AlertDialogTheme</item>
   </style>
 
 

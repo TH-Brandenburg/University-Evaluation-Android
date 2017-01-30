@@ -8,6 +8,7 @@
     <color name="campusapptheme_color_red_dark">#7f0019</color>
     <color name="campusapptheme_color_red_disabled">#46cc0a2f</color>
     <color name="campusapptheme_color_light_gray">#e3e3e3</color>
+    <color name="campusapptheme_color_black">#000000</color>
 
     <color name="campusapptheme_color_very_positive_green">#057832</color>
     <color name="campusapptheme_color_positive_green">#0aaa4b</color>

@@ -277,7 +277,7 @@ public class EvaluationActivityTest {
         onView(withId(R.id.question_search)).perform(click());
 
         //when
-        ViewInteraction interaction2 = onView(withText("Choose your subject"))
+        ViewInteraction interaction2 = onView(withText(R.string.chose_subject))
                 .inRoot(RootMatchers.isPlatformPopup());
         ViewInteraction interaction3 = onView(withText("Interface for question with 2 + 1 possible answers."))
                 .inRoot(RootMatchers.isPlatformPopup());
@@ -329,7 +329,7 @@ public class EvaluationActivityTest {
 
         //when
         onView(withId(R.id.question_search)).perform(click());
-        onView(withText("Send"))
+        onView(withText(R.string.send_button))
                 .inRoot(RootMatchers.isPlatformPopup())
                 .perform(click());
 

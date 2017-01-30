@@ -236,6 +236,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         mListPopupWindow.setAdapter(mListAdapter);
         mListPopupWindow.setOnItemClickListener(this);
 
+
         //reopen ListView if perspective was changed while it was open
         if (savedInstanceState != null) {
             mListPopupReopen = savedInstanceState.getBoolean(MLIST_POPUP_REOPEN);
