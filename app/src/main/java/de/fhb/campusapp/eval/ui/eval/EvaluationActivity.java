@@ -5,9 +5,9 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.util.Pair;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
@@ -23,6 +23,8 @@ import android.widget.ListPopupWindow;
 import com.github.buchandersenn.android_permission_manager.PermissionManager;
 import com.github.buchandersenn.android_permission_manager.PermissionRequest;
 
+import org.apache.commons.lang3.tuple.Triple;
+
 import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -32,35 +34,27 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import de.fhb.ca.dto.ResponseDTO;
 import de.fhb.campusapp.eval.custom.CustomFragmentStatePagerAdapter;
 import de.fhb.campusapp.eval.custom.CustomScroller;
 import de.fhb.campusapp.eval.custom.CustomViewPager;
 import de.fhb.campusapp.eval.custom.CustomWindowPopupAdapter;
-import de.fhb.campusapp.eval.data.local.RetrofitHelper;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
-import de.fhb.campusapp.eval.interfaces.ProgressCommunicator;
-import de.fhb.campusapp.eval.interfaces.RequestCommunicator;
 import de.fhb.campusapp.eval.ui.base.BaseActivity;
 import de.fhb.campusapp.eval.ui.scan.ScanActivity;
-import de.fhb.campusapp.eval.ui.sendfragment.SendFragment;
-import de.fhb.campusapp.eval.ui.textfragment.TextFragment;
 import de.fhb.campusapp.eval.utility.ActivityUtil;
-import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.DialogFactory;
-import de.fhb.campusapp.eval.utility.Events.PreServerCommunicationEvent;
 import de.fhb.campusapp.eval.utility.FeatureSwitch;
-import de.fhb.campusapp.eval.utility.Observer.CreateUploadImageObservable;
 import de.fhb.campusapp.eval.utility.Utility;
-import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
-import de.fhb.campusapp.eval.utility.vos.TextAnswerVO;
-import de.fhb.campusapp.eval.utility.vos.TextQuestionVO;
+import de.fhb.campusapp.eval.utility.eventpipelines.AppEventPipelines;
+import de.fhb.campusapp.eval.utility.eventpipelines.NetworkEventPipelines;
 import fhb.de.campusappevaluationexp.R;
 import retrofit2.Retrofit;
+import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 
-public class EvaluationActivity extends BaseActivity implements ProgressCommunicator, PagerAdapterSetPrimary, ViewPager.PageTransformer,
-        CustomViewPager.CustomViewPagerCommunicator, AdapterView.OnItemClickListener, TextFragment.TextFragmentCommunicator,
-        RequestCommunicator, SendFragment.SendFragmentCommunicator, EvalMvpView{
+public class EvaluationActivity extends BaseActivity implements PagerAdapterSetPrimary, ViewPager.PageTransformer,
+        AdapterView.OnItemClickListener, EvalMvpView{
 
     /**
      * Constant used to put and extract the state of mListPopupReopen from Bundle
@@ -89,7 +83,10 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     PagerTabStrip mPagerTabStrip;
 
     @Inject
-    RetrofitHelper mRetrofitHelper;
+    AppEventPipelines mAppEventPipelines;
+
+    @Inject
+    NetworkEventPipelines mNetworkEventPipelines;
 
     @Inject
     Resources mResources;
@@ -100,18 +97,22 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     @Inject
     PermissionManager mPermissionManager;
 
+    @Inject
+    CustomFragmentStatePagerAdapter mCollectionPagerAdapter;
+
+    /**
+     * Adapter used for the ViewPager. see @CustomFragmentStatePagerAdapter
+     */
+    @Inject
+    CustomWindowPopupAdapter mListAdapter;
 
     /**
      * Overlay ListView used to navigate within the app. Placed in ActionBar
      */
     private ListPopupWindow mListPopupWindow;
 
-    /**
-     * Adapter used for the ViewPager. see @CustomFragmentStatePagerAdapter
-     */
-    private CustomWindowPopupAdapter mListAdapter;
+
     //    protected SpiceManager spiceManager = new SpiceManager(CustomJsonSpiceService.class);
-    private CustomFragmentStatePagerAdapter mCollectionPagerAdapter;
     private List<Uri> mPictureList = new ArrayList<>();
     /**
      *
@@ -170,10 +171,17 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
      */
     private boolean mIsNormalModeDisplayed = false;
 
+    private Subscription mNetworkErrorSubscription;
+    private Subscription mRequestErrorSubscription;
+    private Subscription mResponseDTOSubscription;
+    private Subscription mPreServerCommSubscription;
+    private Subscription mChangingPageSubscription;
+
     public EvaluationActivity() {
         super();
     }
 
+    //**************** Life-cycle methods**********************
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -194,12 +202,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 
         setSupportActionBar(mToolbar);
 
-        //just in case it became null thanks to android
-        DataManager.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
-
-        mCollectionPagerAdapter = new CustomFragmentStatePagerAdapter(getSupportFragmentManager(), this);
         mViewPager.setAdapter(mCollectionPagerAdapter);
-        mViewPager.setmCustomViewPagerCommunicator(this);
         mViewPager.setPageTransformer(true, this);
 
         // Manipulating the animation speed of the view pager is not easy.
@@ -217,10 +220,6 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
             }
         }
 
-//        ArrayList<String> navigationEntrys = (ArrayList<String>) constructNavList();
-
-        mListAdapter = new CustomWindowPopupAdapter(this, R.layout.nav_list);
-        mListAdapter.setProgressCommunicator(this);
         mListPopupWindow = new ListPopupWindow(this);
         mListPopupWindow.setAdapter(mListAdapter);
         mListPopupWindow.setOnItemClickListener(this);
@@ -238,8 +237,6 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     @Override
     protected void onStart() {
         super.onStart();
-
-//        spiceManager.start(this);
 
         // reopen ListPopup if it was closed due to orientation change
         if (mListPopupReopen) {
@@ -264,27 +261,94 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
             }
 
         }
-
-        // do this to ensure that the camera symbol is also displayed
-        // when TextQuestion is first type of question in a questionnaire
-        if (isCameraSymbolNeeded()) {
-            changeToolbarIcons(true);
-        }
-
     }
 
     @Override
     protected void onResume() {
-        // DataHolder gets ability to freely serialize/deserialize its variables
-        // Android might clear variable in DataHolder while App is in background leading to shit.
-        DataManager.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
-        DataManager.saveAllData();
+        mEvalPresenter.saveAllData();
 
-        mEvalPresenter.registerToEventBus();
+        mNetworkErrorSubscription = mNetworkEventPipelines.receiveNetworkError()
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .doOnError(t -> t.printStackTrace())
+                .doOnNext(this::onNetworkError)
+                .subscribe();
+
+        mRequestErrorSubscription = mNetworkEventPipelines.receiveRequestError()
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .doOnError(t -> t.printStackTrace())
+                .doOnNext(this::onRequestError)
+                .subscribe();
+
+        mResponseDTOSubscription = mNetworkEventPipelines.receiveResponseDTO()
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .doOnError(t -> t.printStackTrace())
+                .doOnNext(this::onRequestSuccess)
+                .subscribe();
+
+        mPreServerCommSubscription = mAppEventPipelines.receiveBeforeServerCommunication()
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .doOnError(t -> t.printStackTrace())
+                .doOnNext(voids -> doBeforeServerCommunication())
+                .subscribe();
+
+        mChangingPageSubscription = mAppEventPipelines.receiveSecondPagingEvent()
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .doOnError(t -> t.printStackTrace())
+                .doOnNext(aVoid -> {
+                    if(isKeyboardNeeded()){
+                        setLayoutResizing();
+                        showKeyboard();
+                    } else {
+                        setLayoutOverlapping();
+                        hideKeyboard();
+                    }
+                })
+                .subscribe();
 
         super.onResume();
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mListPopupWindow.isShowing()) {
+            mListPopupWindow.dismiss();
+            mListPopupReopen = true;
+        }
+        mRestoreToolbar = true;
+
+        mNetworkErrorSubscription.unsubscribe();
+        mRequestErrorSubscription.unsubscribe();
+        mPreServerCommSubscription.unsubscribe();
+        mResponseDTOSubscription.unsubscribe();
+        mChangingPageSubscription.unsubscribe();
 
     }
+
+    @Override
+    protected void onStop() {
+        mEvalPresenter.saveAllData();
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy(){
+        mEvalPresenter.detachView();
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(MLIST_POPUP_REOPEN, mListPopupReopen);
+        outState.putBoolean(MLIST_POPUP_TOGGLE, mListPopupToggle);
+        outState.putBoolean(CAMERA_MODE_DISPLAYED, mIsCameraModeDisplayed);
+        outState.putBoolean(NORMAL_MODE_DISPLAYED, mIsNormalModeDisplayed);
+        outState.putBoolean(RESTORE_TOOLBAR, mRestoreToolbar);
+
+        super.onSaveInstanceState(outState);
+    }
+
+    //****************Utility**********************
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -331,33 +395,29 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
             mListPopupReopen = false;
         }
 
-//        if (id == R.id.camera_activation) {
-//            mEvalPresenter.requestCameraPermission(mPermissionManager);
-//            mEvalPresenter.requestStoragePermission(mPermissionManager);
-//
-//            mCurrentIntentImage = mEvalPresenter.startCameraIntent(mCurrentImageName);
-
-//        }
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void setIntentImage(File intentImage) {
-        mCurrentIntentImage = intentImage;
+    public void onRequestSuccess(ResponseDTO dto){
+        hideProgressOverlay();
+        showSuccessDialog();
     }
 
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//
-//        if (requestCode == REQUEST_CAPTURE_IMAGE && resultCode == RESULT_OK) {
-////            ImageManager manager = new ImageManager();
-////            manager.testForPossibility(getContentResolver(), mCurrentIntentImage);
-//
-//            TextFragment fragment = ((TextFragment) mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem()));
-//            fragment.onPhotoTaken(DataHolder.getCurrentQuestion(), mCurrentIntentImage.getAbsolutePath());
-//        }
-//    }
+    public void onNetworkError(Pair<String, String> errorText){
+        hideProgressOverlay();
+        showNetworkErrorDialog(errorText.first, errorText.second);
+    }
+
+    public void onRequestError(Triple<String, String, String> errorText){
+        hideProgressOverlay();
+
+        if(errorText.getRight().equals("RETRY_SCAN")){
+            showRequestErrorRestartDialog(errorText.getLeft(), errorText.getMiddle());
+        } else if(errorText.getRight().equals("RETRY_COMMUNICATION")){
+            showRequestErrorRetryDialog(errorText.getLeft(), errorText.getMiddle());
+        }
+    }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
@@ -414,7 +474,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
                 , getString(R.string.retry_button)
                 , getString(R.string.abort_button)
                 , true
-                , (dialogInterface, i) -> onStartServerCommunication()
+                , (dialogInterface, i) -> mEvalPresenter.requestInternetPermissionAndConnectServer(mPermissionManager)
                 , null
                 , null);
         dialog.show();
@@ -451,7 +511,7 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
                 , getString(R.string.abort_button)
                 , true
                 , (dialogInterface, i) -> {
-                    onStartServerCommunication();
+                    doBeforeServerCommunication();
                     showProgressOverlay();
                 }
                 , null
@@ -466,56 +526,11 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
     }
 
     @Override
-    public File zipPictureFiles(List<File> imageFileList) {
-        return Utility.zipFiles(this,(ArrayList<File>) imageFileList);
-    }
-
-    @Override
     public void restartApp() {
         Intent intent = new Intent(this, ScanActivity.class);
         intent.putExtra("GO_TO_SCAN", true);
         startActivity(intent);
         finish();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        if (mListPopupWindow.isShowing()) {
-            mListPopupWindow.dismiss();
-            mListPopupReopen = true;
-        }
-        mRestoreToolbar = true;
-        mEvalPresenter.unregisterFromEventBus();
-    }
-
-    @Override
-    protected void onStop() {
-        DataManager.saveAllData();
-        super.onStop();
-    }
-
-    @Override
-    protected void onDestroy(){
-        mEvalPresenter.detachView();
-
-        super.onDestroy();
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        outState.putBoolean(MLIST_POPUP_REOPEN, mListPopupReopen);
-        outState.putBoolean(MLIST_POPUP_TOGGLE, mListPopupToggle);
-        outState.putBoolean(CAMERA_MODE_DISPLAYED, mIsCameraModeDisplayed);
-        outState.putBoolean(NORMAL_MODE_DISPLAYED, mIsNormalModeDisplayed);
-        outState.putBoolean(RESTORE_TOOLBAR, mRestoreToolbar);
-
-        super.onSaveInstanceState(outState);
-    }
-
-    @Override
-    public int getProgress() {
-        return mViewPager.getCurrentItem();
     }
 
     @Override
@@ -547,50 +562,54 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
      * START CustomViewPagerCommunicator IMPLEMENTATION SECTION
      **********************************************************/
 
-    @Override
     public boolean isKeyboardNeeded() {
         boolean needed = false;
 
-        if (mCollectionPagerAdapter != null && mViewPager != null) {
-            Fragment fragment = mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem());
-
-            if (fragment != null && fragment.getClass() == TextFragment.class ) {
-                // only show keyboard if textView was not written in before and no picture was previously taken
-                TextFragment textFragment = (TextFragment) fragment;
-                TextAnswerVO textAnswerVO =  DataManager.isTextQuestionAnswered(textFragment.getmQuestion());
-                ImageDataVO pathObj = DataManager.getCommentaryImageMap().get(textFragment.getmQuestion());
-                if((textAnswerVO == null || textAnswerVO.getAnswerText().equals("")) && pathObj == null){
-                    needed = true;
-                }
-            }
+        if (mEvalPresenter.isQuestionTextQuestion() && !mEvalPresenter.isCurrentQuestionAnswered()) {
+            needed = true;
         }
+
         return needed;
     }
 
-    @Override
-    public boolean isCameraSymbolNeeded() {
-        boolean needed = false;
+//        if (mCollectionPagerAdapter != null && mViewPager != null) {
+//            Fragment fragment = mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem());
+//
+//            if (fragment != null && fragment.getClass() == TextFragment.class ) {
+//                // only show keyboard if textView was not written in before and no picture was previously taken
+//                TextFragment textFragment = (TextFragment) fragment;
+//                TextAnswerVO textAnswerVO =  DataManager.isTextQuestionAnswered(textFragment.getmQuestion());
+//                ImageDataVO pathObj = DataManager.getCommentaryImageMap().get(textFragment.getmQuestion());
+//                if((textAnswerVO == null || textAnswerVO.getAnswerText().equals("")) && pathObj == null){
+//                    needed = true;
+//                }
+//            }
+//        }
+//        return needed;
 
-        if (mCollectionPagerAdapter != null && mViewPager != null && FeatureSwitch.TOOLBAR_CAMERA_ICON) {
-            Fragment fragment = mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem());
+//    @Override
+//    public boolean isCameraSymbolNeeded() {
+//        boolean needed = false;
+//
+//        if (mCollectionPagerAdapter != null && mViewPager != null && FeatureSwitch.TOOLBAR_CAMERA_ICON) {
+//            Fragment fragment = mCollectionPagerAdapter.getFragmentAtPosition(mViewPager.getCurrentItem());
+//
+//            if (fragment != null && fragment.getClass() == TextFragment.class ) {
+//                TextFragment textFragment = (TextFragment) fragment;
+//                TextQuestionVO dto = DataManager.retrieveTextQuestionVO(textFragment.getmQuestion());
+//                // numerical answers mustnt be answered with a photo. That would be dumb.
+//                if(!dto.getOnlyNumbers()){
+//                    needed = true;
+//                }
+//            } else if (fragment == null) {
+//                Log.e("IsKeyboardNeededError", "Fragment was null");
+//            }
+//        } else {
+//            Log.e("IsKeyboardNeededError", "Adapter is: " + mCollectionPagerAdapter + " and Pager is: " + mViewPager);
+//        }
+//        return needed;
+//    }
 
-            if (fragment != null && fragment.getClass() == TextFragment.class ) {
-                TextFragment textFragment = (TextFragment) fragment;
-                TextQuestionVO dto = DataManager.retrieveTextQuestionVO(textFragment.getmQuestion());
-                // numerical answers mustnt be answered with a photo. That would be dumb.
-                if(!dto.getOnlyNumbers()){
-                    needed = true;
-                }
-            } else if (fragment == null) {
-                Log.e("IsKeyboardNeededError", "Fragment was null");
-            }
-        } else {
-            Log.e("IsKeyboardNeededError", "Adapter is: " + mCollectionPagerAdapter + " and Pager is: " + mViewPager);
-        }
-        return needed;
-    }
-
-    @Override
     public void hideKeyboard() {
         Utility.setKeyboardOverlapping(this);
         Fragment fragment = mCollectionPagerAdapter.getFragmentAtPosition(
@@ -601,43 +620,39 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 
     }
 
-    @Override
-    public void showKeyboard(/*CustomViewPager.SwipeDirectionEnum direction*/) {
-
+    public void showKeyboard() {
         Fragment fragment = mCollectionPagerAdapter.getFragmentAtPosition(
-                mViewPager.getCurrentItem()/* + nextPage*/);
+                mViewPager.getCurrentItem());
         if (fragment != null && fragment.getView() != null) {
             EditText editText = (EditText) fragment.getView().findViewById(R.id.edit_text);
             Utility.showSoftKeyboard(editText, this);
         } else {
-            Log.d("EditTextError", "Fragment does not contain a EditTetx View or the provided ID is wrong. Keyboard cannot be opened.");
+            Log.d("EditTextError", "Fragment does not contain a EditText View or the provided ID is wrong. Keyboard cannot be opened.");
         }
     }
 
-    @Override
     public void setLayoutResizing() {
         Utility.setKeyboardResizing(this);
     }
 
-    @Override
     public void setLayoutOverlapping() {
         Utility.setKeyboardOverlapping(this);
     }
 
-    @Override
-    public void changeToolbarIcons(boolean isKeyboardNeeded) {
-        if (isKeyboardNeeded && !mIsKeyboardNeededOld) {
-            mIsKeyboardNeededOld = true;
-            mKeyboardNeeded = true;
-            invalidateOptionsMenu();
-            // restore normal
-        } else if (!isKeyboardNeeded && mIsKeyboardNeededOld) {
-            mIsKeyboardNeededOld = false;
-            mKeyboardNeeded = false;
-            mCameraIconNeeded = false;
-            invalidateOptionsMenu();
-        }
-    }
+//    @Override
+//    public void changeToolbarIcons(boolean isKeyboardNeeded) {
+//        if (isKeyboardNeeded && !mIsKeyboardNeededOld) {
+//            mIsKeyboardNeededOld = true;
+//            mKeyboardNeeded = true;
+//            invalidateOptionsMenu();
+//            // restore normal
+//        } else if (!isKeyboardNeeded && mIsKeyboardNeededOld) {
+//            mIsKeyboardNeededOld = false;
+//            mKeyboardNeeded = false;
+//            mCameraIconNeeded = false;
+//            invalidateOptionsMenu();
+//        }
+//    }
 
     /**********************************************************
      * END CustomViewPagerCommunicator IMPLEMENTATION SECTION
@@ -685,59 +700,6 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
         }
     }
 
-    /**********************************************************
-     * START MIXED IMPLEMENTATION SECTION
-     **********************************************************/
-
-    @Override
-    public void onPreServerCommunication() {
-        onPreServerCommunicationEvent(new PreServerCommunicationEvent());
-    }
-
-    @Override
-    public void onRecolorUnansweredQuestions() {
-       DataManager.setRecolorNavigationList(true);
-    }
-
-    /**********************************************************
-     * END MIXED IMPLEMENTATION SECTION
-     **********************************************************/
-
-    /**********************************************************
-     * START TEXTFRAGMENT_COMMUNICATOR IMPLEMENTATION SECTION
-     **********************************************************/
-
-    @Override
-    public void fragmentBecamePrimary(String question, String imageName) {
-//        mCurrentQuestionText = question;
-//        mCurrentImageName = imageName;
-    }
-
-    @Override
-    public void displayProgressOverlay() {
-        showProgressOverlay();
-    }
-
-    /**********************************************************
-     * END TEXTFRAGMENT_COMMUNICATOR IMPLEMENTATION SECTION
-     **********************************************************/
-
-
-    /**********************************
-     * START PRODUCER SECTION
-     **********************************/
-//    @Produce
-//    public PhotoTakenEvent produceLastPhotoTakenEvent(){
-//        if(mCurrentIntentImage != null){
-//            return new PhotoTakenEvent(mCurrentIntentImage.getPath(), mCurrentQuestionText);
-//        }
-//        return null;
-//    }
-
-    /**********************************
-     * END PRODUCER SECTION
-     **********************************/
-
     /**********************************
      * START EVENT LISTENER SECTION
      **********************************/
@@ -748,19 +710,11 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 //        mCurrentImageName = event.getImageName();
 //    }
 
-    private void onPreServerCommunicationEvent(PreServerCommunicationEvent event){
-        showProgressOverlay();
+    private void doBeforeServerCommunication(){
+       showProgressOverlay();
 
-        CreateUploadImageObservable observable = new CreateUploadImageObservable();
-        observable.prepareImageUploadInBackground(this).observeOn(AndroidSchedulers.mainThread())
-                .subscribe(pair -> DataManager.getCommentaryImageMap().get(pair.first).setmUploadFilePath(pair.second)
-                        , Throwable::printStackTrace
-                        , this::onStartServerCommunication);
-        mEvalPresenter.setUnasweredQuestions();
-    }
-
-    private void onStartServerCommunication() {
-        mEvalPresenter.requestInternetPermissionAndConnectServer(mPermissionManager);
+       mEvalPresenter.prepareImagesForUpload(mPermissionManager);
+       mEvalPresenter.setUnasweredQuestions();
     }
 
     @Override
@@ -776,11 +730,6 @@ public class EvaluationActivity extends BaseActivity implements ProgressCommunic
 //    public void onStartServerCommunication() {
 //        EventBus.get().post(new StartServerCommunicationEvent());
 //    }
-
-    @Override
-    public void performAnswerRequest() {
-        mEvalPresenter.requestInternetPermissionAndConnectServer(mPermissionManager);
-    }
 
     /**********************************
      * END EVENT LISTENER SECTION

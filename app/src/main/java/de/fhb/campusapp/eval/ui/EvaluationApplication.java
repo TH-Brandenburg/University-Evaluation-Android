@@ -1,6 +1,5 @@
 package de.fhb.campusapp.eval.ui;
 
-import android.app.Application;
 import android.content.Context;
 import android.support.multidex.MultiDex;
 import android.support.multidex.MultiDexApplication;
@@ -19,8 +18,6 @@ import de.fhb.campusapp.eval.injection.module.ApplicationModule;
 public class EvaluationApplication extends MultiDexApplication {
 
     private ApplicationComponent applicationComponent;
-
-
 
     @Override
     public void onCreate() {

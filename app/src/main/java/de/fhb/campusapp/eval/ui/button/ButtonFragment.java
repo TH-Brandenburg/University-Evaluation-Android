@@ -1,4 +1,4 @@
-package de.fhb.campusapp.eval.fragments;
+package de.fhb.campusapp.eval.ui.button;
 
 
 import android.app.Activity;
@@ -17,25 +17,27 @@ import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-
 import com.google.common.collect.Iterables;
 
 import java.util.ArrayList;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import de.fhb.campusapp.eval.interfaces.PagerAdapterPageEvent;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterSetPrimary;
+import de.fhb.campusapp.eval.ui.base.BaseActivity;
 import de.fhb.campusapp.eval.ui.base.BaseFragment;
-import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.EventBus;
 import de.fhb.campusapp.eval.utility.Events.ClickedChoiceButtonEvent;
 import de.fhb.campusapp.eval.utility.Utility;
+import de.fhb.campusapp.eval.utility.eventpipelines.AppEventPipelines;
 import de.fhb.campusapp.eval.utility.vos.ChoiceVO;
-import de.fhb.campusapp.eval.utility.vos.MultipleChoiceAnswerVO;
 import fhb.de.campusappevaluationexp.R;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
 
-public class ButtonFragment extends BaseFragment implements PagerAdapterPageEvent {
+public class ButtonFragment extends BaseFragment implements ButtonMvpView/*, PagerAdapterPageEvent*/ {
     public static final String QUESTION = "QUESTION";
     public static final String CHOICES = "CHOICES";
     public static final String POSITION = "POSITION";
@@ -46,7 +48,16 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
     private int mPosition;
     private View mRootView;
     private ViewTreeObserver.OnGlobalLayoutListener mGlobalObserver;
-    private DisplayMetrics mDisplayMetrics;
+    private Subscription mPageChangedSubscription;
+
+    @Inject
+    ButtonPresenter mButtonPresenter;
+
+    @Inject
+    DisplayMetrics mDisplayMetrics;
+
+    @Inject
+    AppEventPipelines mAppControllEvents;
 
     @BindView(R.id.question_text_view)
     TextView mQuestionTextView;
@@ -61,9 +72,6 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
         return fragment;
     }
 
-    public ButtonFragment() {
-        // Required empty public constructor
-    }
 
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
@@ -71,11 +79,15 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
         if(isVisibleToUser && getActivity() != null){
             Utility.setKeyboardOverlapping(getActivity());
         }
-
     }
 
+    //********************** Life cycle methods ***************************
+
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(Activity activity){
+        ((BaseActivity)getActivity()).mActicityComponent.bind(this);
+        mButtonPresenter.attachView(this);
+
         super.onAttach(activity);
     }
 
@@ -90,12 +102,25 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
             mPosition = args.getInt(POSITION);
         }
 
-        //just add a new entry for this fragments question into answers dto
-//        MultipleChoiceAnswerDTO mcAnswer = DataHolder.isMcQuestionAnswered(mQuestion);
-//        if(mcAnswer == null){
-//            DataHolder.getAnswersVO().getMcAnswers().add(new MultipleChoiceAnswerDTO(mQuestion, DataHolder.retrieveChoiceByGrade(mQuestion, 0)));
-//        }
         mDisplayMetrics = getResources().getDisplayMetrics();
+
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        //***EventListeners***
+
+        mPageChangedSubscription = mAppControllEvents.receiveFirstPagingEvent()
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .doOnError(t -> t.printStackTrace())
+                .doOnNext(newOldPosition -> {
+                    if(newOldPosition.first == mPosition){
+                        mButtonPresenter.setCurrentQuestion(mQuestion);
+                    }
+                })
+                .subscribe();
     }
 
     @Override
@@ -115,6 +140,63 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
         mRootView = view;
         view.getViewTreeObserver().addOnGlobalLayoutListener(mGlobalObserver);
         return view;
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        mQuestionTextView.setText(mQuestion);
+        mQuestionTextView.setMovementMethod(new ScrollingMovementMethod());
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        //***Unsuscribe events***
+        mPageChangedSubscription.unsubscribe();
+    }
+
+    @Override
+    public void onDestroyView() {
+        mButtonPresenter.detachView();
+        if(mRootView != null){
+            if(Build.VERSION.SDK_INT < 16){
+                mRootView.getViewTreeObserver().removeGlobalOnLayoutListener(mGlobalObserver);
+            } else {
+                mRootView.getViewTreeObserver().removeOnGlobalLayoutListener(mGlobalObserver);
+            }
+        }
+        super.onDestroyView();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+
+
+    //************************ utility methods ***********************
+
+    private void hideAllButtons(){
+        if (mButtons != null && mButtons.size() > 0) {
+            for (Button button : mButtons) {
+                button.setVisibility(View.GONE);
+            }
+        } else {
+            Log.e("BUTTONERROR", "button could not be initialised! List of buttons was null or empty");
+        }
+    }
+
+    private void showAllButtons(){
+        if (mButtons != null && mButtons.size() > 0) {
+            for (Button button : mButtons) {
+                button.setVisibility(View.VISIBLE);
+            }
+        } else {
+            Log.e("BUTTONERROR", "button could not be initialised! List of buttons was null or empty");
+        }
     }
 
     /**
@@ -183,7 +265,7 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
                     view = inflater.inflate(R.layout.fragment_button_7_positive_middle_nc, container, false);
                     break;
             }
-        // choose a layout where top button is very positive answer if above does not apply
+            // choose a layout where top button is very positive answer if above does not apply
         } else {
             switch(mChoices.size()-1){
                 case 2:
@@ -209,43 +291,9 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
         return view;
     }
 
-    @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        mQuestionTextView.setText(mQuestion);
-        mQuestionTextView.setMovementMethod(new ScrollingMovementMethod());
-
-      /*  if(getActivity().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
-            mQuestionTextView.setMaxLines(2);
-        } else if(getActivity().getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
-            mQuestionTextView.setMaxLines(2);
-        }*/
-    }
-
-    private void hideAllButtons(){
-        if (mButtons != null && mButtons.size() > 0) {
-            for (Button button : mButtons) {
-                button.setVisibility(View.GONE);
-            }
-        } else {
-            Log.e("BUTTONERROR", "button could not be initialised! List of buttons was null or empty");
-        }
-    }
-
-    private void showAllButtons(){
-        if (mButtons != null && mButtons.size() > 0) {
-            for (Button button : mButtons) {
-                button.setVisibility(View.VISIBLE);
-            }
-        } else {
-            Log.e("BUTTONERROR", "button could not be initialised! List of buttons was null or empty");
-        }
-    }
-
     private ViewTreeObserver.OnGlobalLayoutListener initObserver(final View rootView){
-       return new ViewTreeObserver.OnGlobalLayoutListener() {
-           boolean buttonsConfigured = false;
+        return new ViewTreeObserver.OnGlobalLayoutListener() {
+            boolean buttonsConfigured = false;
 
             @Override
             public void onGlobalLayout() {
@@ -276,36 +324,18 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
         int choiceCounter = 0;
         if (mButtons != null && mButtons.size() > 0) {
             for (Button button : mButtons) {
-//                button.setHeight((mWindowHeight - mQuestionTextView.getHeight()) / mButtons.size());
                 button.setHeight(20);
-//                if(mChoices.get(choiceCounter).getGrade() == 0 && mChoices.get(choiceCounter).getChoiceText() != null){
-//                      StringBuilder builder = new StringBuilder();
-//                    for(int i = 0; i < mChoices.get(choiceCounter).getChoiceText().length(); i++){
-//                        builder.append(mChoices.get(choiceCounter).getChoiceText().charAt(i));
-//                        builder.append("\n");
-//                    }
-//                    button.setText(builder.toString());
-//                } /*else {*/
                 button.setText(mChoices.size() > choiceCounter ? mChoices.get(choiceCounter).getChoiceText() : "");
-//                }
                 button.setOnClickListener(new InnerOnClickListener());
                 // always select the button which was previously clicked on this question
-                for (MultipleChoiceAnswerVO dto : DataManager.getAnswersVO().getMcAnswers()){
-                    if(dto.getQuestionText().equals(mQuestion) && button.getText().equals(dto.getChoice().getChoiceText())){
-                        toggleSelectedButton(button);
-                    }
+                if(mButtonPresenter.isButtonToBeToggled(mQuestion, button.getText().toString())){
+                    toggleSelectedButton(button);
                 }
                 choiceCounter++;
             }
 
         } else {
             Log.e("BUTTONERROR", "button could not be initialised! List of buttons was null or empty");
-        }
-    }
-
-    private void hideSoftKeyboard(){
-        if(this.getView() != null){
-            Utility.hideSoftKeyboard(this.getView(), getActivity());
         }
     }
 
@@ -333,53 +363,15 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
         return resultList;
     }
 
-    @Override
-    public void onDestroyView() {
-        if(mRootView != null){
-            if(Build.VERSION.SDK_INT < 16){
-                mRootView.getViewTreeObserver().removeGlobalOnLayoutListener(mGlobalObserver);
-            } else {
-                mRootView.getViewTreeObserver().removeOnGlobalLayoutListener(mGlobalObserver);
-            }
-        }
-        super.onDestroyView();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
-
-    @Override
-    public void onGettingPrimary(int oldPosition) {
-        DataManager.setmCurrentPagerPosition(mPosition);
-        DataManager.setCurrentQuestion(mQuestion);
-    }
-
-    @Override
-    public void onLeavingPrimary(int newPosition) {
-
-    }
-
     private class InnerOnClickListener implements View.OnClickListener{
 
         @Override
         public void onClick(View view) {
             toggleSelectedButton((Button) view);
-            // add answer to list of answers in AnswersDTO after button has been clicked.
-            MultipleChoiceAnswerVO dto = DataManager.isMcQuestionAnswered(mQuestion);
 
-          /*  // remove \n commands from "no comment" button
-           String choiceText = ((Button) view).getText().toString().replaceAll("\\n", "");*/
             String choiceText = ((Button) view).getText().toString();
+            mButtonPresenter.processButtonClick(mQuestion, choiceText);
 
-            if(dto == null){
-                ChoiceVO choiceVO = DataManager.retrieveChoiceVOByQuestionText(mQuestion, choiceText);
-                DataManager.getAnswersVO().getMcAnswers().add(new MultipleChoiceAnswerVO(mQuestion, choiceVO));
-            } else {
-                ChoiceVO choiceVO = DataManager.retrieveChoiceVOByQuestionText(mQuestion, choiceText);
-                dto.setChoice(choiceVO);
-            }
             EventBus.get().post(new ClickedChoiceButtonEvent());
             //notify navigationList that a new answer was given
             ((PagerAdapterSetPrimary) getActivity()).setPrimaryFragment(mPosition + 1);
@@ -394,8 +386,8 @@ public class ButtonFragment extends BaseFragment implements PagerAdapterPageEven
 
     }
 
-//    public interface ButtonFragmentCommunicator{
-//        public void questionAnswered();
-//    }
+    //**********************EventListener*************************
+
+
 
 }

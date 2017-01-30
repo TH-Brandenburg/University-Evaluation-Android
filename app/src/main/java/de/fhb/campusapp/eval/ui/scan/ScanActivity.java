@@ -4,7 +4,6 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.v4.util.Pair;
@@ -39,13 +38,10 @@ import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import de.fhb.campusapp.eval.data.local.RetrofitHelper;
 import de.fhb.campusapp.eval.services.CleanUpService;
 import de.fhb.campusapp.eval.ui.base.BaseActivity;
 import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
 import de.fhb.campusapp.eval.utility.ActivityUtil;
-import de.fhb.campusapp.eval.data.DataManager;
-import de.fhb.campusapp.eval.utility.DebugConfigurator;
 import de.fhb.campusapp.eval.utility.DialogFactory;
 import de.fhb.campusapp.eval.utility.EventBus;
 import de.fhb.campusapp.eval.utility.Events.RestartQRScanningEvent;
@@ -55,6 +51,7 @@ import de.fhb.campusapp.eval.utility.eventpipelines.NetworkEventPipelines;
 import de.fhb.campusapp.eval.utility.vos.QrDataVo;
 import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
 import fhb.de.campusappevaluationexp.R;
+import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 
 public class ScanActivity extends BaseActivity implements IScanResultHandler, ICameraManagerListener, ScanMvpView{
@@ -83,6 +80,10 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
     private BarcodeFragment mBarcodeFragment;
     private CameraManager mCameraManager;
 
+    private Subscription mNetworkErrorSubscription;
+    private Subscription mRequestErrorSubscription;
+    private Subscription mQuestionsVOSubscription;
+
 //    private JacksonConverter mJacksonConverter;
     /*
     * The QrPojo object that was created from the last scanned QR code.
@@ -97,6 +98,9 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
 
     @BindView(R.id.my_awesome_toolbar)
     Toolbar mToolBar;
+
+    //************ Life cycle methods ********************
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -151,40 +155,7 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
 
         //sets the uuid for this session
         mScanPresenter.setUuid(UUID.randomUUID().toString());
-
-        mNetworkEventPipelines.receiveNetworkError()
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(this::onNetworkError);
-
-        mNetworkEventPipelines.receiveRequestError()
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(this::onRequestError);
-
-        mNetworkEventPipelines.receiveQuestionsVO()
-                .subscribeOn(AndroidSchedulers.mainThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(this::onRequestSuccess);
-
-
         initBarcodeFragment();
-
-    }
-
-    /**
-     * inititializes the barcode fragment
-     */
-    private void initBarcodeFragment(){
-        if(mBarcodeFragment == null){
-            mBarcodeFragment = (BarcodeFragment) getSupportFragmentManager().findFragmentById(R.id.scan_view);
-            //mBarcodeFragment.setAlwaysDecodeOnResume(true); // Restore old behaviour.
-            mBarcodeFragment.setScanResultHandler(this);
-            mBarcodeFragment.setCameraManagerListener(this);
-            mBarcodeFragment.setAlwaysDecodeOnResume(false);
-            mBarcodeFragment.setDecodeFor(EnumSet.of(BarcodeFormat.QR_CODE));
-            mBarcodeFragment.restart();
-        }
     }
 
     @Override
@@ -205,7 +176,48 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
             mToolBar.setTitle(mResources.getText(R.string.scan_send));
             showProgressOverlay();
         }
+
+        mNetworkErrorSubscription = mNetworkEventPipelines.receiveNetworkError()
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .doOnNext(this::onNetworkError)
+                .subscribe();
+
+        mRequestErrorSubscription = mNetworkEventPipelines.receiveRequestError()
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .doOnNext(this::onRequestError)
+                .subscribe();
+
+        mQuestionsVOSubscription = mNetworkEventPipelines.receiveQuestionsVO()
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .doOnNext(this::onRequestSuccess)
+                .subscribe();
+
         super.onResume();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(ACTIVATE_SCANNING, mActivateScanning);
+        outState.putBoolean(CLEANUP_SERVICE_STARTED, mCleanupServiceStarted);
+        outState.putBoolean(REQUEST_RUNNING, mRequestRunning);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mScanPresenter.unregisterFromEventBus();
+
+    }
+
+    @Override
+    protected void onStop() {
+        mScanPresenter.saveAllData();
+        mNetworkErrorSubscription.unsubscribe();
+        mRequestErrorSubscription.unsubscribe();
+        mQuestionsVOSubscription.unsubscribe();
+
+        super.onStop();
     }
 
     @Override
@@ -213,6 +225,8 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
         super.onDestroy();
         mScanPresenter.detachView();
     }
+
+    //************ Utility ********************
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -241,6 +255,21 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
         return super.onOptionsItemSelected(item);
     }
 
+    /**
+     * inititializes the barcode fragment
+     */
+    private void initBarcodeFragment(){
+        if(mBarcodeFragment == null){
+            mBarcodeFragment = (BarcodeFragment) getSupportFragmentManager().findFragmentById(R.id.scan_view);
+            //mBarcodeFragment.setAlwaysDecodeOnResume(true); // Restore old behaviour.
+            mBarcodeFragment.setScanResultHandler(this);
+            mBarcodeFragment.setCameraManagerListener(this);
+            mBarcodeFragment.setAlwaysDecodeOnResume(false);
+            mBarcodeFragment.setDecodeFor(EnumSet.of(BarcodeFormat.QR_CODE));
+            mBarcodeFragment.restart();
+        }
+    }
+
     @Override
     public void scanResult(ScanResult result) {
         try {
@@ -266,35 +295,12 @@ public class ScanActivity extends BaseActivity implements IScanResultHandler, IC
         }
     }
 
-
-
     @Override
     public void setCameraManager(CameraManager manager) {
         mCameraManager = manager;
         if(mRequestRunning && mCameraManager != null){
             mCameraManager.stopPreview();
         }
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        outState.putBoolean(ACTIVATE_SCANNING, mActivateScanning);
-        outState.putBoolean(CLEANUP_SERVICE_STARTED, mCleanupServiceStarted);
-        outState.putBoolean(REQUEST_RUNNING, mRequestRunning);
-        super.onSaveInstanceState(outState);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        mScanPresenter.unregisterFromEventBus();
-
-    }
-
-    @Override
-    protected void onStop() {
-        mScanPresenter.saveAllData();
-        super.onStop();
     }
 
     @Override

@@ -6,15 +6,23 @@ import android.os.IBinder;
 
 import java.io.File;
 
+import javax.inject.Inject;
+
 import de.fhb.campusapp.eval.data.DataManager;
+import de.fhb.campusapp.eval.data.IDataManager;
+import de.fhb.campusapp.eval.injection.module.ActivityModule;
+import de.fhb.campusapp.eval.ui.EvaluationApplication;
 import de.fhb.campusapp.eval.utility.Utility;
 
 /**
- * Created by Admin on 11.12.2015.
+ * Created by Sebastian Müller on 11.12.2015.
  */
 public class CleanUpService extends Service{
 
     private File pathToImages;
+
+    @Inject
+    IDataManager mDataManager;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -23,13 +31,8 @@ public class CleanUpService extends Service{
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
         pathToImages = Utility.getImageDirectory(this);
-//        Notification notification = new NotificationCompat.Builder(this)
-//                .setContentTitle("Sicherheitsüberwachung")
-//                .setContentText("löscht alle Sicherheitsrelevanten Daten am Ende der Evalaution.")
-//                .setSmallIcon(android.R.drawable.ic_delete)
-//                .build();
-//        startForeground(5192, notification);
         super.onStartCommand(intent, flags, startId);
         return START_STICKY;
     }
@@ -38,7 +41,7 @@ public class CleanUpService extends Service{
     public void onTaskRemoved(Intent rootIntent) {
 
         int fileNr = Utility.getImageDirectory(this).listFiles().length;
-        DataManager.deleteAllData();
+//        mDataManager.removeAllData();
 
         for(int i = 0; i < fileNr && Utility.getImageDirectory(this).listFiles().length > 0; i++){
             Utility.getImageDirectory(this).listFiles()[0].delete();

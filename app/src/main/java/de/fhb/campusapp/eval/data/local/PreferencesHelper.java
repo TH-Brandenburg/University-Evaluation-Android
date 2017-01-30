@@ -42,6 +42,7 @@ public class PreferencesHelper {
     private static final String GALLERY_LIST_KEY = "GALLERY_LIST_KEY";
     private static final String CURRENT_QUESTION = "CURRENT_QUESTION";
     private static final String CURRENT_PAGER_POSITION = "CURRENT_PAGER_POSITION";
+    private static final String PAGE_CHANGED = "PAGE_CHANGED";
 
     private static final String COLLECTION_TYPE = "COLLECTION_TYPE";
     private static final String MAP_TYPE = "MAP_TYPE";
@@ -64,7 +65,7 @@ public class PreferencesHelper {
         AnswersVO answersVO = retrieveFromStorage(ANSWER_VO_KEY, AnswersVO.class);
 
         if(answersVO == null){
-            answersVO = new AnswersVO("", "", new ArrayList<TextAnswerVO>(), new ArrayList<MultipleChoiceAnswerVO>(), "");
+            answersVO = new AnswersVO("", "", new ArrayList<>(), new ArrayList<>(), "");
             storeToStorage(ANSWER_VO_KEY, answersVO);
         }
         return answersVO;
@@ -206,6 +207,19 @@ public class PreferencesHelper {
         removeFromStorage(CURRENT_QUESTION);
     }
 
+    //***********************************************
+
+    public void putPageChanged(boolean keyboardNeeded){
+        storeToStorage(PAGE_CHANGED, keyboardNeeded);
+    }
+
+    public boolean getPageChanged(){
+        return retrieveFromStorage(PAGE_CHANGED, Boolean.class);
+    }
+
+    public void removePageChanged(){
+        removeFromStorage(PAGE_CHANGED);
+    }
 
     /************************************************************
      *           DATA PERSISTENCE LOGIC IMPLEMENTED HERE         *

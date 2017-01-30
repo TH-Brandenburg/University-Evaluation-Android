@@ -15,6 +15,7 @@ import de.fhb.campusapp.eval.data.local.RetrofitHelper;
 import de.fhb.campusapp.eval.injection.ApplicationContext;
 import de.fhb.campusapp.eval.injection.module.ActivityModule;
 import de.fhb.campusapp.eval.injection.module.ApplicationModule;
+import de.fhb.campusapp.eval.services.CleanUpService;
 import de.fhb.campusapp.eval.ui.eval.EvalPresenter;
 import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
 import de.fhb.campusapp.eval.ui.sendfragment.SendFragment;
@@ -33,6 +34,7 @@ import de.fhb.campusapp.eval.utility.eventpipelines.NetworkEventPipelines;
 public interface ApplicationComponent {
     void bind(RetrofitHelper helper);
     void bind(PreferencesHelper preferencesHelper);
+    void bind(CleanUpService cleanUpService);
 
     void bind(SplashPresenter splashPresenter);
     void bind(EvalPresenter evalPresenter);

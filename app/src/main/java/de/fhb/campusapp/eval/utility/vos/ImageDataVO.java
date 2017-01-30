@@ -1,7 +1,7 @@
 package de.fhb.campusapp.eval.utility.vos;
 
 /**
- * Created by Admin on 11.12.2015.
+ * Created by Sebastian Müller on 11.12.2015.
  */
 public class ImageDataVO {
 

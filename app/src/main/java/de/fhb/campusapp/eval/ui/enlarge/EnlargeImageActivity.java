@@ -45,9 +45,6 @@ public class EnlargeImageActivity extends BaseActivity implements EnlargeMvpView
         String nullTester = null;
         final String imageFilePath;
 
-        //just in case it became null thanks to android
-        DataManager.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
-
         Bundle extras = getIntent().getExtras();
         if(extras != null){
             nullTester = extras.getString(IMAGE_FILE_PATH);
@@ -86,9 +83,6 @@ public class EnlargeImageActivity extends BaseActivity implements EnlargeMvpView
 
     @Override
     protected void onResume() {
-        // DataHolder gets ability to freely serialize/deserialize its variables
-        // Android might clear variable in DataHolder while App is in background leading to shit.
-        DataManager.setPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         super.onResume();
     }
 
@@ -97,26 +91,4 @@ public class EnlargeImageActivity extends BaseActivity implements EnlargeMvpView
         super.onDestroy();
         mEnlargePresenter.detachView();
     }
-
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.action_bar_enlarge_image, menu);
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up button, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
 }

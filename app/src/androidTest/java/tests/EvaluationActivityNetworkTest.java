@@ -2,6 +2,7 @@ package tests;
 
 import android.Manifest;
 import android.app.Activity;
+import android.provider.ContactsContract;
 import android.support.annotation.IdRes;
 import android.support.annotation.StringRes;
 import android.support.test.espresso.ViewInteraction;
@@ -10,6 +11,8 @@ import android.support.test.espresso.intent.rule.IntentsTestRule;
 import android.support.test.espresso.matcher.RootMatchers;
 import android.support.test.filters.LargeTest;
 import android.support.test.runner.AndroidJUnit4;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.After;
 import org.junit.Before;
@@ -21,9 +24,12 @@ import org.junit.runner.RunWith;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import de.fhb.campusapp.eval.data.local.PreferencesHelper;
+import de.fhb.campusapp.eval.data.local.RetrofitHelper;
 import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
 import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.DebugConfigurator;
+import de.fhb.campusapp.eval.utility.eventpipelines.NetworkEventPipelines;
 import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
 import fhb.de.campusappevaluationexp.R;
 import okhttp3.HttpUrl;
@@ -55,28 +61,28 @@ import static org.hamcrest.Matchers.is;
 @LargeTest
 public class EvaluationActivityNetworkTest {
 
-    private class CustomIntentsTestRule<T extends Activity> extends IntentsTestRule<T>{
+//    private class CustomIntentsTestRule<T extends Activity> extends IntentsTestRule<T>{
+//
+//        public CustomIntentsTestRule(Class<T> activityClass) {
+//            super(activityClass);
+//        }
+//
+//        @Override
+//        protected void beforeActivityLaunched() {
+//            //prepare app
+//            DataManager.();
+//            DataManager.setmQuestionsVO(new QuestionsVO(
+//                    DebugConfigurator.getDemoStudyPaths(),
+//                    DebugConfigurator.getDemoTextQuestions(),
+//                    DebugConfigurator.getDemoMultipleChoiceQuestionDTOs(),
+//                    false
+//            ));
+//            super.beforeActivityLaunched();
+//        }
+//    }
 
-        public CustomIntentsTestRule(Class<T> activityClass) {
-            super(activityClass);
-        }
-
-        @Override
-        protected void beforeActivityLaunched() {
-            //prepare app
-            DataManager.deleteAllData();
-            DataManager.setmQuestionsVO(new QuestionsVO(
-                    DebugConfigurator.getDemoStudyPaths(),
-                    DebugConfigurator.getDemoTextQuestions(),
-                    DebugConfigurator.getDemoMultipleChoiceQuestionDTOs(),
-                    false
-            ));
-            super.beforeActivityLaunched();
-        }
-    }
-
-    @Rule
-    public CustomIntentsTestRule<EvaluationActivity> main = new CustomIntentsTestRule<>(EvaluationActivity.class);;
+//    @Rule
+//    public CustomIntentsTestRule<EvaluationActivity> main = new CustomIntentsTestRule<>(EvaluationActivity.class);;
     MockWebServer server = null;
 
     @Before

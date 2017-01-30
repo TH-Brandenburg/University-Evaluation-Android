@@ -1,10 +1,10 @@
 package de.fhb.campusapp.eval.data;
 
-import com.google.common.collect.Iterables;
+
+import android.support.v4.util.Pair;
 
 import org.joda.time.Instant;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,6 +17,7 @@ import de.fhb.campusapp.eval.utility.vos.MultipleChoiceQuestionVO;
 import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
 import de.fhb.campusapp.eval.utility.vos.TextAnswerVO;
 import de.fhb.campusapp.eval.utility.vos.TextQuestionVO;
+import rx.Observable;
 
 /**
  * Created by Admin on 12.11.2016.
@@ -52,7 +53,7 @@ import de.fhb.campusapp.eval.utility.vos.TextQuestionVO;
      * @param question question text used to identify correct object
      * @return
      */
-    MultipleChoiceAnswerVO retrieveMcQuestion(String question);
+    MultipleChoiceAnswerVO retrieveMcAnswer(String question);
 
     /**
      * Returns a specific ChoiceDTO identified by question text.
@@ -103,7 +104,14 @@ import de.fhb.campusapp.eval.utility.vos.TextQuestionVO;
      */
     List<String> retrieveAllQuestionTexts();
 
+    boolean isTextQuestion(String question);
+    boolean isMcQuestion(String question);
+
+    Observable<Pair<String, String>> prepareImageUploadInBackground();
+    Observable<Void> deleteImagePairInBackground(final ImageDataVO pathObj);
+
     void initAndObserveQuestionRequest();
+    void initAndObserveAnswersResponse();
 
     /**
      * Saves all data to shared preferences.
@@ -130,17 +138,27 @@ import de.fhb.campusapp.eval.utility.vos.TextQuestionVO;
     void setmUuid(String mUuid);
     String getmHostName();
     void setmHostName(String mHostName);
-    HashMap<String, ImageDataVO> getmImageMap();
-    void setmImageMap(HashMap<String, ImageDataVO> mImageMap);
+
+   ImageDataVO getFromImageMap(String key);
+
+   ImageDataVO removeFromImageMap(String key);
+
+   boolean isInImageMap(String key);
+
+   ImageDataVO putIntoImageMap(String key, ImageDataVO value);
+
     boolean ismRecolorNavigation();
     void setmRecolorNavigation(boolean mRecolorNavigation);
-    HashSet<String> getmGallerySet();
-    void setmGallerySet(HashSet<String> mGallerySet);
     String getmCurrentQuestion();
     void setmCurrentQuestion(String mCurrentQuestion);
     int getmCurrentPagerPosition();
     void setmCurrentPagerPosition(int mCurrentPagerPosition);
     Instant getmAppStartTime();
     void setmAppStartTime(Instant mAppStartTime);
+    void broadcastSecondPagingEvent();
 
+    /**
+     * Throws the beforeServerCommunication Event
+     */
+    void broadcastBeforeServerCommunication();
 }

@@ -6,6 +6,7 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import javax.inject.Inject;
 
+import de.fhb.ca.dto.ResponseDTO;
 import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
 import rx.Observable;
 import rx.subjects.PublishSubject;
@@ -14,6 +15,7 @@ import rx.subjects.PublishSubject;
  * Created by Sebastian Müller on 14.11.2016.
  */
 public class NetworkEventPipelines {
+    private PublishSubject<ResponseDTO> responseSubject = PublishSubject.create();
     private PublishSubject<QuestionsVO> questionsSubject = PublishSubject.create();
     private PublishSubject<Triple<String, String, String>> requestErrorSubject = PublishSubject.create();
     private PublishSubject<Pair<String, String>> networkErrorSubject = PublishSubject.create();
@@ -28,6 +30,14 @@ public class NetworkEventPipelines {
 
     public Observable<QuestionsVO> receiveQuestionsVO(){
         return questionsSubject;
+    }
+
+    public void broadcastResponseDTO(ResponseDTO dto){
+        responseSubject.onNext(dto);
+    }
+
+    public Observable<ResponseDTO> receiveResponseDTO(){
+        return responseSubject;
     }
 
     public void broadcastRequestError(Triple<String, String, String> msg){

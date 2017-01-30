@@ -3,7 +3,7 @@ package de.fhb.campusapp.eval.injection.module;
 import android.app.Application;
 import android.content.Context;
 import android.content.res.Resources;
-import android.support.v4.view.ViewCompat;
+import android.util.DisplayMetrics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -17,9 +17,8 @@ import de.fhb.campusapp.eval.data.local.PreferencesHelper;
 import de.fhb.campusapp.eval.data.local.RetrofitHelper;
 import de.fhb.campusapp.eval.injection.ApplicationContext;
 import de.fhb.campusapp.eval.utility.ClassMapper;
+import de.fhb.campusapp.eval.utility.eventpipelines.AppEventPipelines;
 import de.fhb.campusapp.eval.utility.eventpipelines.NetworkEventPipelines;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 
 /**
  * Created by Sebastian Müller on 14.10.2016.
@@ -59,13 +58,21 @@ public class ApplicationModule {
     }
 
     @Provides @Singleton
-    IDataManager provideDataManager(PreferencesHelper preferencesHelper
-            , RetrofitHelper retrofitHelper, NetworkEventPipelines networkEventPipelines){
-        return new DataManager(preferencesHelper, retrofitHelper, networkEventPipelines);
+    IDataManager provideDataManager(PreferencesHelper preferencesHelper, RetrofitHelper retrofitHelper,
+                                    NetworkEventPipelines networkEventPipelines, AppEventPipelines appControllEvents, @ApplicationContext Context context){
+        return new DataManager(preferencesHelper, retrofitHelper, context, networkEventPipelines, appControllEvents);
     }
 
     @Provides @Singleton
     NetworkEventPipelines provideNetworkEventPipelines(){
         return new NetworkEventPipelines();
+    }
+
+    @Provides @Singleton
+    AppEventPipelines provideAppEventPipelines(){return new AppEventPipelines();}
+
+    @Provides @Singleton
+    DisplayMetrics provideDisplayMetrics(){
+        return mApplication.getResources().getDisplayMetrics();
     }
 }

@@ -20,7 +20,10 @@ import de.fhb.campusapp.eval.ui.base.BaseFragment;
 import de.fhb.campusapp.eval.ui.eval.EvaluationActivity;
 import de.fhb.campusapp.eval.utility.DialogFactory;
 import de.fhb.campusapp.eval.utility.Utility;
+import de.fhb.campusapp.eval.utility.eventpipelines.AppEventPipelines;
 import fhb.de.campusappevaluationexp.R;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -32,8 +35,14 @@ public class SendFragment extends BaseFragment implements SendMvpView{
     @BindView(R.id.send_button)
     Button mSendButton;
 
+    @Inject
+    AppEventPipelines mAppEventPipelines;
+
+    Subscription mChangingPageSubscription;
+
+
+
     private int mPosition;
-    private SendFragmentCommunicator mActivityCommunicator;
 
     @Inject
     public SendPresenter mSendPresenter;
@@ -59,7 +68,6 @@ public class SendFragment extends BaseFragment implements SendMvpView{
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        mActivityCommunicator = (SendFragmentCommunicator) activity;
     }
 
     @Override
@@ -72,7 +80,6 @@ public class SendFragment extends BaseFragment implements SendMvpView{
             mPosition = args.getInt(POSITION);
         }
 
-//        mSendPresenter = new SendPresenter();
         mSendPresenter.attachView(this);
     }
 
@@ -85,26 +92,34 @@ public class SendFragment extends BaseFragment implements SendMvpView{
     }
 
     @Override
-    public void onDestroy() {
-        mSendPresenter.detachView();
-        super.onDestroy();
-    }
-
-    @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         mSendButton.setOnClickListener(view1 -> mSendPresenter.sendButtonPressed());
     }
 
     @Override
-    public void recolorUnansweredQuestions() {
-        mActivityCommunicator.onRecolorUnansweredQuestions();
+    public void onResume() {
+        mChangingPageSubscription = mAppEventPipelines.receiveFirstPagingEvent()
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .doOnError(t -> t.printStackTrace())
+                .doOnNext(aVoid -> mSendPresenter.setCurrentQuestion())
+                .subscribe();
+        super.onResume();
     }
 
     @Override
-    public void onPreServerCommunication() {
-        mActivityCommunicator.onPreServerCommunication();
+    public void onPause() {
+        mChangingPageSubscription.unsubscribe();
+        super.onPause();
     }
+
+    @Override
+    public void onDestroy() {
+        mSendPresenter.detachView();
+        super.onDestroy();
+    }
+
+
 
     /*****************************************
      * SendMvpView Interface Implementations *
@@ -124,18 +139,13 @@ public class SendFragment extends BaseFragment implements SendMvpView{
     public void showQuestionsNotAnsweredDialog(int answered, int total) {
         Dialog dialog = DialogFactory.createAcceptDenyDialog(getActivity()
                 , ""
-                , getResources().getString(R.string.send_dialogue_answers_uncomplete, answered, total)
+                , getResources().getString(R.string.send_dialogue_answers_uncomplete, Integer.toString(answered), Integer.toString(total))
                 , getResources().getString(R.string.send_anyway_button)
                 , getResources().getString(R.string.abort_button)
                 , true
-                , (dialogInterface, i) -> { onPreServerCommunication(); } //accept
+                , (dialogInterface, i) -> { mSendPresenter.beforeServerCommunication(); } //accept
                 , null
                 , null);
         dialog.show();
-    }
-
-    public interface SendFragmentCommunicator{
-        void onPreServerCommunication();
-        void onRecolorUnansweredQuestions();
     }
 }

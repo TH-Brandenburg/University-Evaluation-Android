@@ -24,7 +24,6 @@ public interface EvalMvpView extends MvpView {
     void showRequestErrorRestartDialog(String title, String message);
     void showRequestErrorRetryDialog(String title, String message);
     void callSaveTerminateTask();
-    File zipPictureFiles(List<File> imageFileList);
     void restartApp();
 
 }

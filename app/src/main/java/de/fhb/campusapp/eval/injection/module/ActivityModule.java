@@ -13,9 +13,11 @@ import javax.inject.Named;
 import dagger.Module;
 import dagger.Provides;
 import de.fhb.campusapp.eval.custom.CustomFragmentStatePagerAdapter;
+import de.fhb.campusapp.eval.custom.CustomWindowPopupAdapter;
 import de.fhb.campusapp.eval.data.IDataManager;
 import de.fhb.campusapp.eval.injection.ActivityContext;
 import de.fhb.campusapp.eval.injection.ApplicationContext;
+import fhb.de.campusappevaluationexp.R;
 
 /**
  * Created by Sebastian Müller on 14.10.2016.
@@ -52,5 +54,10 @@ public class ActivityModule {
             , @ActivityContext Context context
             , IDataManager dataManager){
         return new CustomFragmentStatePagerAdapter(manager, context, dataManager);
+    }
+
+    @Provides
+    CustomWindowPopupAdapter provideCustomWindowPopupAdapter(@ActivityContext Context context, IDataManager dataManager){
+        return new CustomWindowPopupAdapter(context, dataManager, R.layout.nav_list);
     }
 }

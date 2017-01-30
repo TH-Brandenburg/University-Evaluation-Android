@@ -13,7 +13,7 @@ import fhb.de.campusappevaluationexp.R;
 public final class DialogFactory {
 
     public static Dialog createSimpleOkErrorDialog(Context context, String title, String message, DialogInterface.OnClickListener listener, DialogInterface.OnDismissListener dismissListener, boolean cancelable) {
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context)
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context, R.style.AlertDialogTheme)
                 .setTitle(title)
                 .setMessage(message)
                 .setNeutralButton(R.string.ok_button, listener)
@@ -84,7 +84,7 @@ public final class DialogFactory {
     }
 
     public static Dialog createGenericErrorDialog(Context context, String message) {
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context)
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context, R.style.AlertDialogTheme)
                 .setTitle(context.getString(R.string.generic_error_title))
                 .setMessage(message)
                 .setNeutralButton(R.string.ok_button, null);
@@ -114,7 +114,7 @@ public final class DialogFactory {
                                                      DialogInterface.OnClickListener accept,
                                                      DialogInterface.OnClickListener deny,
                                                      DialogInterface.OnDismissListener dismiss){
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context)
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context, R.style.AlertDialogTheme)
                 .setTitle(title)
                 .setMessage(message)
                 .setPositiveButton(acceptText, accept)
@@ -143,7 +143,7 @@ public final class DialogFactory {
                                                      DialogInterface.OnClickListener accept,
                                                      DialogInterface.OnClickListener deny,
                                                      DialogInterface.OnDismissListener dismiss){
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context)
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context, R.style.AlertDialogTheme)
                 .setTitle(title)
                 .setMessage(message)
                 .setPositiveButton(acceptText, accept)

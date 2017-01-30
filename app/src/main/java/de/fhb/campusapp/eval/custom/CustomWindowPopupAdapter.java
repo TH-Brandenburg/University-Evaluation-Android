@@ -25,8 +25,6 @@ import fhb.de.campusappevaluationexp.R;
  */
 public class CustomWindowPopupAdapter extends ArrayAdapter<String> {
 
-    private ProgressCommunicator progressCommunicator;
-
     private final IDataManager mDataManager;
 
     /**
@@ -93,7 +91,7 @@ public class CustomWindowPopupAdapter extends ArrayAdapter<String> {
         }
         //mark the question currently displayed
         if(FeatureSwitch.NAVIGATION_MARK_SELECTED){
-            if(position == progressCommunicator.getProgress()){
+            if(position == mDataManager.getmCurrentPagerPosition()){
                 holder.textView.setBackgroundResource(R.color.campusapptheme_color_negative_red);
             } else { // or make it white again if it is no longer
                 holder.textView.setBackgroundResource(R.color.campusapptheme_color_transparent);
@@ -112,25 +110,23 @@ public class CustomWindowPopupAdapter extends ArrayAdapter<String> {
     Color can be changed in appropriate xml source file.
      */
     private void recolorNavigationList(int position, ViewHolder holder) {
-        //the +1s (plural) because of the InnerSectionFragment at the beginning
+        //the +1s (plural) because of the PathFragment at the beginning
         if(position < navListEntries.size()){
                 boolean answered = mDataManager.isQuestionAnswered(navListEntries.get(position));
 
-                if(position != 0 && position != navListEntries.size() - 1
-                        && !answered && position != progressCommunicator.getProgress()){ //mark unanswered questions
+                if(position != 0
+                        && position != navListEntries.size() - 1
+                        && position != mDataManager.getmCurrentPagerPosition()
+                        && !answered ){ //mark unanswered questions
 
                     holder.textView.setBackgroundResource(R.color.campusapptheme_color_not_answered_yet);
-                } else if(position != progressCommunicator.getProgress()){ //let answered questions appear white again
+                } else if(position != mDataManager.getmCurrentPagerPosition()){ //let answered questions appear white again
                     holder.textView.setBackgroundResource(R.color.campusapptheme_color_transparent);
                 } else if(FeatureSwitch.NAVIGATION_MARK_SELECTED){ // mark the question currently displayed -> ignore if it is answered or not
                     holder.textView.setBackgroundResource(R.color.campusapptheme_color_negative_red);
                 }
 
         }
-    }
-
-    public void setProgressCommunicator(ProgressCommunicator progressCommunicator) {
-        this.progressCommunicator = progressCommunicator;
     }
 
     //I really dont know why this is needed but it works so who cares?

@@ -2,8 +2,8 @@ package de.fhb.campusapp.eval.ui.sendfragment;
 
 import javax.inject.Inject;
 
+import de.fhb.campusapp.eval.data.IDataManager;
 import de.fhb.campusapp.eval.ui.base.BasePresenter;
-import de.fhb.campusapp.eval.data.DataManager;
 import de.fhb.campusapp.eval.utility.vos.AnswersVO;
 import de.fhb.campusapp.eval.utility.vos.TextAnswerVO;
 
@@ -12,18 +12,20 @@ import de.fhb.campusapp.eval.utility.vos.TextAnswerVO;
  */
 public class SendPresenter extends BasePresenter<SendMvpView> {
 
+    private final IDataManager mDataManager;
+
     @Inject
-    public SendPresenter(){
+    public SendPresenter(IDataManager dataManager) {
         super();
+        this.mDataManager = dataManager;
     }
 
-
     public void sendButtonPressed(){
-        int total = DataManager.getmQuestionsVO().getMultipleChoiceQuestionVOs().size() + DataManager.getmQuestionsVO().getTextQuestions().size();
+        int total = mDataManager.getmQuestionsVO().getMultipleChoiceQuestionVOs().size() + mDataManager.getmQuestionsVO().getTextQuestions().size();
         int answered = 0;
-        String subject = DataManager.getAnswersVO().getStudyPath();
+        String subject = mDataManager.getmAnswersVO().getStudyPath();
         boolean subjectChoosen = !(subject == null || subject.isEmpty());
-        AnswersVO answersVO = DataManager.getAnswersVO();
+        AnswersVO answersVO = mDataManager.getmAnswersVO();
 
         // insist that a subject is chosen
         if(!subjectChoosen){
@@ -31,8 +33,7 @@ public class SendPresenter extends BasePresenter<SendMvpView> {
         } else {
             //count only non empty texts and photos as answered
             for(TextAnswerVO answer : answersVO.getTextAnswers()){
-                if((answer.getAnswerText() != null && !answer.getAnswerText().equals(""))
-                        || DataManager.getCommentaryImageMap().containsKey(answer.getQuestionText())){
+                if(mDataManager.isTextQuestionAnswered(answer.getQuestionText())){
                     answered++;
                 }
             }
@@ -40,12 +41,25 @@ public class SendPresenter extends BasePresenter<SendMvpView> {
             answered += answersVO.getMcAnswers().size();
 
             if(answered < total){
-                getMvpView().recolorUnansweredQuestions();
+                mDataManager.setmRecolorNavigation(true);
                 getMvpView().showQuestionsNotAnsweredDialog(answered, total);
             } else {
-                getMvpView().onPreServerCommunication();
+                mDataManager.setmRecolorNavigation(false);
+                beforeServerCommunication();
             }
         }
+    }
+
+    /**
+     * Set the current question to something different so the app does not act
+     * as if the last question was still displayed.
+     */
+    void setCurrentQuestion(){
+        mDataManager.setmCurrentQuestion("Send");
+    }
+
+    void beforeServerCommunication(){
+        mDataManager.broadcastBeforeServerCommunication();
     }
 
 }

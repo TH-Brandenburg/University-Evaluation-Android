@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import de.fhb.ca.dto.AnswersDTO;
 import de.fhb.ca.dto.MultipleChoiceQuestionDTO;
 import de.fhb.ca.dto.QuestionsDTO;
+import de.fhb.ca.dto.ResponseDTO;
 import de.fhb.ca.dto.util.ChoiceDTO;
 import de.fhb.ca.dto.util.MultipleChoiceAnswerDTO;
 import de.fhb.ca.dto.util.TextAnswerDTO;

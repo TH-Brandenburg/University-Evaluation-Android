@@ -31,4 +31,13 @@
         <item name="android:textColorPrimary">@color/campusapptheme_color_white_background</item>
     </style>
 
+    <style name="AlertDialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:textColor">@color/campusapptheme_color_black</item>
+        <item name="buttonBarButtonStyle">@style/ButtonCampusAppTheme</item>
+        <item name="colorAccent">@color/campusapptheme_color_red</item>
+
+        <!--If minimum API level is greater than or equal to 23, you can define the color of Title text separately  -->
+        <!--<item name="android:titleTextColor">@color/campusapptheme_color_black</item>-->
+    </style>
+
 </resources>

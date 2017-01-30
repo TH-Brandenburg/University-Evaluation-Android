@@ -18,6 +18,7 @@ import javax.inject.Inject;
 
 import de.fhb.ca.dto.AnswersDTO;
 import de.fhb.ca.dto.ResponseDTO;
+import de.fhb.campusapp.eval.data.IDataManager;
 import de.fhb.campusapp.eval.data.local.RetrofitHelper;
 import de.fhb.campusapp.eval.interfaces.RetroRespondService;
 import de.fhb.campusapp.eval.ui.base.BasePresenter;
@@ -28,6 +29,7 @@ import de.fhb.campusapp.eval.utility.Events.NetworkErrorEvent;
 import de.fhb.campusapp.eval.utility.Events.RequestErrorEvent;
 import de.fhb.campusapp.eval.utility.Events.RequestSuccessEvent;
 import de.fhb.campusapp.eval.utility.FeatureSwitch;
+import de.fhb.campusapp.eval.utility.Observer.CreateUploadImageObservable;
 import de.fhb.campusapp.eval.utility.vos.ChoiceVO;
 import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
 import de.fhb.campusapp.eval.utility.vos.MultipleChoiceAnswerVO;
@@ -41,6 +43,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 /**
  * Created by Sebastian Müller on 09.10.2016.
@@ -51,64 +55,32 @@ public class EvalPresenter extends BasePresenter<EvalMvpView>{
     Resources mResources;
 
     @Inject
-    RetrofitHelper mRetrofitHelper;
-
-    Retrofit mRetrofit;
+    IDataManager mDataManager;
 
     @Inject
-    public EvalPresenter(Resources resources) {
+    public EvalPresenter(Resources resources, IDataManager dataManager) {
         super();
-        mResources = resources;
+        this.mResources = resources;
+        this.mDataManager = dataManager;
     }
 
     /*
- * Executes request retrieving questions and choices from REST server
- * */
-
+    * Executes request retrieving questions and choices from REST server
+    * */
     private void performAnswerRequest() {
 
-        if(FeatureSwitch.DEBUG_ACTIVE && DataManager.getHostName() == null){
+        if(FeatureSwitch.DEBUG_ACTIVE && mDataManager.getmHostName() == null){
             getMvpView().hideProgressOverlay();
             getMvpView().showDebugMessage();
             return;
         }
 
-        mRetrofit = new Retrofit.Builder()
-                .baseUrl(DataManager.getHostName() + '/')
-                .addConverterFactory(JacksonConverterFactory.create())
-                .build();
-
-        //zip commentary pictures if there are any
-        ArrayList<File> imageFileList = new ArrayList<>();
-        for(ImageDataVO pathObj : DataManager.getCommentaryImageMap().values()){
-            if(pathObj.getmUploadFilePath() != null){
-                imageFileList.add(new File(pathObj.getmUploadFilePath()));
-            }
-        }
-        File zippedImages = getMvpView().zipPictureFiles(imageFileList);
-
-//      manuel mapping to Json since I do not trust retrofit to do that
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonAnswers = null;
-
-        try {
-            AnswersDTO dto = ClassMapper.answersVOToAnswerDTOMapper(DataManager.getAnswersVO());
-            jsonAnswers = mapper.writeValueAsString(dto);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-
-        RequestBody fileBody = RequestBody.create(MediaType.parse("multipart/form-data"), zippedImages);
-        RequestBody answerBody = RequestBody.create(MediaType.parse("multipart/form-data"), jsonAnswers);
-
-        MultipartBody.Part filePart = MultipartBody.Part.createFormData("images", zippedImages.getName(), fileBody);
-
-        RetroRespondService respondService = mRetrofit.create(RetroRespondService.class);
-        Call<ResponseDTO> response = respondService.sendAnswersWithPictures(answerBody, filePart);
-
-        response.enqueue(new RetrofitCallback());
+        mDataManager.initAndObserveAnswersResponse();
     }
 
+    void setNewPagerPosition(int newPosition){
+        mDataManager.setmCurrentPagerPosition(newPosition);
+    }
 
     public void requestInternetPermissionAndConnectServer(PermissionManager manager){
         manager.with(Manifest.permission.INTERNET)
@@ -118,76 +90,48 @@ public class EvalPresenter extends BasePresenter<EvalMvpView>{
                 .request();
     }
 
+    public void saveAllData(){
+    }
+
+    public boolean isQuestionTextQuestion(){
+        return mDataManager.isTextQuestion(mDataManager.getmCurrentQuestion());
+    }
+
+    public boolean isCurrentQuestionAnswered(){
+        return mDataManager.isQuestionAnswered(mDataManager.getmCurrentQuestion());
+    }
+
     /**
      * Gives every question a representation in AnswersDTO which never got one assigned by the user.
      */
     public void setUnasweredQuestions(){
         //server expects all questions to have an entry in answers dto. Add all the user did not set
-        for(TextAnswerVO answerVO : DataManager.getAnswersVO().getTextAnswers()){
-            if(DataManager.isTextQuestionAnswered(answerVO.getQuestionText()) == null){
-                DataManager.getAnswersVO().getTextAnswers().add(new TextAnswerVO(answerVO.getQuestionID(), answerVO.getQuestionText(), ""));
+        for(TextAnswerVO answerVO : mDataManager.getmAnswersVO().getTextAnswers()){
+            if(mDataManager.isTextQuestionAnswered(answerVO.getQuestionText())){
+                mDataManager.getmAnswersVO().getTextAnswers().add(new TextAnswerVO(answerVO.getQuestionID(), answerVO.getQuestionText(), ""));
             }
         }
 
         //loop through all mcQuestions
-        for(MultipleChoiceQuestionVO questionVO : DataManager.getmQuestionsVO().getMultipleChoiceQuestionVOs()){
+        for(MultipleChoiceQuestionVO questionVO : mDataManager.getmQuestionsVO().getMultipleChoiceQuestionVOs()){
             //test if any wasnt answered by the user
-            if(DataManager.isMcQuestionAnswered(questionVO.getQuestion()) == null){
-                ChoiceVO noCommentChoice = DataManager.retrieveChoiceByGrade(questionVO.getQuestion(), 0);
-                DataManager.getAnswersVO().getMcAnswers().add(new MultipleChoiceAnswerVO(questionVO.getQuestion(), noCommentChoice));
+            if(mDataManager.isMcQuestionAnswered(questionVO.getQuestion())){
+                ChoiceVO noCommentChoice = mDataManager.retrieveChoiceByGrade(questionVO.getQuestion(), 0);
+                mDataManager.getmAnswersVO().getMcAnswers().add(new MultipleChoiceAnswerVO(questionVO.getQuestion(), noCommentChoice));
             }
         }
     }
 
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void onRequestSuccess(RequestSuccessEvent event){
-        getMvpView().hideProgressOverlay();
-        getMvpView().showSuccessDialog();
+    public void prepareImagesForUpload(PermissionManager permissionManager){
+        mDataManager.prepareImageUploadInBackground()
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(pair -> mDataManager.getFromImageMap(pair.first).setmUploadFilePath(pair.second)
+                        , Throwable::printStackTrace
+                        , () -> requestInternetPermissionAndConnectServer(permissionManager));
     }
 
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void onNetworkError(NetworkErrorEvent event){
-        Throwable t = event.getRetrofitError();
-        boolean dialogsCanceable = true;
-        int statusCode = 0;
-        ResponseDTO dto = null;
-        getMvpView().hideProgressOverlay();
-
-
-        Pair<String, String> errorText = mRetrofitHelper.processNetworkError(t, mResources);
-        getMvpView().showNetworkErrorDialog(errorText.first, errorText.second);
+    public void recolorNavigationList(boolean recolor){
+        mDataManager.setmRecolorNavigation(recolor);
     }
-
-    @Subscribe
-    @SuppressWarnings("unused")
-    public void onRequestError(RequestErrorEvent<ResponseDTO> event){
-        Triple<String, String, String> errorText = mRetrofitHelper.processRequestError(event.getResposne(), mResources, mRetrofit);
-        getMvpView().hideProgressOverlay();
-
-        if(errorText.getRight().equals("RETRY_SCAN")){
-           getMvpView().showRequestErrorRestartDialog(errorText.getLeft(), errorText.getMiddle());
-        } else if(errorText.getRight().equals("RETRY_COMMUNICATION")){
-           getMvpView().showRequestErrorRetryDialog(errorText.getLeft(), errorText.getMiddle());
-        }
-    }
-
-    private class RetrofitCallback implements Callback<ResponseDTO> {
-
-        @Override
-        public void onResponse(Call<ResponseDTO> call, Response<ResponseDTO> response) {
-            if(response.isSuccessful()){
-                EventBus.get().post(new RequestSuccessEvent<>(response.body() ,response));
-            } else {
-                EventBus.get().post(new RequestErrorEvent<>(response));
-            }
-        }
-
-        @Override
-        public void onFailure(Call<ResponseDTO> call, Throwable t) {
-            EventBus.get().post(new NetworkErrorEvent(t));
-        }
-    }
-
 }

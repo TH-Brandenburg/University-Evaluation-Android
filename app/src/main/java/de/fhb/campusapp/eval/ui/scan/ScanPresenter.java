@@ -59,7 +59,7 @@ public class ScanPresenter extends BasePresenter<ScanMvpView> {
         getMvpView().changeToolbarTitle(mResources.getString(R.string.scan_send));
         getMvpView().showProgressOverlay();
 
-        //TODO call datamanager
+        mDataManager.initAndObserveQuestionRequest();
 
     }
 

@@ -74,7 +74,7 @@
     <string name="ok_button">Okay</string>
     <string name="abort_button">Abbrechen</string>
     <string name="close_button">Schließen</string>
-    <string name="send_button">Abschicken</string>
+    <string name="send_button">Senden</string>
     <string name="retry_button">Wiederholen</string>
     <string name="send_anyway_button">Trotzdem abschicken</string>
     <string name="tab_view_button_question">Frage </string>

@@ -4,33 +4,45 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.support.v4.util.Pair;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.squareup.otto.Subscribe;
 
 import org.apache.commons.lang3.tuple.Triple;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
+import de.fhb.ca.dto.AnswersDTO;
 import de.fhb.ca.dto.QuestionsDTO;
 import de.fhb.ca.dto.RequestDTO;
 import de.fhb.ca.dto.ResponseDTO;
 import de.fhb.ca.dto.util.ErrorType;
 import de.fhb.campusapp.eval.injection.ApplicationContext;
+import de.fhb.campusapp.eval.interfaces.RetroRespondService;
+import de.fhb.campusapp.eval.ui.eval.EvalPresenter;
 import de.fhb.campusapp.eval.utility.ClassMapper;
 import de.fhb.campusapp.eval.utility.EventBus;
 import de.fhb.campusapp.eval.utility.Events.NetworkErrorEvent;
 import de.fhb.campusapp.eval.utility.Events.RequestErrorEvent;
 import de.fhb.campusapp.eval.utility.Events.RequestSuccessEvent;
+import de.fhb.campusapp.eval.utility.FeatureSwitch;
+import de.fhb.campusapp.eval.utility.Utility;
 import de.fhb.campusapp.eval.utility.vos.AnswersVO;
+import de.fhb.campusapp.eval.utility.vos.ImageDataVO;
 import de.fhb.campusapp.eval.utility.vos.QuestionsVO;
 import fhb.de.campusappevaluationexp.R;
+import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
@@ -88,10 +100,36 @@ public class RetrofitHelper {
         return requestService.requestQuestions(requestDTO);
     }
 
-    public void performPostAnswersRequest(String hostName){
-//        RetroAnswersRespondService respondService = createOrGetRetrofitInstance(hostName).create(RetroAnswersRespondService.class);
-//        Call<QuestionsDTO> response = respondService.sendAnswersWithPictures();
-//        response.enqueue(new RetrofitCallback());
+    public Observable<Response<ResponseDTO>> performPostAnswersRequest(String hostName, AnswersVO answersVO, Map<String
+            , ImageDataVO> imageMap, Context context){
+
+        //zip commentary pictures if there are any
+        ArrayList<File> imageFileList = new ArrayList<>();
+        for(ImageDataVO pathObj : imageMap.values()){
+            if(pathObj.getmUploadFilePath() != null){
+                imageFileList.add(new File(pathObj.getmUploadFilePath()));
+            }
+        }
+        File zippedImages = Utility.zipFiles(context, imageFileList);
+
+//      manuel mapping to Json since I do not trust retrofit to do that
+        ObjectMapper mapper = new ObjectMapper();
+        String jsonAnswers = null;
+
+        try {
+            AnswersDTO dto = ClassMapper.answersVOToAnswerDTOMapper(answersVO);
+            jsonAnswers = mapper.writeValueAsString(dto);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        RequestBody fileBody = RequestBody.create(MediaType.parse("multipart/form-data"), zippedImages);
+        RequestBody answerBody = RequestBody.create(MediaType.parse("multipart/form-data"), jsonAnswers);
+
+        MultipartBody.Part filePart = MultipartBody.Part.createFormData("images", zippedImages.getName(), fileBody);
+
+        RetroAnswersRespondService respondService = createOrGetRetrofitInstance(hostName).create(RetroAnswersRespondService.class);
+        return respondService.sendAnswers(answerBody, filePart);
     }
 
     public Pair<String, String> processNetworkError(Throwable t){
@@ -174,6 +212,6 @@ public class RetrofitHelper {
     private interface RetroAnswersRespondService {
         @Multipart
         @POST("v1/answers")
-        Observable<ResponseDTO> sendAnswersWithPictures(@Part("answers-dto") RequestBody answers, @Part MultipartBody.Part images);
+        Observable<Response<ResponseDTO>> sendAnswers(@Part("answers-dto") RequestBody answers, @Part MultipartBody.Part images);
     }
 }

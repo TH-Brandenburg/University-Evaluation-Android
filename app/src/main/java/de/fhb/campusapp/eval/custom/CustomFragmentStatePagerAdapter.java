@@ -14,8 +14,8 @@ import java.util.List;
 import javax.inject.Inject;
 
 import de.fhb.campusapp.eval.data.IDataManager;
-import de.fhb.campusapp.eval.fragments.ButtonFragment;
-import de.fhb.campusapp.eval.fragments.InnerSectionFragment;
+import de.fhb.campusapp.eval.ui.button.ButtonFragment;
+import de.fhb.campusapp.eval.ui.path.PathFragment;
 import de.fhb.campusapp.eval.injection.ActivityContext;
 import de.fhb.campusapp.eval.ui.sendfragment.SendFragment;
 import de.fhb.campusapp.eval.interfaces.PagerAdapterPageEvent;
@@ -95,15 +95,21 @@ public class CustomFragmentStatePagerAdapter extends FragmentStatePagerAdapter{
     @Override
     public void setPrimaryItem(ViewGroup container, int position, Object object){
         super.setPrimaryItem(container, position, object);
-//        mCurrentFragment = (Fragment) object;
-        if(object instanceof PagerAdapterPageEvent){
-            ((PagerAdapterPageEvent) object).onGettingPrimary(mOldPosition);
-        }
 
-        if(mOldPosition != position && getFragmentAtPosition(mOldPosition) != null && getFragmentAtPosition(mOldPosition) instanceof PagerAdapterPageEvent){
-            ((PagerAdapterPageEvent) getFragmentAtPosition(mOldPosition)).onLeavingPrimary(position);
-        }
-        mOldPosition = position;
+//        if(mOldPosition != position && (object instanceof TextFragment || object instanceof ButtonFragment || object instanceof PathFragment)){
+//            mDataManager.setmCurrentPagerPosition(position);
+//            mOldPosition = position;
+//        }
+//        mCurrentFragment = (Fragment) object;
+//        if(object instanceof PagerAdapterPageEvent){
+//            ((PagerAdapterPageEvent) object).onGettingPrimary(mOldPosition);
+
+//        }
+
+//        if(mOldPosition != position && getFragmentAtPosition(mOldPosition) != null && getFragmentAtPosition(mOldPosition) instanceof PagerAdapterPageEvent){
+//            ((PagerAdapterPageEvent) getFragmentAtPosition(mOldPosition)).onLeavingPrimary(position);
+//        }
+//        mOldPosition = position;
     }
 
     public Fragment getFragmentAtPosition(int position){
@@ -114,9 +120,9 @@ public class CustomFragmentStatePagerAdapter extends FragmentStatePagerAdapter{
         Fragment fragment;
         List<MultipleChoiceQuestionVO> multipleChoiceQuestions = mDataManager.getMCQuestionTexts();
         List<TextQuestionVO> textQuestions = mDataManager.getTextQuestionTexts();
-        // this +1/-1 stuff all hails from the inclusion of the innerSectionFragment
+        // this +1/-1 stuff all hails from the inclusion of the pathFragment
         if (i == 0){
-            fragment = InnerSectionFragment.newInstance(i);
+            fragment = PathFragment.newInstance(i);
             mPageReferenceMap.put(i, fragment);
         } else if(i < textQuestions.size() + mDataManager.getPositionOffset()){
             TextQuestionVO dto = textQuestions.get(i - mDataManager.getPositionOffset());
@@ -143,7 +149,7 @@ public class CustomFragmentStatePagerAdapter extends FragmentStatePagerAdapter{
         List<TextQuestionVO> textQuestions = mDataManager.getTextQuestionTexts();
         // this +1/-1stuff all hails from the inclusion of the innerSectionFragment
         if (i == 0) {
-            fragment = InnerSectionFragment.newInstance(i);
+            fragment = PathFragment.newInstance(i);
             mPageReferenceMap.put(i, fragment);
         } else if(i < multipleChoiceQuestions.size() + mDataManager.getPositionOffset()){
             String question = multipleChoiceQuestions.get(i - mDataManager.getPositionOffset()).getQuestion();
