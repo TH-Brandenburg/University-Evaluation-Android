@@ -1,8 +1,27 @@
 <resources>
-    <!-- Default screen margins, per the Android Design guidelines. -->
-    <dimen name="button_margin_top_bottom">2dp</dimen>
-    <dimen name="button_margin_left_right">2dp</dimen>
-    <dimen name="button_border_thickness">4dp</dimen>
+    <dimen name="parent_margin_vertical">16dp</dimen>
+    <dimen name="parent_right_icons_margin_vertical">32dp</dimen>
+    <dimen name="parent_margin_left_second_lvl_content">72dp</dimen>
 
+    <dimen name="height_list_item_single_line">64dp</dimen>
+    <dimen name="height_list_item_double_line">72dp</dimen>
+    <dimen name="margin_content_area_vertical">8dp</dimen>
+    <dimen name="parent_margin_left_first_lvl_content">16dp</dimen>
+    <dimen name="button_padding">8dp</dimen>
+    <dimen name="button_margin_to_border">8dp</dimen>
+    <dimen name="button_margin_to_content">32dp</dimen>
+    <dimen name="button_nominal_height">36dp</dimen>
+    <dimen name="keyboard_border_margin">8dp</dimen>
+
+    <dimen name="toolbar_hight">56dp</dimen>
+    <dimen name="subtitle_height">48dp</dimen>
+
+    <dimen name="font_45_sp">45sp</dimen>
+    <dimen name="font_34_sp">34sp</dimen>
+    <dimen name="font_24_sp">24sp</dimen>
+    <dimen name="font_15_sp">15sp</dimen>
+    <dimen name="font_13_sp">13sp</dimen>
+
+    <dimen name="button_border_thickness">6dp</dimen>
 
 </resources>

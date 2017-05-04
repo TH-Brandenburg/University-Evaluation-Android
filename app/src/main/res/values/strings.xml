@@ -16,6 +16,7 @@
     <!--Website %1$s isn\'t yet available, I\'m working on it, please wait %2$s-->
 
     <!--Error messages-->
+    <string name="generic_error_title">Sorry</string>
     <string name="no_network_title">Keine Verbindung zum Server möglich.</string>
     <string name="no_network_message">Aktivieren Sie Ihre Verbindung zum Internet.</string>
     <string name="error_500_502_title">Interner Fehler aufgetreten.</string>

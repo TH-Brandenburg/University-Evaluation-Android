@@ -31,13 +31,15 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
+        android:name="de.thb.ue.android.ui.BaseApplication"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ic_fhb_logo_clean"
         android:label="@string/app_name"
-        android:theme="@style/app_theme"
+        android:theme="@style/AppTheme"
         tools:replace="icon, theme" >
         <activity
-            android:name="de.thb.ue.android.activities.ScanActivity"
+            android:name="de.thb.ue.android.ui.splash.SplashActivity"
+            android:theme="@style/SplashTheme"
             android:label="@string/app_name"
             android:windowSoftInputMode="adjustResize" >
             <intent-filter>
@@ -46,28 +48,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name="de.thb.ue.android.activities.EvaluationActivity"
-            android:label="@string/action_bar_title" >
-        </activity>
-        <activity
-            android:name="de.thb.ue.android.activities.InnerSectionActivity"
-            android:label="@string/action_bar_title" >
-        </activity>
-        <activity
-            android:name="de.thb.ue.android.activities.EnlargeImageActivity"
-            android:label="@string/action_bar_title" >
-        </activity>
-
-        <service
-            android:name="de.thb.ue.android.custom.CustomJsonSpiceService"
-            android:exported="false" />
-        <service
-            android:name="de.thb.ue.android.services.CleanUpService"
-            android:exported="false"
-            android:stopWithTask="false"
-            />
-
     </application>
 
 </manifest>

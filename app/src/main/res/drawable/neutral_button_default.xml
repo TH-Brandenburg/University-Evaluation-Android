@@ -5,11 +5,11 @@
       android:top="2dp">
         <shape>
             <solid
-                android:color="@color/campusapptheme_color_neutral_yellow" />
+                android:color="@color/color_neutral_yellow" />
             <corners
                 android:radius="2dp" />
             <stroke
-                android:color="@color/campusapptheme_color_neutral_yellow"
+                android:color="@color/color_neutral_yellow"
                 android:width="@dimen/button_border_thickness"/>
         </shape>
     </item>

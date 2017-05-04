@@ -1,7 +1,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" tools:context="de.thb.ue.android.fragments.ButtonFragment"
+    android:layout_height="match_parent"
     android:id="@+id/button_fragment_layout">
+<!--tools:context="de.fhb.campusapp.eval.ui.button.ButtonFragment"-->
 
 
     <TextView
@@ -35,23 +36,6 @@
             android:layout_height="wrap_content"
             >
 
-            <de.thb.ue.android.custom.CustomVerticalButton
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAllCaps="false"
-                android:paddingTop="10dp"
-                android:text=""
-                android:id="@+id/no_comment_button"
-                android:minWidth="50dp"
-                android:background="@drawable/no_comment_state_list"
-                android:textColor="@color/campusapptheme_color_dark_grey_font"
-                android:layout_alignParentRight="true"
-                android:layout_alignParentEnd="true"
-                android:layout_marginRight="@dimen/button_margin_left_right"
-                android:layout_marginEnd="@dimen/button_margin_top_bottom"
-                android:layout_alignBottom="@+id/bottom_button"
-                android:layout_alignTop="@+id/top_button" />
-
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -60,15 +44,15 @@
                 android:id="@+id/top_button"
                 android:minWidth="120dp"
                 android:background="@drawable/very_positive_btn_state_list"
-                android:textColor="@color/campusapptheme_color_bright_font"
+                android:textColor="@color/color_bright_font"
                 android:layout_above="@+id/upper_button"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
-                android:layout_marginLeft="@dimen/button_margin_left_right"
-                android:layout_marginStart="@dimen/button_margin_left_right"
-                android:layout_marginBottom="@dimen/button_margin_top_bottom"
-                android:layout_toLeftOf="@+id/no_comment_button"
-                android:layout_toStartOf="@+id/no_comment_button" />
+                android:layout_marginLeft="@dimen/button_margin_to_border"
+                android:layout_marginStart="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true" />
 
             <Button
                 android:layout_width="wrap_content"
@@ -78,15 +62,15 @@
                 android:id="@+id/upper_button"
                 android:minWidth="120dp"
                 android:background="@drawable/positive_btn_state_list"
-                android:textColor="@color/campusapptheme_color_bright_font"
+                android:textColor="@color/color_bright_font"
                 android:layout_above="@+id/lower_button"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
-                android:layout_marginLeft="@dimen/button_margin_left_right"
-                android:layout_marginStart="@dimen/button_margin_left_right"
-                android:layout_marginBottom="@dimen/button_margin_top_bottom"
-                android:layout_toLeftOf="@+id/no_comment_button"
-                android:layout_toStartOf="@+id/no_comment_button" />
+                android:layout_marginLeft="@dimen/button_margin_to_border"
+                android:layout_marginStart="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true" />
 
             <Button
                 android:layout_width="wrap_content"
@@ -96,15 +80,15 @@
                 android:id="@+id/lower_button"
                 android:minWidth="120dp"
                 android:background="@drawable/negative_btn_state_list"
-                android:textColor="@color/campusapptheme_color_bright_font"
+                android:textColor="@color/color_bright_font"
                 android:layout_above="@+id/bottom_button"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
-                android:layout_marginLeft="@dimen/button_margin_left_right"
-                android:layout_marginStart="@dimen/button_margin_left_right"
-                android:layout_marginBottom="@dimen/button_margin_top_bottom"
-                android:layout_toLeftOf="@+id/no_comment_button"
-                android:layout_toStartOf="@+id/no_comment_button" />
+                android:layout_marginLeft="@dimen/button_margin_to_border"
+                android:layout_marginStart="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true" />
 
             <Button
                 android:layout_width="wrap_content"
@@ -114,15 +98,15 @@
                 android:id="@+id/bottom_button"
                 android:minWidth="120dp"
                 android:background="@drawable/very_negative_btn_state_list"
-                android:textColor="@color/campusapptheme_color_bright_font"
+                android:textColor="@color/color_bright_font"
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
-                android:layout_marginLeft="@dimen/button_margin_left_right"
-                android:layout_marginStart="@dimen/button_margin_left_right"
-                android:layout_marginBottom="@dimen/button_margin_top_bottom"
-                android:layout_toLeftOf="@+id/no_comment_button"
-                android:layout_toStartOf="@+id/no_comment_button" />
+                android:layout_marginLeft="@dimen/button_margin_to_border"
+                android:layout_marginStart="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true" />
 
         </RelativeLayout>
     </ScrollView>

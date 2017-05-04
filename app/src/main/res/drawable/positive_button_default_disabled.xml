@@ -6,11 +6,11 @@
 
         <shape xmlns:android="http://schemas.android.com/apk/res/android">
             <solid
-                android:color="@color/campusapptheme_color_positive_green" />
+                android:color="@color/color_positive_green" />
             <corners
                 android:radius="2dp" />
             <stroke
-                android:color="@color/campusapptheme_color_positive_green"
+                android:color="@color/color_positive_green"
                 android:width="@dimen/button_border_thickness"/>
         </shape>
     </item>
