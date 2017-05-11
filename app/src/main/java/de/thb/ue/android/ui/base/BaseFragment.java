@@ -1,15 +1,19 @@
 package de.thb.ue.android.ui.base;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.res.Configuration;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.view.LayoutInflaterCompat;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
+
+import com.mikepenz.iconics.context.IconicsLayoutInflater;
 
 import de.thb.ue.android.injection.component.FragmentComponent;
 import de.thb.ue.android.injection.module.FragmentModule;
@@ -27,6 +31,8 @@ public abstract class BaseFragment extends DialogFragment implements MvpView{
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        mFragmentComponent = ((BaseActivity) context).mActicityComponent
+                .fragmentComponent(new FragmentModule((BaseActivity) context));
 
     }
 
@@ -40,14 +46,14 @@ public abstract class BaseFragment extends DialogFragment implements MvpView{
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Icepick.restoreInstanceState(this, savedInstanceState);
+//        LayoutInflaterCompat.setFactory(getLayoutInflater(savedInstanceState), new IconicsLayoutInflater(getActivity().getDelegate()));
 
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mFragmentComponent = ((BaseActivity) getActivity()).mActicityComponent
-                .fragmentComponent(new FragmentModule(getActivity()));
+
     }
 
     @Override
@@ -102,6 +108,17 @@ public abstract class BaseFragment extends DialogFragment implements MvpView{
                 ,null
                 ,null
                 ,true)
+                .show();
+    }
+
+    @Override
+    public void displayGenericActionDialog(String title, String message, DialogInterface.OnClickListener listener, DialogInterface.OnDismissListener dismissListener, boolean dismissable) {
+        DialogFactory.createSimpleOkErrorDialog(getActivity()
+                , title
+                , message
+                , listener
+                , dismissListener
+                , dismissable)
                 .show();
     }
 

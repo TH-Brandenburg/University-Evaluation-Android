@@ -6,6 +6,8 @@ import dagger.Subcomponent;
 import de.thb.ue.android.injection.module.ActivityModule;
 import de.thb.ue.android.injection.module.FragmentModule;
 import de.thb.ue.android.injection.scopes.PerActivity;
+import de.thb.ue.android.ui.evaluation.EvaluationActivity;
+import de.thb.ue.android.ui.scan.ScanActivity;
 import de.thb.ue.android.ui.splash.SplashActivity;
 
 /**
@@ -15,6 +17,8 @@ import de.thb.ue.android.ui.splash.SplashActivity;
 @Subcomponent(modules = {ActivityModule.class})
 public interface ActivityComponent {
     void bind(SplashActivity splashActivity);
+    void bind(ScanActivity scanActivity);
+    void bind(EvaluationActivity evaluationActivity);
 
     FragmentComponent fragmentComponent(FragmentModule fragmentModule);
 

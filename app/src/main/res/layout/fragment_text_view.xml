@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/text_fragment_root_layout">
 
@@ -36,7 +38,7 @@
             android:layout_gravity="center_horizontal"
             android:gravity="center">
 
-            <de.thb.ue.android.custom.CustomEditText
+            <EditText
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
@@ -51,19 +53,23 @@
                 android:focusable="true"
                 android:imeOptions="actionNext|flagNoEnterAction"
                  />
+
             <RelativeLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:clickable="false"
+                android:id="@+id/thumbnail_layout"
                 >
 
                 <ImageView
-                    android:layout_width="200dp"
-                    android:layout_height="200dp"
-                    android:layout_marginLeft="8dp"
-                    android:layout_marginRight="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginStart="8dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="@dimen/activity_vertical_margin"
+                    android:layout_marginRight="@dimen/activity_vertical_margin"
+                    android:layout_marginEnd="@dimen/activity_vertical_margin"
+                    android:layout_marginStart="@dimen/activity_vertical_margin"
+                    android:layout_marginBottom="@dimen/margin_content_area_vertical"
+                    android:layout_marginTop="@dimen/margin_content_area_vertical"
                     android:layout_centerInParent="true"
                     android:clickable="true"
                     android:id="@+id/comment_thumbnail"
@@ -82,8 +88,24 @@
                     android:layout_centerInParent="true"
                     android:visibility="gone" />
 
-            </RelativeLayout>
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/delete_image_button"
+                    android:layout_alignTop="@+id/comment_thumbnail"
+                    android:layout_alignEnd="@+id/comment_thumbnail"
+                    android:layout_alignRight="@+id/comment_thumbnail"
+                    android:visibility="gone"
+                    />
 
+                <ImageButton
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/camera_button"
+                    android:layout_centerInParent="true"
+                    android:visibility="gone"
+                    />
+            </RelativeLayout>
         </LinearLayout>
     </ScrollView>
 

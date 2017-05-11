@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">University Evaluation Android</string>
+    <string name="app_name">THB Evaluation</string>
     <string name="action_settings">Settings</string>
     <string name="viewfinder_switch">Vollbild</string>
     <string name="action_bar_title">Evaluation</string>
@@ -9,8 +9,8 @@
     <string name="toolbar_activate_camera_mode">Wechsle zu Kamera-Modus</string>
     <string name="send_dialogue_answers_uncomplete">Es wurde(n) erst %1$s von %2$s Frage beantwortet. Antworten wirklich abschicken?\n\nDie unbeantworteten Fragen sind in der Navigationsliste (Toolbar) jetzt farbig markiert.</string>
     <!--<string name="send_dialogue_answers_complete">Wirklich </string>-->
-    <string name="edit_text_click_hint_photo">Gib hier eine Antwort ein oder versende ein Photo mit der Antwort durch klick auf das Photoapparat-Symbol in der Toolbar.</string>
-    <string name="edit_text_click_hint_numeric">Gib hier eine Antwort ein.</string>
+    <string name="edit_text_click_hint_photo">Geben Sie hier eine Antwort ein oder machen Sie unten ein Photo. </string>
+    <string name="edit_text_click_hint_numeric">Geben Sie hier eine Antwort ein.</string>
 
     <string name="title_activity_inner_section">InnerSectionActivity</string>
     <!--Website %1$s isn\'t yet available, I\'m working on it, please wait %2$s-->
@@ -45,9 +45,29 @@
     <string name="socket_timeout_message">Der Server benötigt zu lange für eine Antwort. Versuchen sie es erneut.</string>
     <string name="connect_exception_title">Netzwerk neu konfiguriert</string>
     <string name="connect_exception_message">Ihre Netzwerkkonfiguration hat sich seit dem Start der App geändert. App muss neu gestartet werden. Wird jetzt beendet.</string>
+    <string name="subject_not_chosen_title">Studiengang nicht gewählt</string>
+    <string name="subject_not_chosen_message">Sie müssen zu Beginn des Fragenbogens einen Studiengang wählen, wenn Sie Ihre Antworten absenden wollen.</string>
+
+    <string name="camera_permission_not_granted_title">Kamera-Berechtigung erforderlich</string>
+    <string name="camera_permission_not_granted_message">Die App wird beendet. Zentrale Features dieser App, wie das einlesen von QR-Codes, benötigen den Zugriff auf die Kamera. Ohne diesen ist die App nicht funktionstüchtig.</string>
+
+
     <!--Success Messages-->
     <string name="answers_transmission_success_title">Übertragung erfolgreich.</string>
-    <string name="answers_transmission_success_message">Die Evaluation ist beendet. Die Applikation wird geschlossen.</string>
+    <string name="answers_transmission_success_message">Die Evaluation ist beendet. Die Applikation wird zurückgesetzt.</string>
+
+    <!--Permission Explanations-->
+    <string name="camera_permission_explanation_title">Kamera-Berechtigung erforderlich</string>
+    <string name="camera_permission_explanation_message">Zentrale Features dieser App, wie das einlesen von QR-Codes oder das aufnehmen von Bildern, benötigen den Zugriff auf die Kamera. Ohne diese Berechtigung ist die App funktionsunfähig.</string>
+
+    <string name="storage_permission_explanation_title">Speicherzugriff erforderlich</string>
+    <string name="storage_permission_explanation_message">Bilder die Sie aufgenommen haben, müssen auf Ihrem Handy gespeichert werden. Ohne Zugriff auf den Speicher kann die App Ihre Fotos nicht persistieren.</string>
+
+    <string name="storage_camera_explanation_title">Kamera und Speicherzugriffs Berechtigungen erforderlich</string>
+    <string name="storage_camera_explanation_message">Wenn Sie ein Bild als Antwort verschicken müssen, benötigt die App Zugriff auf Ihre Kamera sowie auf Ihren internen Speicher, um das Bild zu machen und anschließend bis zum Absenden der Antworten zu speichern. Keine Sorge, die Bilder werden nach Beendigung der Evaluation automatisch gelöscht.</string>
+
+    <string name="internet_explanation_title">Internetzugriff erforderlich</string>
+    <string name="internet_explanation_message">Die App benötigt Internet sowohl zum Empfangen des Fragebogens als auch zum senden Ihrer Antworten. Ohne diese Möglichkeit ist die App funktionsuntüchtig.</string>
 
     <!--Button texts-->
     <string name="ok_button">Okay</string>
@@ -55,9 +75,11 @@
     <string name="close_button">Schließen</string>
     <string name="send_button">Abschicken</string>
     <string name="retry_button">Wiederholen</string>
+    <string name="send_anyway_button">Trotzdem abschicken</string>
     <string name="tab_view_button_question">Frage </string>
-    <string name="tab_view_button_send">Abschicken</string>
-
+    <string name="tab_view_button_send">
+        Senden</string>
+    <string name="tab_view_button_choose">Wähle deinen Studiengang</string>
 
     <!--ScanActivity status texts-->
     <string name="scan_search">QR-Code einlesen</string>
@@ -69,4 +91,7 @@
     <string name="title_activity_enlarge_image">EnlargeImageActivity</string>
 
     <string name="hello_world">Hello world!</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

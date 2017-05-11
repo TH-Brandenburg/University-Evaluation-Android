@@ -8,6 +8,7 @@ import android.net.ConnectivityManager;
 import android.util.DisplayMetrics;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.smile.SmileFactory;
 import com.franmontiel.persistentcookiejar.cache.SetCookieCache;
 import com.franmontiel.persistentcookiejar.persistence.SharedPrefsCookiePersistor;
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
@@ -24,6 +25,8 @@ import de.thb.ue.android.data.local.MappingHelper;
 import de.thb.ue.android.data.local.PreferencesHelper;
 import de.thb.ue.android.data.remote.RetrofitHelper;
 import de.thb.ue.android.injection.ApplicationContext;
+import de.thb.ue.android.ui.evaluation.EvaluationPresenter;
+import de.thb.ue.android.ui.scan.ScanPresenter;
 import de.thb.ue.android.utility.Connectivity;
 import de.thb.ue.android.utility.FeatureSwitch;
 import de.thb.ue.android.utility.customized_classes.CheckableCookieJar;
@@ -129,6 +132,15 @@ public class ApplicationModule {
                 .addConverterFactory(JacksonConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
+    }
+
+    @Provides @Singleton
+    ScanPresenter provideScanPresenter(IDataManager dataManager, ObjectMapper mapper){
+        return new ScanPresenter(dataManager, mapper, mApplication);
+    }
+
+    EvaluationPresenter provideEvaluationPresenter(IDataManager dataManager, ObjectMapper mapper){
+        return new EvaluationPresenter(dataManager, mApplication);
     }
 
     @Provides @Singleton

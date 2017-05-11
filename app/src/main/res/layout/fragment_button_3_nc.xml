@@ -21,7 +21,7 @@
         android:layout_centerHorizontal="true"
         android:textAlignment="5"/> <!--alignStart-->
 
-    <de.fhb.campusapp.eval.custom.CustomVerticalButton
+    <de.thb.ue.android.utility.customized_classes.CustomVerticalButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingTop="10dp"

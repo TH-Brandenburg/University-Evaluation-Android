@@ -22,16 +22,6 @@ public class SplashPresenter extends BasePresenter<SplashMvpView> {
         mCookieJar = cookieJar;
     }
 
-    boolean isSessionCookieExpired(){
-        return mCookieJar.isSessionCookieExpired();
-    }
-
-    void clearAllCookies(){
-        getMvpView().displayToast("All cookies cleared.");
-        mDataManager.invalidateAllCookies();
-    }
-
-
     boolean isConnected(){
         return mDataManager.isConnected();
     }

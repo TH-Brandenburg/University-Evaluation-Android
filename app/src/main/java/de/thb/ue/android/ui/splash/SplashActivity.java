@@ -1,15 +1,22 @@
 package de.thb.ue.android.ui.splash;
 
+import android.Manifest;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.widget.Toast;
 
 import com.github.buchandersenn.android_permission_manager.PermissionManager;
+import com.github.buchandersenn.android_permission_manager.PermissionRequest;
+
+import java.security.Permission;
 
 import javax.inject.Inject;
 
 import butterknife.ButterKnife;
 import de.thb.ue.android.ui.base.BaseActivity;
+import de.thb.ue.android.ui.scan.ScanActivity;
 import de.thb.ue.android.utility.DialogFactory;
 import thb.de.ue.android.R;
 
@@ -20,7 +27,6 @@ public class SplashActivity extends BaseActivity implements SplashMvpView{
     @Inject
     PermissionManager mPermissionManager;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,6 +36,11 @@ public class SplashActivity extends BaseActivity implements SplashMvpView{
         super.fixOrientationToPortrait();
         mSplashPresenter.attachView(this);
 
+        mPermissionManager.with(Manifest.permission.CAMERA)
+                .onPermissionDenied(this::finish)
+                .onPermissionGranted(this::goToScanActivity)
+                .onPermissionShowRationale(this::showCameraExplanation)
+                .request();
     }
 
     @Override
@@ -43,22 +54,18 @@ public class SplashActivity extends BaseActivity implements SplashMvpView{
         super.onDestroy();
     }
 
-    @Override
-    public void displayToast(final String toastText) {
-        int duration = Toast.LENGTH_SHORT;
-
-        Toast toast = Toast.makeText(this, toastText, duration);
-        toast.show();
+    private void goToScanActivity() {
+        Intent intent = new Intent(this, ScanActivity.class);
+        startActivity(intent);
+        this.finish();
     }
 
-    @Override
-    public void displayGenericErrorDialog(String title, String message) {
-        DialogFactory.createSimpleOkErrorDialog(this
-                ,title
-                ,message
-                ,null
-                ,null
-                ,true)
-                .show();
+    public void showCameraExplanation(PermissionRequest request) {
+        AlertDialog dialog = DialogFactory.createAcceptDenyDialog(this
+                , R.string.camera_permission_explanation_title
+                , R.string.camera_permission_explanation_message
+                , (dialogInterface, i) -> request.acceptPermissionRationale()
+                , (dialogInterface, i) -> this.finish());
+        dialog.show();
     }
 }

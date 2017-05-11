@@ -1,11 +1,16 @@
 package de.thb.ue.android.ui.base;
 
+import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.view.LayoutInflaterCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.widget.Toast;
+
+import com.mikepenz.iconics.context.IconicsLayoutInflater;
 
 import de.thb.ue.android.injection.component.ActivityComponent;
 import de.thb.ue.android.injection.module.ActivityModule;
@@ -17,12 +22,15 @@ public class BaseActivity extends AppCompatActivity implements MvpView{
 
     public ActivityComponent mActicityComponent;
 
+
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mActicityComponent = BaseApplication.getApplicationComponent(this)
                 .activityComponent(new ActivityModule(this));
         Icepick.restoreInstanceState(this, savedInstanceState);
+//        LayoutInflaterCompat.setFactory(getLayoutInflater(), new IconicsLayoutInflater(getDelegate()));
     }
 
     @Override
@@ -74,6 +82,17 @@ public class BaseActivity extends AppCompatActivity implements MvpView{
                 ,null
                 ,null
                 ,true)
+                .show();
+    }
+
+    @Override
+    public void displayGenericActionDialog(String title, String message, DialogInterface.OnClickListener listener, DialogInterface.OnDismissListener dismissListener, boolean dismissable) {
+        DialogFactory.createSimpleOkErrorDialog(this
+                , title
+                , message
+                , listener
+                , dismissListener
+                , dismissable)
                 .show();
     }
 

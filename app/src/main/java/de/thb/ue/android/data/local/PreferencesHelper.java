@@ -17,6 +17,8 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
+import de.thb.ue.android.data.VOs.AnswersVO;
+import de.thb.ue.android.data.VOs.QuestionsVO;
 import de.thb.ue.android.injection.ApplicationContext;
 
 /**
@@ -38,6 +40,15 @@ public class PreferencesHelper {
     private static final String COLLECTION_TYPE = "COLLECTION_TYPE";
     private static final String MAP_TYPE = "MAP_TYPE";
 
+    private static final String QUESTIONS_VO = "QUESTIONS_VO_KEY";
+    private static final String ANSWER_VO = "ANSWER_VO_KEY";
+    private static final String DEVICE_ID = "UUID_KEY";
+    private static final String HOST_NAME = "HOST_NAME_KEY";
+    private static final String IMAGE_MAP = "IMAGE_MAP_KEY";
+    private static final String GALLERY_LIST = "GALLERY_LIST_KEY";
+    private static final String CURRENT_QUESTION = "CURRENT_QUESTION";
+    private static final String CURRENT_PAGER_POSITION = "CURRENT_PAGER_POSITION";
+
 
     private final ObjectMapper mapper;
     private final SharedPreferences transientPreferences;
@@ -49,6 +60,55 @@ public class PreferencesHelper {
         this.transientPreferences = context.getSharedPreferences("app_temp_pref_file" ,Context.MODE_PRIVATE);
         this.perisistentPreferences = context.getSharedPreferences("app_pers_pref_file" ,Context.MODE_PRIVATE);
     }
+
+    public void putQuestionsVO(QuestionsVO questionsVO){
+        storeToStorage(QUESTIONS_VO, questionsVO, StorageMode.TRANSIENT);
+    }
+
+    public QuestionsVO getQuestionsVO(){
+        return retrieveFromStorage(QUESTIONS_VO, QuestionsVO.class, StorageMode.TRANSIENT);
+    }
+
+    public void putAnswersVO(AnswersVO answersVO){
+        storeToStorage(ANSWER_VO, answersVO, StorageMode.TRANSIENT);
+    }
+
+    public AnswersVO getAnswersVO(){
+        return retrieveFromStorage(ANSWER_VO, AnswersVO.class, StorageMode.TRANSIENT);
+    }
+
+    public void putCurrentPosition(int position){
+        storeToStorage(CURRENT_PAGER_POSITION, position, StorageMode.TRANSIENT);
+    }
+
+    public int getCurrentPosition(){
+        return retrieveFromStorage(CURRENT_PAGER_POSITION, Integer.class, StorageMode.TRANSIENT);
+    }
+
+    public void putCurrentQuestion(String question){
+        storeToStorage(CURRENT_QUESTION, question, StorageMode.TRANSIENT);
+    }
+
+    public String getCurrentQuestion(){
+        return retrieveFromStorage(CURRENT_QUESTION, String.class, StorageMode.TRANSIENT);
+    }
+
+    public void putHostName(String hostName){
+        storeToStorage(HOST_NAME, hostName, StorageMode.TRANSIENT);
+    }
+
+    public String getHostName(){
+        return retrieveFromStorage(HOST_NAME, String.class, StorageMode.TRANSIENT);
+    }
+
+    public void putDeviceId(String deviceId){
+        storeToStorage(DEVICE_ID, deviceId, StorageMode.TRANSIENT);
+    }
+
+    public String getDeviceId(){
+        return retrieveFromStorage(DEVICE_ID, String.class, StorageMode.TRANSIENT);
+    }
+
 
     /*************************************************************
      *           DATA PERSISTENCE LOGIC IMPLEMENTED HERE         *
@@ -74,6 +134,7 @@ public class PreferencesHelper {
         }
 
         try {
+
             String value = mapper.writeValueAsString(obj);
             SharedPreferences.Editor editor;
             if(mode == StorageMode.TRANSIENT){
