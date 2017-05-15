@@ -22,7 +22,7 @@
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/inner_section_list_view"
+        android:id="@+id/study_path_list_view"
         android:layout_below="@+id/textView"
         android:layout_margin="8dp">
     </ListView>

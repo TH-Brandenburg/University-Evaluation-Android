@@ -1,6 +1,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/button_fragment_layout">
 <!--tools:context="de.fhb.campusapp.eval.ui.button.ButtonFragment"-->
 
@@ -38,7 +40,8 @@
             android:layout_height="wrap_content"
             >
 
-            <de.thb.ue.android.utility.customized_classes.CustomVerticalButton
+            <de.thb.ue.android.utility.customized_classes.SingleChoiceButton
+                app:isVertical="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAllCaps="false"
@@ -55,7 +58,7 @@
                 android:layout_alignTop="@+id/top_button"
                 android:layout_alignBottom="@+id/bottom_button" />
 
-            <Button
+            <de.thb.ue.android.utility.customized_classes.SingleChoiceButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAllCaps="false"
@@ -69,11 +72,11 @@
                 android:layout_alignParentStart="true"
                 android:layout_marginLeft="@dimen/button_margin_to_border"
                 android:layout_marginStart="@dimen/button_margin_to_border"
-                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_choice_margin_bottom"
                 android:layout_toLeftOf="@+id/no_comment_button"
                 android:layout_toStartOf="@+id/no_comment_button" />
 
-            <Button
+            <de.thb.ue.android.utility.customized_classes.SingleChoiceButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAllCaps="false"
@@ -87,11 +90,11 @@
                 android:layout_alignParentStart="true"
                 android:layout_marginLeft="@dimen/button_margin_to_border"
                 android:layout_marginStart="@dimen/button_margin_to_border"
-                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_choice_margin_bottom"
                 android:layout_toLeftOf="@+id/no_comment_button"
                 android:layout_toStartOf="@+id/no_comment_button" />
 
-            <Button
+            <de.thb.ue.android.utility.customized_classes.SingleChoiceButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAllCaps="false"
@@ -105,11 +108,11 @@
                 android:layout_alignParentStart="true"
                 android:layout_marginLeft="@dimen/button_margin_to_border"
                 android:layout_marginStart="@dimen/button_margin_to_border"
-                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_choice_margin_bottom"
                 android:layout_toLeftOf="@+id/no_comment_button"
                 android:layout_toStartOf="@+id/no_comment_button" />
 
-            <Button
+            <de.thb.ue.android.utility.customized_classes.SingleChoiceButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAllCaps="false"
@@ -123,11 +126,11 @@
                 android:layout_alignParentStart="true"
                 android:layout_marginLeft="@dimen/button_margin_to_border"
                 android:layout_marginStart="@dimen/button_margin_to_border"
-                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_choice_margin_bottom"
                 android:layout_toLeftOf="@+id/no_comment_button"
                 android:layout_toStartOf="@+id/no_comment_button" />
 
-            <Button
+            <de.thb.ue.android.utility.customized_classes.SingleChoiceButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAllCaps="false"
@@ -141,11 +144,11 @@
                 android:layout_alignParentStart="true"
                 android:layout_marginLeft="@dimen/button_margin_to_border"
                 android:layout_marginStart="@dimen/button_margin_to_border"
-                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_choice_margin_bottom"
                 android:layout_toLeftOf="@+id/no_comment_button"
                 android:layout_toStartOf="@+id/no_comment_button" />
 
-            <Button
+            <de.thb.ue.android.utility.customized_classes.SingleChoiceButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAllCaps="false"
@@ -159,11 +162,11 @@
                 android:layout_alignParentStart="true"
                 android:layout_marginLeft="@dimen/button_margin_to_border"
                 android:layout_marginStart="@dimen/button_margin_to_border"
-                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_choice_margin_bottom"
                 android:layout_toLeftOf="@+id/no_comment_button"
                 android:layout_toStartOf="@+id/no_comment_button" />
 
-            <Button
+            <de.thb.ue.android.utility.customized_classes.SingleChoiceButton
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAllCaps="false"
@@ -177,7 +180,7 @@
                 android:layout_alignParentStart="true"
                 android:layout_marginLeft="@dimen/button_margin_to_border"
                 android:layout_marginStart="@dimen/button_margin_to_border"
-                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_choice_margin_bottom"
                 android:layout_toLeftOf="@+id/no_comment_button"
                 android:layout_toStartOf="@+id/no_comment_button" />
 

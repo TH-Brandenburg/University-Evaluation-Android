@@ -8,6 +8,10 @@ import android.widget.ArrayAdapter;
 
 import com.github.buchandersenn.android_permission_manager.PermissionManager;
 
+import java.util.List;
+
+import javax.inject.Singleton;
+
 import dagger.Module;
 import dagger.Provides;
 import de.thb.ue.android.data.IDataManager;
@@ -26,6 +30,8 @@ import thb.de.ue.android.R;
  */
 @Module
 public class ActivityModule {
+    private List<ButtonPresenter> buttons;
+
 
     private AppCompatActivity mActivity;
 
@@ -58,7 +64,7 @@ public class ActivityModule {
 
     @Provides
     ArrayAdapter<String> provideArrayAdapter(){
-        return new ArrayAdapter<>(mActivity, R.layout.simple_list_item);
+        return new ArrayAdapter<String>(mActivity, R.layout.simple_list_item);
     }
 
     @Provides

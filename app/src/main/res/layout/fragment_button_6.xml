@@ -38,7 +38,7 @@
             android:layout_height="wrap_content"
             >
 
-            <Button
+            <de.thb.ue.android.utility.customized_classes.SingleChoiceButton
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
@@ -50,14 +50,16 @@
                 android:textColor="@color/color_bright_font"
                 android:layout_marginLeft="@dimen/button_margin_to_border"
                 android:layout_marginStart="@dimen/button_margin_to_border"
-                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_marginRight="@dimen/button_margin_to_border"
+                android:layout_marginEnd="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_choice_margin_bottom"
                 android:layout_above="@+id/upper_button"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 />
 
 
-            <Button
+            <de.thb.ue.android.utility.customized_classes.SingleChoiceButton
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
@@ -69,13 +71,15 @@
                 android:minWidth="120dp"
                 android:layout_marginLeft="@dimen/button_margin_to_border"
                 android:layout_marginStart="@dimen/button_margin_to_border"
-                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_marginRight="@dimen/button_margin_to_border"
+                android:layout_marginEnd="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_choice_margin_bottom"
                 android:layout_above="@+id/upper_middle_button"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 />
 
-            <Button
+            <de.thb.ue.android.utility.customized_classes.SingleChoiceButton
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
@@ -87,14 +91,16 @@
                 android:minWidth="120dp"
                 android:layout_marginLeft="@dimen/button_margin_to_border"
                 android:layout_marginStart="@dimen/button_margin_to_border"
-                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_marginRight="@dimen/button_margin_to_border"
+                android:layout_marginEnd="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_choice_margin_bottom"
                 android:layout_above="@+id/lower_middle_button"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 />
 
 
-            <Button
+            <de.thb.ue.android.utility.customized_classes.SingleChoiceButton
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
@@ -106,14 +112,16 @@
                 android:minWidth="120dp"
                 android:layout_marginLeft="@dimen/button_margin_to_border"
                 android:layout_marginStart="@dimen/button_margin_to_border"
-                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_marginRight="@dimen/button_margin_to_border"
+                android:layout_marginEnd="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_choice_margin_bottom"
                 android:layout_above="@+id/lower_button"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 />
 
 
-            <Button
+            <de.thb.ue.android.utility.customized_classes.SingleChoiceButton
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
@@ -125,14 +133,16 @@
                 android:minWidth="120dp"
                 android:layout_marginLeft="@dimen/button_margin_to_border"
                 android:layout_marginStart="@dimen/button_margin_to_border"
-                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_marginRight="@dimen/button_margin_to_border"
+                android:layout_marginEnd="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_choice_margin_bottom"
                 android:layout_above="@+id/bottom_button"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 />
 
 
-            <Button
+            <de.thb.ue.android.utility.customized_classes.SingleChoiceButton
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
@@ -144,7 +154,9 @@
                 android:minWidth="120dp"
                 android:layout_marginLeft="@dimen/button_margin_to_border"
                 android:layout_marginStart="@dimen/button_margin_to_border"
-                android:layout_marginBottom="@dimen/button_margin_to_border"
+                android:layout_marginRight="@dimen/button_margin_to_border"
+                android:layout_marginEnd="@dimen/button_margin_to_border"
+                android:layout_marginBottom="@dimen/button_choice_margin_bottom"
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"

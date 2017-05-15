@@ -2,11 +2,14 @@ package de.thb.ue.android.ui.evaluation.studypath;
 
 import android.content.Context;
 
+import java.util.List;
+
 import javax.inject.Inject;
 
 import de.thb.ue.android.data.IDataManager;
 import de.thb.ue.android.injection.ActivityContext;
 import de.thb.ue.android.ui.base.BasePresenter;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * Created by scorp on 05.05.2017.
@@ -31,5 +34,15 @@ public class PathPresenter extends BasePresenter<PathMvpView> {
 
     public void setmPosition(int mPosition) {
         this.mPosition = mPosition;
+    }
+
+    List<String> getStudyPaths(){
+        return mDataManager.getCachedQuestions().getStudyPaths();
+    }
+
+    void setStudyPath(String studyPath){
+        mDataManager.putStudyPath(studyPath)
+                .subscribeOn(Schedulers.computation())
+                .subscribe();
     }
 }

@@ -5,15 +5,18 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.support.v4.app.Fragment;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.inject.Inject;
 
+import de.thb.ue.android.data.VOs.Answer;
 import de.thb.ue.android.data.VOs.AnswersVO;
 import de.thb.ue.android.data.VOs.ChoiceVO;
 import de.thb.ue.android.data.VOs.ProcessedResponse;
@@ -26,10 +29,6 @@ import de.thb.ue.android.data.local.MappingHelper;
 import de.thb.ue.android.data.local.PreferencesHelper;
 import de.thb.ue.android.data.remote.RetrofitHelper;
 import de.thb.ue.android.injection.ApplicationContext;
-import de.thb.ue.android.ui.evaluation.choice.ButtonFragment;
-import de.thb.ue.android.ui.evaluation.send.SendFragment;
-import de.thb.ue.android.ui.evaluation.studypath.PathFragment;
-import de.thb.ue.android.ui.evaluation.text.TextFragment;
 import de.thb.ue.android.utility.Connectivity;
 import de.thb.ue.android.utility.TestQuestionnaire;
 import de.thb.ue.android.utility.eventbus.EventBus;
@@ -95,13 +94,19 @@ public class DataManager implements IDataManager{
 
         if(vo == null){
             return new QuestionsVO(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), false);
-        } else if (vo.getTextQuestions() == null){
+        }
+
+        if (vo.getTextQuestions() == null){
             Log.e("QUESTIONS_VO", "List of text questions was null in cached questionsVO object.");
             vo.setTextQuestions(new ArrayList<>());
-        } else if(vo.getSingleChoiceQuestionVOs() == null) {
+        }
+
+        if(vo.getSingleChoiceQuestionVOs() == null) {
             Log.e("QUESTIONS_VO", "List of single choice questions was null in cached questionsVO object.");
             vo.setSingleChoiceQuestionVOs(new ArrayList<>());
-        } else if(vo.getStudyPaths() == null){
+        }
+
+        if(vo.getStudyPaths() == null){
             Log.e("QUESTIONS_VO", "List of study paths was null in cached questionsVO object.");
             vo.setStudyPaths(new ArrayList<>());
         }
@@ -109,63 +114,128 @@ public class DataManager implements IDataManager{
         return vo;
     }
 
+    public Single<Boolean> putSCAnswer(String question, ChoiceVO answer){
+        return Single.create(e -> {
+            boolean found = false;
 
-    public void putSCAnswer(String question, ChoiceVO answer){
-        boolean found = false;
+            //retrieve
+            AnswersVO answersVO = mPreferencesHelper.getAnswersVO();
 
-        //retrieve
-        AnswersVO answersVO = mPreferencesHelper.getAnswersVO();
-
-        //insert / update
-        for(SingleChoiceAnswerVO storedAnswer : answersVO.getScAnswers()) {
-            if (storedAnswer.getQuestionText().equals(question)) {
-                storedAnswer.setChoice(answer);
-                found = true;
+            //insert / update
+            for(SingleChoiceAnswerVO storedAnswer : answersVO.getScAnswers()) {
+                if (storedAnswer.getQuestionText().equals(question)) {
+                    storedAnswer.setChoice(answer);
+                    found = true;
+                }
             }
-        }
 
-        if(!found){
-            answersVO.getScAnswers().add(new SingleChoiceAnswerVO(question, answer));
-        }
+            if(!found){
+                answersVO.getScAnswers().add(new SingleChoiceAnswerVO(question, answer));
+            }
 
-        //persist
-        mPreferencesHelper.putAnswersVO(answersVO);
+            //persist
+            mPreferencesHelper.putAnswersVO(answersVO);
+            e.onSuccess(true);
+        });
+
     }
 
-    public void putTextAnswer(String question, int questionId, String answer){
-        boolean found = false;
+    public Single<Boolean> putTextAnswer(String question, int questionId, String answer){
+        return Single.create(e -> {
+            boolean found = false;
 
-        //retrieve
-        AnswersVO answersVO = mPreferencesHelper.getAnswersVO();
+            //retrieve
+            AnswersVO answersVO = mPreferencesHelper.getAnswersVO();
 
-        //insert / update
-        for(TextAnswerVO storedTextAnswer : answersVO.getTextAnswers()) {
-            if (storedTextAnswer.getQuestionText().equals(question)) {
-                storedTextAnswer.setAnswerText(answer);
-                found = true;
+            //insert / update
+            for(TextAnswerVO storedTextAnswer : answersVO.getTextAnswers()) {
+                if (storedTextAnswer.getQuestionText().equals(question)) {
+                    storedTextAnswer.setAnswerText(answer);
+                    found = true;
+                }
+            }
+
+            if(!found){
+                answersVO.getTextAnswers().add(new TextAnswerVO(questionId ,question, answer));
+            }
+
+            //persist
+            mPreferencesHelper.putAnswersVO(answersVO);
+            e.onSuccess(true);
+        });
+
+    }
+
+    public Single<Boolean> putStudyPath(String studyPath){
+        return Single.create(e -> {
+            //retrieve
+            AnswersVO answersVO = mPreferencesHelper.getAnswersVO();
+
+            //insert / update
+            answersVO.setStudyPath(studyPath);
+
+            //persist
+            mPreferencesHelper.putAnswersVO(answersVO);
+            e.onSuccess(true);
+        });
+    }
+
+    public ChoiceVO getCurrentScAnswer(@NonNull String question){
+        AnswersVO answers = mPreferencesHelper.getAnswersVO();
+
+        for(SingleChoiceAnswerVO scAnswer : answers.getScAnswers()){
+            if(scAnswer.getQuestionText().equals(question)){
+                return scAnswer.getChoice();
+            }
+        }
+        return new ChoiceVO("", (short) 0);
+    }
+
+    public String getCurrentTextAnswer(@NonNull String question){
+        AnswersVO answers = mPreferencesHelper.getAnswersVO();
+
+        for(TextAnswerVO textAnswer : answers.getTextAnswers()){
+            if(textAnswer.getQuestionText().equals(question)){
+                return textAnswer.getAnswerText();
+            }
+        }
+        return "";
+    }
+
+    public Set<String> getAnsweredQuestions(){
+        AnswersVO answers = mPreferencesHelper.getAnswersVO();
+        Set<String> result = new HashSet<>();
+
+        for(TextAnswerVO textAnswer : answers.getTextAnswers()){
+            if(textAnswer.getAnswerText() != null && !textAnswer.getAnswerText().isEmpty()){
+                result.add(textAnswer.getQuestionText());
+            }
+        }
+        for(SingleChoiceAnswerVO scAnswer : answers.getScAnswers()){
+            if(!scAnswer.getChoice().getChoiceText().isEmpty()){
+                result.add(scAnswer.getQuestionText());
             }
         }
 
-        if(!found){
-            answersVO.getTextAnswers().add(new TextAnswerVO(questionId ,question, answer));
-        }
+        return result;
+    }
 
-        //persist
-        mPreferencesHelper.putAnswersVO(answersVO);
+    public String getStudyPath(){
+        return mPreferencesHelper.getAnswersVO().getStudyPath();
     }
 
     private AnswersVO initializeAnswersVO(String voteToken){
         QuestionsVO questionsVO = mPreferencesHelper.getQuestionsVO();
         String deviceId = mPreferencesHelper.getDeviceId();
 
-        AnswersVO answersVO = new AnswersVO(voteToken, null, new ArrayList<>(), new ArrayList<>(), deviceId);
+        AnswersVO answersVO = new AnswersVO(voteToken, "", new ArrayList<>(), new ArrayList<>(), deviceId);
 
         for(TextQuestionVO textQuestion : questionsVO.getTextQuestions()){
             answersVO.getTextAnswers().add(new TextAnswerVO(textQuestion.getQuestionID(), textQuestion.getQuestionText(), ""));
         }
 
         for(SingleChoiceQuestionVO scQuestion : questionsVO.getSingleChoiceQuestionVOs()){
-            answersVO.getScAnswers().add(new SingleChoiceAnswerVO(scQuestion.getQuestion(), null));
+            answersVO.getScAnswers().add(new SingleChoiceAnswerVO(scQuestion.getQuestion(), new ChoiceVO("", (short) 0)));
         }
 
         return answersVO;
@@ -181,6 +251,29 @@ public class DataManager implements IDataManager{
      */
     public void removeCachedData(){
         mPreferencesHelper.clear();
+    }
+
+    @Override
+    public List<String> getQuestionTexts() {
+        QuestionsVO questions = mPreferencesHelper.getQuestionsVO();
+        List<String> result = new ArrayList<>();
+
+        if(questions.getTextQuestionsFirst()){
+            for(TextQuestionVO textQuestion : questions.getTextQuestions()){
+                result.add(textQuestion.getQuestionText());
+            }
+            for(SingleChoiceQuestionVO scQuestion : questions.getSingleChoiceQuestionVOs()){
+                result.add(scQuestion.getQuestion());
+            }
+        } else {
+            for(SingleChoiceQuestionVO scQuestion : questions.getSingleChoiceQuestionVOs()){
+                result.add(scQuestion.getQuestion());
+            }
+            for(TextQuestionVO textQuestion : questions.getTextQuestions()){
+                result.add(textQuestion.getQuestionText());
+            }
+        }
+        return result;
     }
 
     private <T,V> ProcessedResponse<V> handleResponse(Response<T> response, V body, int expectedCode) throws IllegalAccessException, InstantiationException {

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
+import android.os.Environment;
 import android.support.annotation.ColorRes;
 import android.support.annotation.DrawableRes;
 import android.support.v7.widget.Toolbar;
@@ -19,6 +20,7 @@ import android.text.style.StyleSpan;
 import android.util.DisplayMetrics;
 import android.view.View;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -52,6 +54,18 @@ public class Utils {
                         view.setVisibility(toVisibility);
                     }
                 });
+    }
+
+    public static File getImageDirectory(Context context){
+        String extMediaState = Environment.getExternalStorageState();
+        File out = null;
+        // choose external storage if available
+        if(extMediaState.equals(Environment.MEDIA_MOUNTED)){
+            out = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        } else {
+            out = context.getFilesDir();
+        }
+        return out;
     }
 
     /**

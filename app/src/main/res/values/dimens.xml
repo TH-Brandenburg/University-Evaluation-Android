@@ -11,6 +11,7 @@
     <dimen name="button_margin_to_border">8dp</dimen>
     <dimen name="button_margin_to_content">32dp</dimen>
     <dimen name="button_nominal_height">36dp</dimen>
+    <dimen name="button_choice_margin_bottom">4dp</dimen>
     <dimen name="keyboard_border_margin">8dp</dimen>
 
     <dimen name="toolbar_hight">56dp</dimen>

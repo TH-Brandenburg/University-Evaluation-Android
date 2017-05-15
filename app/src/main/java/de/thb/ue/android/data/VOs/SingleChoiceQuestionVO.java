@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Created by Admin on 15.05.2016.
  */
-public class SingleChoiceQuestionVO {
+public class SingleChoiceQuestionVO extends Question{
     private String question;
     private List<ChoiceVO> choices;
 

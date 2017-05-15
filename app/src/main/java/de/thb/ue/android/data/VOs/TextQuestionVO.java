@@ -3,7 +3,7 @@ package de.thb.ue.android.data.VOs;
 /**
  * Created by Sebastian Müller on 15.05.2016.
  */
-public class TextQuestionVO {
+public class TextQuestionVO extends Question{
     private int questionID;
     private String questionText;
     private Boolean onlyNumbers;

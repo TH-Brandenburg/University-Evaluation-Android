@@ -29,7 +29,7 @@
         android:animateLayoutChanges="true"
         android:background="@android:color/black"
         android:visibility="visible"
-        android:layout_below="@id/my_awesome_toolbar">
+        android:layout_below="@id/the_toolbar">
 
         <ProgressBar
             style="?android:attr/progressBarStyleLarge"

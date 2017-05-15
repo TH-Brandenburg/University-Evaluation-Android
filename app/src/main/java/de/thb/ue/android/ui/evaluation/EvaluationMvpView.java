@@ -12,4 +12,7 @@ public interface EvaluationMvpView extends MvpView {
     void hideProgressOverlay();
     void showProgressOverlay();
     void setSubtitle(@StringRes int subtitle);
+    void nextPage();
+    void previousPage();
+    void gotToPage(int position);
 }

@@ -30,6 +30,18 @@ public class ChoiceVO implements Serializable {
         this.grade = grade;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof ChoiceVO){
+            ChoiceVO choiceVO = (ChoiceVO) obj;
+
+            if(choiceVO.getChoiceText().equals(choiceText) && choiceVO.getGrade() == grade){
+                return true;
+            }
+        }
+        return false;
+    }
+
     public String getChoiceText() {
         return choiceText;
     }

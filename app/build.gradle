@@ -108,6 +108,7 @@ dependencies {
     final RXJAVA_VERSION = '2.0.4'
     final JACKSON_JSON_VERSION = '2.8.8.1'
     final JACKSON_JSON_SMILE_VERSION = '2.9.0.pr3'
+    final CWAC_VERSION = '0.7.6'
 
     def daggerCompiler = "com.google.dagger:dagger-compiler:$DAGGER_VERSION"
 
@@ -140,6 +141,9 @@ dependencies {
     compile('com.mikepenz:materialdrawer:5.8.2@aar') {
         transitive = true
     }
+
+    // camera activity
+    compile "com.commonsware.cwac:cam2:$CWAC_VERSION"
 
     //icons
     compile 'com.mikepenz:iconics-core:2.8.2@aar'

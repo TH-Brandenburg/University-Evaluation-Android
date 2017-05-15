@@ -52,9 +52,23 @@ public class BasePagerAdapter extends FragmentStatePagerAdapter {
             case buttonFragment:
                 return ButtonFragment.newInstance(page.position, page.question, (ArrayList<ChoiceVO>) page.choices);
             case textFragment:
-                return TextFragment.newInstance(page.position, page.question);
+                return TextFragment.newInstance(page.position, page.question, page.questionId);
             default:
                 return SendFragment.newInstance(page.position);
+        }
+    }
+
+    public Class getPageClassType(int position){
+        Page page = mPages.get(position);
+        switch (page.pageKind){
+            case pathFragment:
+                return PathFragment.class;
+            case buttonFragment:
+                return ButtonFragment.class;
+            case textFragment:
+                return TextFragment.class;
+            default:
+                return SendFragment.class;
         }
     }
 
@@ -87,42 +101,44 @@ public class BasePagerAdapter extends FragmentStatePagerAdapter {
         List<TextQuestionVO> textQuestions = questionsVo.getTextQuestions();
         int position = 0;
 
-        result.add(new Page(position, null, PageKind.pathFragment, null));
+        result.add(new Page(position, null, -1, PageKind.pathFragment, null));
 
         if(questionsVo.getTextQuestionsFirst()){
             for(TextQuestionVO textQuestion : textQuestions){
                 position++;
-                result.add(new Page(position, textQuestion.getQuestionText(), PageKind.textFragment, null));
+                result.add(new Page(position, textQuestion.getQuestionText(), textQuestion.getQuestionID(), PageKind.textFragment, null));
             }
             for(SingleChoiceQuestionVO scQuestion : scQuestions){
                 position++;
-                result.add(new Page(position, scQuestion.getQuestion(), PageKind.buttonFragment, scQuestion.getChoices()));
+                result.add(new Page(position, scQuestion.getQuestion(), -1, PageKind.buttonFragment, scQuestion.getChoices()));
             }
 
         } else {
             for(SingleChoiceQuestionVO scQuestion : scQuestions){
                 position++;
-                result.add(new Page(position, scQuestion.getQuestion(), PageKind.buttonFragment, scQuestion.getChoices()));
+                result.add(new Page(position, scQuestion.getQuestion(), -1, PageKind.buttonFragment, scQuestion.getChoices()));
             }
             for(TextQuestionVO textQuestion : textQuestions){
                 position++;
-                result.add(new Page(position, textQuestion.getQuestionText(), PageKind.textFragment, null));
+                result.add(new Page(position, textQuestion.getQuestionText(), textQuestion.getQuestionID(), PageKind.textFragment, null));
             }
         }
 
-        result.add(new Page(position + 1, null, PageKind.sendFragment, null));
+        result.add(new Page(position + 1, null, -1, PageKind.sendFragment, null));
         return result;
     }
 
     private class Page {
         int position;
         String question;
+        int questionId;
         PageKind pageKind;
         List<ChoiceVO> choices;
 
-        Page(int position, String question, PageKind pageKind, List<ChoiceVO> choices) {
+        public Page(int position, String question, int questionId, PageKind pageKind, List<ChoiceVO> choices) {
             this.position = position;
             this.question = question;
+            this.questionId = questionId;
             this.pageKind = pageKind;
             this.choices = choices;
         }

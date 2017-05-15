@@ -3,7 +3,7 @@ package de.thb.ue.android.data.VOs;
 /**
  * Created by Admin on 15.05.2016.
  */
-public class SingleChoiceAnswerVO {
+public class SingleChoiceAnswerVO extends Answer{
 
     private String questionText;
 

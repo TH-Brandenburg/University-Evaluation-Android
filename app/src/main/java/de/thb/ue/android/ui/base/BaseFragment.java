@@ -31,9 +31,6 @@ public abstract class BaseFragment extends DialogFragment implements MvpView{
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        mFragmentComponent = ((BaseActivity) context).mActicityComponent
-                .fragmentComponent(new FragmentModule((BaseActivity) context));
-
     }
 
     @Override
@@ -53,7 +50,8 @@ public abstract class BaseFragment extends DialogFragment implements MvpView{
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
+        mFragmentComponent = ((BaseActivity) getActivity()).mActicityComponent
+                .fragmentComponent(new FragmentModule(getActivity()));
     }
 
     @Override

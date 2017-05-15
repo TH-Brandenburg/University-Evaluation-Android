@@ -28,6 +28,14 @@
         <item name="android:alertDialogTheme">@style/AlertDialogTheme</item>
     </style>
 
+    <style name="AppThemeCamera" parent="Theme.AppCompat.Light">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+
 
     <style name="SplashTheme" parent="AppTheme">
         <item name="android:windowBackground">@drawable/splash_screen</item>

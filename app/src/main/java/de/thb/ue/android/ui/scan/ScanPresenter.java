@@ -56,7 +56,6 @@ public class ScanPresenter extends BasePresenter<ScanMvpView> {
                                 @Override
                                 public void onSuccess(ProcessedResponse<QuestionsVO> response) {
                                     if(response.getCode() == 200){
-                                        getMvpView().hideProgressOverlay();
                                         getMvpView().setSubtitle(R.string.scan_forward);
                                         getMvpView().goToEvaluation();
                                     }

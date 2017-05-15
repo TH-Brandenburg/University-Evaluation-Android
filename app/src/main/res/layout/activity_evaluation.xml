@@ -1,59 +1,64 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:layout_weight="1">
 
-    <include
-        layout="@layout/include_toolbar"
+    <android.support.v7.widget.Toolbar
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/the_toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"/>
-
-
-
-    <!--<include-->
-    <!--layout="@layout/include_progress_overlay"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="match_parent"-->
-    <!--/>-->
-
-    <android.support.v4.view.ViewPager
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/the_toolbar"
-        android:id="@+id/button_pager"
-        >
-
-
-        <android.support.v4.view.PagerTabStrip
-            android:id="@+id/button_pager_tab_strip"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top"
-            android:layout_marginRight="8dp"
-            android:layout_marginLeft="8dp"
-
-            />
-    </android.support.v4.view.ViewPager>
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
     <FrameLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/progress_overlay"
+        android:id="@+id/nav_drawer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:alpha="0"
-        android:animateLayoutChanges="true"
-        android:visibility="visible"
-        android:background="@android:color/black"
-        android:layout_below="@+id/the_toolbar" >
+        android:layout_below="@id/the_toolbar">
 
-        <ProgressBar
-            style="?android:attr/progressBarStyleLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:indeterminate="true"/>
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
+            <android.support.v4.view.ViewPager
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/button_pager"
+                >
+
+                <android.support.v4.view.PagerTabStrip
+                    android:id="@+id/button_pager_tab_strip"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top"
+                    android:layout_marginRight="8dp"
+                    android:layout_marginLeft="8dp"
+
+                    />
+            </android.support.v4.view.ViewPager>
+
+            <FrameLayout
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/progress_overlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:alpha="0"
+                android:animateLayoutChanges="true"
+                android:visibility="visible"
+                android:background="@android:color/black"
+                >
+
+                <ProgressBar
+                    style="?android:attr/progressBarStyleLarge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:indeterminate="true"/>
+            </FrameLayout>
+        </RelativeLayout>
     </FrameLayout>
 </RelativeLayout>

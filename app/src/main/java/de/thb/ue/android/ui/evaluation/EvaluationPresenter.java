@@ -2,6 +2,9 @@ package de.thb.ue.android.ui.evaluation;
 
 import android.content.Context;
 
+import java.util.List;
+import java.util.Set;
+
 import javax.inject.Inject;
 
 import de.thb.ue.android.data.IDataManager;
@@ -23,5 +26,17 @@ public class EvaluationPresenter extends BasePresenter<MvpView> {
         super();
         this.mDataManager = dataManager;
         this.mContext = context;
+    }
+
+    List<String> getQuestionTexts(){
+        return mDataManager.getQuestionTexts();
+    }
+
+    Set<String> getAnsweredQuestions(){
+        return mDataManager.getAnsweredQuestions();
+    }
+
+    String getStudyPath(){
+        return mDataManager.getStudyPath();
     }
 }
